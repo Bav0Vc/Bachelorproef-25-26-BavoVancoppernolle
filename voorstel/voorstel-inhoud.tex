@@ -1,84 +1,131 @@
-%---------- Inleiding ---------------------------------------------------------
-
-% TODO: Is dit voorstel gebaseerd op een paper van Research Methods die je
-% vorig jaar hebt ingediend? Heb je daarbij eventueel samengewerkt met een
-% andere student?
-% Zo ja, haal dan de tekst hieronder uit commentaar en pas aan.
-
-%\paragraph{Opmerking}
-
-% Dit voorstel is gebaseerd op het onderzoeksvoorstel dat werd geschreven in het
-% kader van het vak Research Methods dat ik (vorig/dit) academiejaar heb
-% uitgewerkt (met medesturent VOORNAAM NAAM als mede-auteur).
-% 
-
-\section{Inleiding}%
+%---------- Inleiding ---------------------------------------------------
+\section{Inleiding}
 \label{sec:inleiding}
 
-Waarover zal je bachelorproef gaan? Introduceer het thema en zorg dat volgende zaken zeker duidelijk aanwezig zijn:
+Accountancy Europe wijst erop dat de urgentie rond klimaatverandering en duurzaamheid, bedrijven wereldwijd onder toenemende druk zet om hun milieu-impact transparant te rapporteren: ``Bedrijven zullen duurzaamheidsinformatie in hun managementverslag moeten openbaar maken volgens verplichte Europese normen voor duurzaamheidsverslaglegging en deze in een digitaal, machinaal leesbaar formaat moeten indienen'' \autocite{AccountancyEurope2024}. Deze Europese richtlijn genaamd de Corporate Sustainability Reporting Directive (CSRD), werd van kracht op 5 januari 2023 van kracht werd. \'{E}\'{e}n van de vereisten van de CSRD is dat gerapporteerde duurzaamheidsinformatie extern moet worden geaudit door onafhankelijke auditors, wat de nood voor geautomatiseerde en betrouwbare rapportagesystemen benadrukt \autocite{EuropeanCommission2024}.
+\textcite{Nguyen2023} onderzochten Scope 3-emissiedata van verschillende externe leveranciers en documenteerden in \emph{PLOS Climate} dat zelfs bij leveranciers met een hoge correlatie (0.95) slechts 68\% van de individuele datapunten identiek was. Deze inconsistenties zijn te wijten aan verschillen in berekenings\-me\-tho\-do\-lo\-gie\"en, data-bronnen (primair versus secundair), temporele aggregatie (kalenderjaar versus boekjaar) en toewijzingsregels voor gedeelde faciliteiten \autocite{Nguyen2023}.
+Tegelijkertijd heeft de opkomst van Retrieval-Augmented Generation (RAG) nieuwe mogelijkheden gecre\"eerd voor het geautomatiseerd verwerken en analyseren van complexe, domeinspecifieke documentatie. \textcite{Lewis2020} introduceerden het Retrieval-Augmented Generation (RAG)-framework. Een AI-framework dat Large Language Models (LLM's) koppelt aan externe, actuele databank. Door domeinspecifieke documentcontext op te halen en te gebruiken, maakt RAG het mogelijk om antwoorden te genereren die zowel feitelijk correct zijn als traceerbaar naar de bron.
+Binnen de RAG-architectuur is de keuze van het embeddingmodel cruciaal. Het embeddingmodel vertaalt zowel de gebruikersvraag als de brondocumenten naar numerieke vectoren, die de semantische gelijkenis bepalen en daarmee bepalen welke context wordt opgehaald (retrieved). Cruciaal onderzoek toont aan dat de prestaties van een RAG-systeem significant worden beïnvloed door deze keuze: een kleiner LLM gekoppeld aan het juiste embeddingmodel kan grotere modellen overtreffen \autocite{Canale2025}. Dit benadrukt dat de optimalisatie van het retrieval-mechanisme – de taak van het embeddingmodel – essentieel is voor de algehele betrouwbaarheid, nauwkeurigheid en kosteneffici\"entie van het systeem.
+
+De concrete probleemstelling van dit onderzoek wordt benaderd vanuit een casus van het bedrijf Turtle Srl, een softwarebedrijf dat zich inzet om bedrijven te ondersteunen in hun groei, met een focus op de digitalisering en duurzaamheid van industri\"ele processen \autocite{TurtleSrl2023}.
+Het bedrijf is van plan om een Proof of Concept (PoC) te ontwikkelen dat binnen een bedrijf kan worden toegepast: een chatbot die interne, domein specifieke vragen kan beantwoorden. Het is hierbij essentieel dat het systeem duidelijk aangeeft welke documenten het heeft gebruikt om elk antwoord te genereren.
+Hoewel diverse technologische keuzes (chunkingstrategie\"en, embeddingmodellen, en Large Language Models (LLM's)) de prestaties van het systeem beïnvloeden, is de keuze van het embeddingmodel cruciaal voor de relevantie van de opgehaalde documentcontext. Voor Turtle is er echter geen duidelijk kader over hoe de selectie en configuratie van zowel lokaal gehoste als propri\"etaire embeddingmodellen de kwaliteit en effici\"entie van de RAG-prestaties direct beïnvloedt.
+
+
+Dit onderzoek vertrekt vanuit de volgende onderzoeksvraag:
+
+\textit{Hoe kan de keuze van het embeddingmodel voor een RAG-architectuur helpen bij het identificeren van en rapporteren over de uitstoot van productiebedrijven?}
+
+Om deze hoofdvraag te beantwoorden, worden de volgende deelvragen onderzocht:
 
 \begin{itemize}
-  \item kaderen thema
-  \item de doelgroep
-  \item de probleemstelling en (centrale) onderzoeksvraag
-  \item de onderzoeksdoelstelling
+  \item In hoeverre vari\"{e}ren de dataformaten en terminologie in de documenten van verschillende productiebedrijven?
+  \item Welke criteria (zoals snelheid, nauwkeurigheid, recall, en kosteneffectiviteit) moeten worden gebruikt voor de functionele evaluatie van de RAG-output om te bepalen of een antwoord als 'succesvol' kan worden beschouwd binnen het ESG-rapportageproces?
+  \item Welke gangbare testen worden uitgevoerd om de resultaten te evalueren (zoals hallucinatie, contextuele verschuiving, en data noise)?
+  \item Welke karakteristieken (model-grootte, dimensionaliteit, training-data, multilingualiteit) onderscheiden embeddingmodellen van elkaar?
+  \item Wat zijn de prestatieverschillen tussen verschillende embeddingmodellen (bijvoorbeeld BGE-M3, text-embedding-3-large, multilingual-e5-large) bij het genereren van vectorrepresentaties voor domeinspecifieke ESG-emissieteksten?
+  \item Hoe beïnvloedt de keuze van het embeddingmodel de RAGAS-metrics (Retrieval-Augmented Generation Assessment Suite: faithfulness, context precision, context recall, answer relevancy) in een gecontroleerde en constante RAG-architectuur?
 \end{itemize}
 
-Denk er aan: een typische bachelorproef is \textit{toegepast onderzoek}, wat betekent dat je start vanuit een concrete probleemsituatie in bedrijfscontext, een \textbf{casus}. Het is belangrijk om je onderwerp goed af te bakenen: je gaat voor die \textit{ene specifieke probleemsituatie} op zoek naar een goede oplossing, op basis van de huidige kennis in het vakgebied.
+De beoogde doelgroep bestaat uit bedrijven in de productiesector die de stap willen zetten naar de implementatie van een RAG-systeem. Dit onderzoek focust zich specifiek op RAG-systemen die gebruikt worden voor het analyseren, verwerken en rapporteren van de emissiedata van productiebedrijven. 
 
-De doelgroep moet ook concreet en duidelijk zijn, dus geen algemene of vaag gedefinieerde groepen zoals \emph{bedrijven}, \emph{developers}, \emph{Vlamingen}, enz. Je richt je in elk geval op it-professionals, een bachelorproef is geen populariserende tekst. Eén specifiek bedrijf (die te maken hebben met een concrete probleemsituatie) is dus beter dan \emph{bedrijven} in het algemeen.
+Het doel van dit onderzoek is om productiebedrijven tot een gefundeerde beslissing te laten komen over de keuze van het embeddingmodel dat wordt gebruikt in hun RAG-architectuur. 
 
-Formuleer duidelijk de onderzoeksvraag! De begeleiders lezen nog steeds te veel voorstellen waarin we geen onderzoeksvraag terugvinden.
+Voor dit onderzoek wordt een proof of concept uitgewerkt waarin een constante RAG-architectuur met variabele embeddingmodellen zal worden getest op een (vaste) dataset (voorzien door Turtle Srl). De dataset bestaat uit duurzaamheids- en uitstootrapporten van meerdere productiebedrijven. Elke variant van de RAG-architectuur zal moeten antwoorden op een reeks van 30 vragen. Hierbij wordt zowel de volledige output van het RAG-systeem ge\"evalueerd (m.b.v. het RAGAS framework), alsook de prestaties van de verschillende embeddingmodellen (m.b.v. de MTEB framework). Deze meetwaarden zijn cruciaal om een correct aanbeveling te doen bij het kiezen van het embeddingmodel voor een RAG-systeem.
 
-Schrijf ook iets over de doelstelling. Wat zie je als het concrete eindresultaat van je onderzoek, naast de uitgeschreven scriptie? Is het een proof-of-concept, een rapport met aanbevelingen, \ldots Met welk eindresultaat kan je je bachelorproef als een succes beschouwen?
+Na deze inleiding volgt een literatuurstudie die de theoretische fundamenten van RAG-architecturen \textcite{Lewis2020}, embeddingmodellen \textcite{Muennighoff2022} \textcite{Chen2024}, de evaluatiemethoden en -criteria voor embeddingmodellen en ESG-rapportage \autocite{GGP2013} uiteenzet. Daarna de gevolgde methodologie en experimentele opzet, gebaseerd op de evaluatieframeworks van \autocite{Es2024} en \autocite{Muennighoff2022} voor de PoC. Vervolgens komen de verwachte resultaten aan bod. Tot slot wordt een overzicht gegeven van de conclusies en worden aanbevelingen geformuleerd voor zowel verder onderzoek als praktische implementatie.
 
 %---------- Stand van zaken ---------------------------------------------------
 
-\section{Literatuurstudie}%
+\section{Literatuurstudie}
 \label{sec:literatuurstudie}
 
-Hier beschrijf je de \emph{state-of-the-art} rondom je gekozen onderzoeksdomein, d.w.z.\ een inleidende, doorlopende tekst over het onderzoeksdomein van je bachelorproef. Je steunt daarbij heel sterk op de professionele \emph{vakliteratuur}, en niet zozeer op populariserende teksten voor een breed publiek. Wat is de huidige stand van zaken in dit domein, en wat zijn nog eventuele open vragen (die misschien de aanleiding waren tot je onderzoeksvraag!)?
+Deze literatuurstudie een overzicht van de huidige stand van zaken voor dit onderzoek. Het probleemdomein betreft de uitdagingen waarmee productiebedrijven geconfronteerd worden bij het identificeren en rapporteren van hun uitstoot in het kader van ESG-compliance, met specifieke aandacht voor de Corporate Sustainability Reporting Directive (CSRD) en European Sustainability Reporting Standards (ESRS). Het oplossingsdomein focust op Retrieval-Augmented Generation (RAG) architecturen, embeddingmodellen en welke invloed de keuze van het embeddingmodel kan hebben op de resultaten van het RAG-systeem.
 
-Je mag de titel van deze sectie ook aanpassen (literatuurstudie, stand van zaken, enz.). Zijn er al gelijkaardige onderzoeken gevoerd? Wat concluderen ze? Wat is het verschil met jouw onderzoek?
+\subsection{ESG-rapportage en de Environmental Pilaar}
 
-Verwijs bij elke introductie van een term of bewering over het domein naar de vakliteratuur, bijvoorbeeld~\autocite{Hykes2013}! Denk zeker goed na welke werken je refereert en waarom.
+Environmental, Social en Governance (ESG)-rapportage heeft zich de afgelopen jaren ontwikkeld van een vrijwillige praktijk tot een verplichting voor bedrijven wereldwijd \autocite{UNGC}. De Corporate Sustainability Reporting Directive (CSRD), die op 5 januari 2023 van kracht werd, vervangt zijn voorganger nl. de Non-Financial Reporting Directive (NFRD) en breidt het aantal rapportageplichtige bedrijven uit van 12.000 naar 42.500 \autocite{AccountancyEurope2024}. Voor organisaties betekent de CSRD dat zij gedetailleerde informatie moeten rapporteren over hun milieu-impact conform met de European Sustainability Reporting Standards (ESRS), waarbij de rapportage in een digitaal, machinaal leesbaar formaat (ESEF) moet worden ingediend en extern geaudit door onafhankelijke auditors \autocite{EuropeanCommission2024}.
 
-Draag zorg voor correcte literatuurverwijzingen! Een bronvermelding hoort thuis \emph{binnen} de zin waar je je op die bron baseert, dus niet er buiten! Maak meteen een verwijzing als je gebruik maakt van een bron. Doe dit dus \emph{niet} aan het einde van een lange paragraaf. Baseer nooit teveel aansluitende tekst op eenzelfde bron.
+Binnen het ESG-kader vormt de Environmental pilaar een kritisch aandachtsgebied, met specifieke focus op broeikasgasemissies (Scope 1, 2 en 3), energieverbruik, waterbeheer en circulariteit \autocite{AccountancyEurope2024}. Het Greenhouse Gas Protocol (GHG Protocol), een gestandaardiseerd kader voor het meten en beheren van emissies over de volledige waardeketen \autocite{GGP2013}, categoriseert emissies als volgt: Scope 1 omvat directe emissies van bronnen die het bedrijf bezit of controleert (bijvoorbeeld brandstofverbruik in bedrijfswagens, procesemissies); Scope 2 zijn alle indirecte emissies van aangekochte energie (elektriciteit, warmte); en Scope 3 omvat alle andere indirecte emissies in de waardeketen, zowel upstream (leveranciers, transport) als downstream (gebruik van verkochte producten, afvalverwerking) \autocite{Wiedmann2020}. 
 
-Als je informatie over bronnen verzamelt in JabRef, zorg er dan voor dat alle nodige info aanwezig is om de bron terug te vinden (zoals uitvoerig besproken in de lessen Research Methods).
+\subsection{Variatie in Dataformaten en Terminologie van Emissierapporten}
 
-% Voor literatuurverwijzingen zijn er twee belangrijke commando's:
-% \autocite{KEY} => (Auteur, jaartal) Gebruik dit als de naam van de auteur
-%   geen onderdeel is van de zin.
-% \textcite{KEY} => Auteur (jaartal)  Gebruik dit als de auteursnaam wel een
-%   functie heeft in de zin (bv. ``Uit onderzoek door Doll & Hill (1954) bleek
-%   ...'')
+Een bewezen uitdaging bij het automatiseren van ESG-dataverwerking is de heterogeniteit van emissiedata in domeinspecifieke uitstootdocumenten. \textcite{Nguyen2023} vonden in hun onderzoek naar Scope 3-emissiedata van meerdere externe gegevensleveranciers duidelijk verschillen tussen de gerapporteerde emissiewaarden van dataproviders. Uit het onderzoek bleek dat de emissiewaarden van een groep leveranciers, desondanks correlatiewaarden van 95\%, slechts 68\% identieke gegevenspunten hebben \autocite{Nguyen2023}. Deze inconsistentie maakt geautomatiseerde extractie zonder uitgebreide domeinkennis een grotere uitdaging. Deze inconsistenties zijn het resultaat van verschillen in berekenings-me-tho-do-lo-gie"en, data-bronnen (primair versus secundair), temporele aggregatie (kalenderjaar versus boekjaar) en toewijzingsregels \autocite{Nguyen2023}. Het NGFS (Network for Greening the Financial System) benadrukt in een onderzoek naar het verbeteren van de gerapporteerde emissiedata dat de grote heterogeniteit in benaderingen van verschillende dataproviders, vooral voor Scope 3-emissies, de vergelijkbaarheid bemoeilijkt \autocite{NGFS2024}.
 
-Je mag deze sectie nog verder onderverdelen in subsecties als dit de structuur van de tekst kan verduidelijken.
+Daarnaast presenteren duurzaamheidsrapporten informatie in zeer diverse formaten: plain text, tabellen, grafieken en afbeeldingen, wat geautomatiseerde Information Extraction (IE) significant bemoeilijkt \autocite{Morales2022}. Deze fragmentatie van ESG-data maakt gestandaardiseerde rapportage complex en ineffici\"ent. PwC Luxembourg rapporteerde dat 55\% van de bedrijven uitdagingen verwacht op het gebied van datakwaliteit en consistentie bij CSRD-rapportage, en 45\% van de bedrijven zijn bezorgd over het feit of zij voldoende resources hebben om aan de richtlijnen te voldoen \autocite{FundsEurope2025}.
+
+\subsection{Retrieval-Augmented Generation (RAG)}
+
+Om deze uitdagingen het hoofd te bieden, biedt Retrieval-Augmented Generation (RAG) een veelbelovend architectuurpatroon. Geïntroduceerd door \autocite{Lewis2020}, het kernidee achter RAG is dat LLMs, hoewel krachtig in het vastleggen van taalpatronen en algemene kennis tijdens pre-training, beperkt zijn in hun vermogen om actuele, domeinspecifieke of feitelijke informatie te onthouden en correct toe te passen. Door een externe kennisbron combineren met een LLM, kunnen RAG-systemen relevante documenten ophalen en deze gebruiken als context voor het genereren van antwoorden \autocite{Lewis2020}.
+
+De toepassing van RAG-systemen voor ESG-rapportage werd onderzocht door verschillende recente studies. ESGReveal, geïntroduceerd door \textcite{Zou2023} in december 2023, is een methode voor de systematische extractie en analyse van Environmental, Social, and Governance data uit bedrijfsrapporten. Het systeem gebruikt LLMs gecombineerd met RAG-technieken en omvat drie modules: een ESG metadata-module voor criteria-queries, een rapport-preprocessing-module voor het bouwen van databases, en een LLM-agent-module voor data-extractie \autocite{Zou2023}.
+
+\subsection{Embeddingmodellen: Karakteristieken en Eigenschappen}
+
+Een embeddingmodel is verantwoordelijk voor het omzetten van data uit de externe databank in een vectorrepresentaties genaamd \textit{embeddings} \autocite{Khanna2025}. Deze embeddings vormen de kern van het RAG-retrieval mechanisme door semantische zoekopdrachten in vector databases mogelijk te maken. Embeddingmodellen onderscheiden zich op basis van meerdere karakteristieken: model grootte, de embedding dimensionaliteit, domeinspecificiteit en multilingualiteit.
+
+\subsection{Evaluatie van Embeddingmodellen: MTEB Framework}
+
+Om embeddingmodellen systematisch te benchmarken, ontwikkelden \textcite{Muennighoff2022} het Massive Text Embedding Benchmark (MTEB), een publiek framework voor text embedding evaluatie \autocite{Muennighoff2022}. MTEB omvat 58 datasets verspreid over 8 embedding taken: Classification, Clustering, Pair Classification, Reranking, Retrieval, Semantic Textual Similarity (STS), Summarization en BitextMining in 112 talen \autocite{Muennighoff2022}. Voor RAG-toepassingen is vooral de Retrieval taak relevant, waarbij documenten worden gerankt op basis van hun relevantie voor queries en gescoord via metrics zoals NDCG@10 (Normalized Discounted Cumulative Gain at rank 10) \autocite{Muennighoff2022}.
+
+\subsection{Invloed van Embeddingmodel op RAG-prestaties}
+
+De keuze van het embeddingmodel heeft een fundamentele impact op RAG-prestaties, met effecten die meetbaar zijn via zowel RAGAS- als MTEB-metrics. \textcite{Canale2025} introduceerden BES4RAG, een framework specifiek ontworpen om embeddingmodellen te evalueren op basis van question-answering accuracy in plaats van standaard retrieval metrics \autocite{Canale2025}. Hun experimentele resultaten op drie diverse datasets tonen aan dat:
+
+Dataset-afhankelijkheid: De optimale embeddingkeuze varieert significant per dataset, wat het belang benadrukt van dataset-specifieke selectie \autocite{Canale2025}. Verschillende datasets leveren fundamenteel verschillende optimale embeddings op, wat one-size-fits-all benaderingen ineffectief maakt.
+
+Embedding kwaliteit versus model grootte: Een kleiner LLM gekoppeld aan een effectief embeddingmodel kan betere prestaties leveren dan een groter LLM met zwakkere embeddings \autocite{Canale2025}. Dit suggereert dat investering in hoogwaardige embeddings vaak effectiever is dan het upgraden naar grotere generative modellen.
+
+Voor emissiedata specifiek toonden \textcite{Zhao2025} aan dat knowledge graph embeddings een perfecte accuracy (F1=1.0) behaalden op emission factor retrieval queries, terwijl text-only embeddings een veel lagere accuracy behaalden (F1<0.08) \autocite{Zhao2025}. Dit benadrukt dat domeinspecifieke embedding benaderingen essentieel zijn voor numerieke precisie-vereisten in ESG-rapportage, waar kleine fouten in emission factor retrieval kunnen leiden tot compliance violations en financi\"ele misstatements.
 
 %---------- Methodologie ------------------------------------------------------
-\section{Methodologie}%
+\section{Methodologie}
 \label{sec:methodologie}
 
-Hier beschrijf je hoe je van plan bent het onderzoek te voeren. Welke onderzoekstechniek ga je toepassen om elk van je onderzoeksvragen te beantwoorden? Gebruik je hiervoor literatuurstudie, interviews met belanghebbenden (bv.~voor requirements-analyse), experimenten, simulaties, vergelijkende studie, risico-analyse, PoC, \ldots?
+Dit onderzoek wordt uitgevoerd aan de hand van een vergelijkende studie waarin de invloed van verschillende embeddingmodellen op de kwaliteit van een RAG-systeem wordt geanalyseerd. Het onderzoek volgt een iteratief proces, dat bestaat uit zes fasen, met als doel het opleveren van een beslissingskader voor het kiezen van het geschikte embeddingmodel.
 
-Valt je onderwerp onder één van de typische soorten bachelorproeven die besproken zijn in de lessen Research Methods (bv.\ vergelijkende studie of risico-analyse)? Zorg er dan ook voor dat we duidelijk de verschillende stappen terug vinden die we verwachten in dit soort onderzoek!
+\paragraph{Literatuurstudie \& requirementsanalyse (Week 1-3)}
 
-Vermijd onderzoekstechnieken die geen objectieve, meetbare resultaten kunnen opleveren. Enquêtes, bijvoorbeeld, zijn voor een bachelorproef informatica meestal \textbf{niet geschikt}. De antwoorden zijn eerder meningen dan feiten en in de praktijk blijkt het ook bijzonder moeilijk om voldoende respondenten te vinden. Studenten die een enquête willen voeren, hebben meestal ook geen goede definitie van de populatie, waardoor ook niet kan aangetoond worden dat eventuele resultaten representatief zijn.
+In de literatuurstudie worden de werking van RAG en embeddingmodellen is uiteengezet. In deze fase wordt de vertaalslag gemaakt naar de praktijk d.m.v. interviews met werknemers van het bedrijf Turtle Srl. Tijdens deze contactmomenten worden de functionele requirements vastgelegd en wordt bepaald welke specifieke kwaliteitsmetrics (RAGAS, MTEB, BES4RAG) prioriteit hebben voor hun casus.
 
-Uit dit onderdeel moet duidelijk naar voor komen dat je bachelorproef ook technisch voldoen\-de diepgang zal bevatten. Het zou niet kloppen als een bachelorproef informatica ook door bv.\ een student marketing zou kunnen uitgevoerd worden.
+\paragraph{Experimentele voorbereiding (Week 4-5)}
 
-Je beschrijft ook al welke tools (hardware, software, diensten, \ldots) je denkt hiervoor te gebruiken of te ontwikkelen.
+Daarna wordt de dataset, aangeleverd door Turtle Srl, voorbereid voor verwerking. Dit proces omvat het selecteren van representatieve ESG-rapporten en het (her)structureren van de data (pre-processing). Voor het chunken van de documenten, de dataset verdelen in een gelijkwaardige subset van gegevens (chunks) \autocite{Dozza2013}, wordt gebruik gemaakt van Python libraries zoals \texttt{LangChain} of \texttt{Unstructured}, waarbij een vaste chunking-strategie wordt gehanteerd om de variabele invloed te beperken tot enkel het embeddingmodel.
 
-Probeer ook een tijdschatting te maken. Hoe lang zal je met elke fase van je onderzoek bezig zijn en wat zijn de concrete \emph{deliverables} in elke fase?
+\paragraph{Ontwikkeling RAG-pipeline (Week 6-8)}
+
+In de derde fase wordt de experimentele opstelling opgezet. Er wordt een RAG-pipeline ontwikkeld in Python, waarbij de architectuur het toelaat om het embeddingmodel eenvoudig te wisselen ('hot-swappable'). Het RAG-framework dat wordt gebruikt is LagChain. De infrastructuur wordt ondersteund door Qdrant als de vector database, die in een Docker-container draait om de vereiste hoge performantie en effectieve ondersteuning voor verschillende vector-dimensies te garanderen. Binnen deze opstelling worden drie verschillende embeddingmodellen getest ter vergelijking: het open-source model HuggingFace, een zwaarder model van OpenAI (text-embedding-3), en BAAI/bge-m3 dat beter presteert in meertaligheid (Multi-Lingual). Voor de generatie component (de LLM) wordt consistent GPT-4o gebruikt om de vergelijking tussen de embeddingmodellen te waarborgen. Ten slotte wordt voor het draaien van de lokale embeddingmodellen en inferentie gebruikgemaakt van de hardware van Google Colab Pro.
+
+\paragraph{Gecontroleerde testen (Week 9)}
+
+Vervolgens wordt de pipeline onderworpen aan een geautomatiseerde testprocedure d.m.v. simulaties. Een vaste 'Golden Set' van 30 vragen, representatief voor de domeinspecifieke aard van emissiedata van productiebedrijven, wordt op elke variant van de pipeline getest. Hierbij wordt gemeten hoe accuraat de opgehaalde context is (retrieval) en hoe goed het antwoord is (generation).
+
+\paragraph{Resultaten verzamelen en interpreteren (Week 10-11)}
+
+De resultaten van de simulaties worden kwantitatief geanalyseerd met behulp van het RAGAS-framework (zoals besproken in de literatuurstudie). De modellen worden vergeleken op metrics zoals \textit{Context Recall}, \textit{Context Precision} en \textit{Faithfulness}. Deze data wordt uiteindelijk gebruikt om te bepalen welk model de beste 'fit' heeft voor specifieke scenario's.
+
+\paragraph{Beslissingskader \& rapportering (Week 12)}
+
+In de laatste fase worden alle bevindingen gebundeld in een visueel ondersteund onderzoeksrapport. De resultaten van beide testgroepen worden afgebeeld aan de hand van grafieken, tabellen en diagrammen die de verschillen in retrieval kwaliteit, efficiëntie en relevantie weergeven.
+
+Het onderzoek wordt afgesloten met een Proof of Concept (PoC) in de vorm van een flowchart. De PoC stelt productiebedrijven in staat om, op basis van hun specifieke randvoorwaarden (budget, snelheid, nauwkeurigheid), een gefundeerde keuze te maken voor een embeddingmodel voor hun RAG-systeem. Tot slot worden de bevindingen gerapporteerd en gekoppeld aan de oorspronkelijke onderzoeksvragen.
+
+\begin{figure*}[h]
+  \includegraphics[width=\linewidth]{/graphics/Gantt.png}
+  \caption{Planning bachelorproef 2025-2026}
+  \label{gantt}
+\end{figure*}
 
 %---------- Verwachte resultaten ----------------------------------------------
-\section{Verwacht resultaat, conclusie}%
+\section{Verwacht resultaat, conclusie}
 \label{sec:verwachte_resultaten}
 
-Hier beschrijf je welke resultaten je verwacht. Als je metingen en simulaties uitvoert, kan je hier al mock-ups maken van de grafieken samen met de verwachte conclusies. Benoem zeker al je assen en de onderdelen van de grafiek die je gaat gebruiken. Dit zorgt ervoor dat je concreet weet welk soort data je moet verzamelen en hoe je die moet meten.
+Op basis van de \textit{Massive Text Embedding Benchmark} (MTEB) wordt verwacht dat de prestaties van de onderzochte modellen zullen variëren afhankelijk van de taal en complexiteit van de documentatie. Concreet wordt verwacht dat \textbf{BAAI/bge-m3} de hoogste \textit{Context Recall} zal behalen bij meertalige documentatie, aangezien dit model specifiek is getraind voor 'cross-lingual retrieval' en consistent bovenaan staat in de MTEB-ranglijsten voor meertalige taken. Voor \textbf{OpenAI text-embedding-3-large} wordt een hoge \textit{Context Precision} verwacht vanwege de uitgebreide trainingsdata, maar met een hogere latency (verwerkingstijd) door de afhankelijkheid van API-aanroepen in vergelijking met de lokaal gehoste modellen. \textbf{Multilingual-e5-large} zal naar verwachting fungeren als een sterke baseline die een balans biedt tussen snelheid en accuraatheid.
 
-Wat heeft de doelgroep van je onderzoek aan het resultaat? Op welke manier zorgt jouw bachelorproef voor een meerwaarde?
+De resultaten zullen worden gepresenteerd in een vergelijkende tabel waarin de RAGAS-metrics (Recall, Precision, Faithfulness) worden afgezet tegen de computationele kosten en snelheid.
 
-Hier beschrijf je wat je verwacht uit je onderzoek, met de motivatie waarom. Het is \textbf{niet} erg indien uit je onderzoek andere resultaten en conclusies vloeien dan dat je hier beschrijft: het is dan juist interessant om te onderzoeken waarom jouw hypothesen niet overeenkomen met de resultaten.
+De meerwaarde van dit onderzoek ligt in het verduidelijken van de embeddingmodel keuze voor productiebedrijven die onder de CSRD-wetgeving vallen. Aangezien CSRD-rapportage audits vereist, is de traceerbaarheid (\textit{Faithfulness}) van het antwoord cruciaal.
 
+Dit onderzoek levert een beslissingskader (PoC) op dat bedrijven helpt te bepalen welk embeddingmodel de beste keuze is voor hun RAG-systeem, aan de hand van meerdere criteria. Hiermee kunnen bedrijven voldoen aan de vraag naar transparante emissierapportage zonder onnodige overinvestering in cloud-infrastructuur. 
+
+Er wordt gesteld dat de keuze van het embeddingmodel een significante invloed heeft op de retrieval-kwaliteit. Mocht uit de resultaten blijken dat de verschillen tussen de modellen minimaal zijn (bijvoorbeeld $<5\%$ verschil in RAGAS-scores), dan zou dit de nulhypothese verwerpen en suggereren dat voor deze specifieke casus andere factoren, zoals de kwaliteit van de data-preprocessing of chunking-strategie, dominanter zijn dan het embeddingmodel zelf. Dit zou een belangrijk inzicht zijn voor de praktische implementatie bij Turtle Srl.

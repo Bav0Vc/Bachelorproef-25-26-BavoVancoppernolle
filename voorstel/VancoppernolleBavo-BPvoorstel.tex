@@ -21,16 +21,23 @@
 
 \begin{document}
 
-\tolerance=2000
-
 \begin{abstract}
   De afgelopen jaren neemt de regulering rond duurzaamheid en emissierapportage toe. Een voorbeeld is de Corporate Sustainability Reporting Directive (CSRD), die bedrijven verplicht om hun milieu-impact transparant en digitaal te rapporteren. De huidige emissiedata in ESG-rapporten is vaak heterogeen, onnauwkeurig en moeilijk automatisch te verwerken, wat de ontwikkeling van betrouwbare, geautomatiseerde rapportagesystemen moeilijk maakt. Tegelijkertijd bieden Retrieval-Augmented Generation (RAG)-architecturen, waarin een LLM wordt gekoppeld aan een externe kennisbron, nieuwe mogelijkheden om domeinspecifieke documentaten te doorzoeken en accurate antwoorden te genereren. Binnen deze architectuur is de keuze van het embeddingmodel cruciaal, omdat dit model bepaalt welke documentcontext wordt opgehaald en dus een directe impact heeft op nauwkeurigheid, betrouwbaarheid en efficiëntie. In deze bachelorproef wordt, vertrekkend vanuit een concrete casus bij Turtle Srl, onderzocht: “Hoe kan de keuze van het embeddingmodel voor een RAG-architectuur helpen bij het identificeren van en rapporteren over de uitstoot van productiebedrijven?”. Het doel is om een proof-of-concept te ontwikkelen met een constante RAG-architectuur en drie variabele embeddingmodellen. Deze architecturen worden getest op een vaste dataset van duurzaamheids- en uitstootrapporten met behulp van een vragenlijst van 30 domeinspecifieke vragen. De prestaties van de embeddingmodellen en het RAG-systeem worden geëvalueerd via RAGAS- en MTEB-metrics. Het onderzoek bevat een literatuurstudie, requirementsanalyse, een experimentele opzet, simulaties van de verschillende embeddingmodellen en een vergelijkende analyse van de prestaties. Er wordt verwacht dat de modellen meetbare verschillen zullen tonen op vlak van context recall, precisie, faithfulness en latency, wat toelaat om sterktes en beperkingen per model te identificeren en te koppelen aan praktijkcriteria zoals kosten, snelheid en compliance-risico. Het resultaat is een beslissingskader in de vorm van een flowchart waarmee productiebedrijven, en in het bijzonder Turtle Srl en haar klanten, onderbouwd kunnen kiezen welk embeddingmodel het best past bij hun RAG-architectuur voor ESG- en emissierapportage, en zo zowel de kwaliteit als de efficiëntie van hun rapportageprocessen verbeteren.
 \end{abstract}
 
 \tableofcontents
 
+\listoffigures
+
 \input{voorstel-inhoud}
 
 \printbibliography[heading=bibintoc]
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\textwidth]{../graphics/gantt.png}
+  \caption{Planning bachelorproef 2025--2026}
+  \label{fig:gantt}
+\end{figure}
 
 \end{document}

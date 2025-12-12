@@ -33,7 +33,7 @@ Het doel van dit onderzoek is om productiebedrijven tot een gefundeerde beslissi
 
 Voor dit onderzoek wordt een proof of concept uitgewerkt waarin een constante RAG-architectuur met variabele embeddingmodellen zal worden getest op een (vaste) dataset (voorzien door Turtle Srl). De dataset bestaat uit duurzaamheids- en uitstootrapporten van meerdere productiebedrijven. Elke variant van de RAG-architectuur zal moeten antwoorden op een reeks van 30 vragen. Hierbij wordt zowel de volledige output van het RAG-systeem ge\"evalueerd (m.b.v. het RAGAS framework), alsook de prestaties van de verschillende embeddingmodellen (m.b.v. de MTEB framework). Deze meetwaarden zijn cruciaal om een correct aanbeveling te doen bij het kiezen van het embeddingmodel voor een RAG-systeem.
 
-Na deze inleiding volgt een literatuurstudie die de theoretische fundamenten van RAG-architecturen \textcite{Lewis2020}, embeddingmodellen \textcite{Muennighoff2022} \textcite{Chen2024}, de evaluatiemethoden en -criteria voor embeddingmodellen en ESG-rapportage \autocite{GGP2013} uiteenzet. Daarna de gevolgde methodologie en experimentele opzet, gebaseerd op de evaluatieframeworks van \autocite{Es2024} en \autocite{Muennighoff2022} voor de PoC. Vervolgens komen de verwachte resultaten aan bod. Tot slot wordt een overzicht gegeven van de conclusies en worden aanbevelingen geformuleerd voor zowel verder onderzoek als praktische implementatie.
+Na deze inleiding volgt een literatuurstudie die de theoretische fundamenten\\van RAG-architecturen \textcite{Lewis2020}, embeddingmodellen \textcite{Muennighoff2022} \textcite{Chen2024}, de evaluatiemethoden en -criteria voor embeddingmodellen en ESG-rapportage \autocite{GGP2013} uiteenzet. Daarna de gevolgde methodologie en experimentele opzet, gebaseerd op de evaluatieframeworks van \autocite{Es2024} en \autocite{Muennighoff2022} voor de PoC. Vervolgens komen de verwachte resultaten aan bod. Tot slot wordt een overzicht gegeven van de conclusies en worden aanbevelingen geformuleerd voor zowel verder onderzoek als praktische implementatie.
 
 %---------- Stand van zaken ---------------------------------------------------
 
@@ -56,7 +56,7 @@ Daarnaast presenteren duurzaamheidsrapporten informatie in zeer diverse formaten
 
 \subsection{Retrieval-Augmented Generation (RAG)}
 
-Om deze uitdagingen het hoofd te bieden, biedt Retrieval-Augmented Generation (RAG) een veelbelovend architectuurpatroon. Geïntroduceerd door \autocite{Lewis2020}, het kernidee achter RAG is dat LLMs, hoewel krachtig in het vastleggen van taalpatronen en algemene kennis tijdens pre-training, beperkt zijn in hun vermogen om actuele, domeinspecifieke of feitelijke informatie te onthouden en correct toe te passen. Door een externe kennisbron combineren met een LLM, kunnen RAG-systemen relevante documenten ophalen en deze gebruiken als context voor het genereren van antwoorden \autocite{Lewis2020}.
+Om deze uitdagingen het hoofd te bieden, biedt Retrieval-Augmented Generation (RAG) een veelbelovend architectuurpatroon.\\Geïntroduceerd door \autocite{Lewis2020}, het kernidee achter RAG is dat LLMs, hoewel krachtig in het vastleggen van taalpatronen en algemene kennis tijdens pre-training, beperkt zijn in hun vermogen om actuele, domeinspecifieke of feitelijke informatie te onthouden en correct toe te passen. Door een externe kennisbron combineren met een LLM, kunnen RAG-systemen relevante documenten ophalen en deze gebruiken als context voor het genereren van antwoorden \autocite{Lewis2020}.
 
 De toepassing van RAG-systemen voor ESG-rapportage werd onderzocht door verschillende recente studies. ESGReveal, geïntroduceerd door \textcite{Zou2023} in december 2023, is een methode voor de systematische extractie en analyse van Environmental, Social, and Governance data uit bedrijfsrapporten. Het systeem gebruikt LLMs gecombineerd met RAG-technieken en omvat drie modules: een ESG metadata-module voor criteria-queries, een rapport-preprocessing-module voor het bouwen van databases, en een LLM-agent-module voor data-extractie \autocite{Zou2023}.
 
@@ -88,16 +88,14 @@ Dit onderzoek wordt uitgevoerd aan de hand van een vergelijkende studie waarin d
 
 In de literatuurstudie worden de werking van RAG en embeddingmodellen is uiteengezet. In deze fase wordt de vertaalslag gemaakt naar de praktijk d.m.v. interviews met werknemers van het bedrijf Turtle Srl. Tijdens deze contactmomenten worden de functionele requirements vastgelegd en wordt bepaald welke specifieke kwaliteitsmetrics (RAGAS, MTEB, BES4RAG) prioriteit hebben voor hun casus.
 
-\paragraph{Experimentele voorbereiding (Week 4-5)}
-
-Daarna wordt de dataset, aangeleverd door Turtle Srl, voorbereid voor verwerking. Dit proces omvat het selecteren van representatieve ESG-rapporten en het (her)structureren van de data (pre-processing). Voor het chunken van de documenten, de dataset verdelen in een gelijkwaardige subset van gegevens (chunks) \autocite{Dozza2013}, wordt gebruik gemaakt van Python libraries zoals \texttt{LangChain} of \texttt{Unstructured}, waarbij een vaste chunking-strategie wordt gehanteerd om de variabele invloed te beperken tot enkel het embeddingmodel.
+\paragraph{Experimentele voorbereiding (Week 4-5)}\mbox{}\\
+Daarna wordt de dataset, aangeleverd door Turtle Srl, voorbereid voor verwerking. Dit proces omvat het selecteren van representatieve ESG-rapporten en het (her)structureren van de\\data (pre-processing). Voor het chunken van de documenten, de dataset verdelen in een gelijkwaardige subset van gegevens (chunks) \autocite{Dozza2013}, wordt gebruik gemaakt van Python libraries zoals \texttt{LangChain} of \texttt{Unstructured}, waarbij een\\vaste chunking-strategie wordt gehanteerd om de variabele invloed te beperken tot enkel het embeddingmodel.
 
 \paragraph{Ontwikkeling RAG-pipeline (Week 6-8)}
 
 In de derde fase wordt de experimentele opstelling opgezet. Er wordt een RAG-pipeline ontwikkeld in Python, waarbij de architectuur het toelaat om het embeddingmodel eenvoudig te wisselen ('hot-swappable'). Het RAG-framework dat wordt gebruikt is LagChain. De infrastructuur wordt ondersteund door Qdrant als de vector database, die in een Docker-container draait om de vereiste hoge performantie en effectieve ondersteuning voor verschillende vector-dimensies te garanderen. Binnen deze opstelling worden drie verschillende embeddingmodellen getest ter vergelijking: het open-source model HuggingFace, een zwaarder model van OpenAI (text-embedding-3), en BAAI/bge-m3 dat beter presteert in meertaligheid (Multi-Lingual). Voor de generatie component (de LLM) wordt consistent GPT-4o gebruikt om de vergelijking tussen de embeddingmodellen te waarborgen. Ten slotte wordt voor het draaien van de lokale embeddingmodellen en inferentie gebruikgemaakt van de hardware van Google Colab Pro.
 
-\paragraph{Gecontroleerde testen (Week 9)}
-
+\paragraph{Gecontroleerde testen (Week 9)}\mbox{}\\
 Vervolgens wordt de pipeline onderworpen aan een geautomatiseerde testprocedure d.m.v. simulaties. Een vaste 'Golden Set' van 30 vragen, representatief voor de domeinspecifieke aard van emissiedata van productiebedrijven, wordt op elke variant van de pipeline getest. Hierbij wordt gemeten hoe accuraat de opgehaalde context is (retrieval) en hoe goed het antwoord is (generation).
 
 \paragraph{Resultaten verzamelen en interpreteren (Week 10-11)}
@@ -108,19 +106,13 @@ De resultaten van de simulaties worden kwantitatief geanalyseerd met behulp van 
 
 In de laatste fase worden alle bevindingen gebundeld in een visueel ondersteund onderzoeksrapport. De resultaten van beide testgroepen worden afgebeeld aan de hand van grafieken, tabellen en diagrammen die de verschillen in retrieval kwaliteit, efficiëntie en relevantie weergeven.
 
-Het onderzoek wordt afgesloten met een Proof of Concept (PoC) in de vorm van een flowchart. De PoC stelt productiebedrijven in staat om, op basis van hun specifieke randvoorwaarden (budget, snelheid, nauwkeurigheid), een gefundeerde keuze te maken voor een embeddingmodel voor hun RAG-systeem. Tot slot worden de bevindingen gerapporteerd en gekoppeld aan de oorspronkelijke onderzoeksvragen.
-
-\begin{figure*}[h]
-  \includegraphics[width=\linewidth]{/graphics/Gantt.png}
-  \caption{Planning bachelorproef 2025-2026}
-  \label{gantt}
-\end{figure*}
+Het onderzoek wordt afgesloten met een Proof of Concept (PoC) in de vorm van een flowchart. De PoC stelt productiebedrijven in staat om, op basis van hun specifieke randvoorwaarden (budget, snelheid, nauwkeurigheid), een gefundeerde keuze te maken voor een embeddingmodel voor hun RAG-systeem. Tot slot worden de bevindingen gerapporteerd en gekoppeld aan de oorspronkelijke onderzoeksvragen. De planning voor dit onderzoek wordt weergegeven in Figuur~\ref{fig:gantt}.
 
 %---------- Verwachte resultaten ----------------------------------------------
 \section{Verwacht resultaat, conclusie}
 \label{sec:verwachte_resultaten}
 
-Op basis van de \textit{Massive Text Embedding Benchmark} (MTEB) wordt verwacht dat de prestaties van de onderzochte modellen zullen variëren afhankelijk van de taal en complexiteit van de documentatie. Concreet wordt verwacht dat \textbf{BAAI/bge-m3} de hoogste \textit{Context Recall} zal behalen bij meertalige documentatie, aangezien dit model specifiek is getraind voor 'cross-lingual retrieval' en consistent bovenaan staat in de MTEB-ranglijsten voor meertalige taken. Voor \textbf{OpenAI text-embedding-3-large} wordt een hoge \textit{Context Precision} verwacht vanwege de uitgebreide trainingsdata, maar met een hogere latency (verwerkingstijd) door de afhankelijkheid van API-aanroepen in vergelijking met de lokaal gehoste modellen. \textbf{Multilingual-e5-large} zal naar verwachting fungeren als een sterke baseline die een balans biedt tussen snelheid en accuraatheid.
+Op basis van de \textit{Massive Text Embedding Benchmark} (MTEB) wordt verwacht dat de prestaties van de onderzochte modellen zullen variëren afhankelijk van de taal en complexiteit van de documentatie. Concreet wordt verwacht dat \textbf{BAAI/bge-m3} de hoogste \textit{Context Recall} zal behalen bij meertalige documentatie, aangezien dit model specifiek is getraind voor 'cross-lingual retrieval' en consistent bovenaan staat in de MTEB-ranglijsten voor meertalige taken. Voor \textbf{OpenAI text-embedding-3-large} wordt een hoge \textit{Context Precision} verwacht vanwege de uitgebreide trainingsdata, maar met een hogere latency (verwerkingstijd) door de afhankelijkheid van API-calls in vergelijking met de lokaal gehoste modellen. \textbf{Multilingual-e5-large} zal naar verwachting fungeren als een sterke baseline die een balans biedt tussen snelheid en accuraatheid.
 
 De resultaten zullen worden gepresenteerd in een vergelijkende tabel waarin de RAGAS-metrics (Recall, Precision, Faithfulness) worden afgezet tegen de computationele kosten en snelheid.
 

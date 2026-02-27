@@ -5,32 +5,65 @@
 \chapter{\IfLanguageName{dutch}{Inleiding}{Introduction}}%
 \label{ch:inleiding}
 
-De inleiding moet de lezer net genoeg informatie verschaffen om het onderwerp te begrijpen en in te zien waarom de onderzoeksvraag de moeite waard is om te onderzoeken. In de inleiding ga je literatuurverwijzingen beperken, zodat de tekst vlot leesbaar blijft. Je kan de inleiding verder onderverdelen in secties als dit de tekst verduidelijkt. Zaken die aan bod kunnen komen in de inleiding~\autocite{Pollefliet2011}:
+% De inleiding moet de lezer net genoeg informatie verschaffen om het onderwerp te begrijpen en in te zien waarom de onderzoeksvraag de moeite waard is om te onderzoeken. In de inleiding ga je literatuurverwijzingen beperken, zodat de tekst vlot leesbaar blijft. Je kan de inleiding verder onderverdelen in secties als dit de tekst verduidelijkt. Zaken die aan bod kunnen komen in de inleiding~\\autocite{Pollefliet2011}:
 
-\begin{itemize}
-  \item context, achtergrond
-  \item afbakenen van het onderwerp
-  \item verantwoording van het onderwerp, methodologie
-  \item probleemstelling
-  \item onderzoeksdoelstelling
-  \item onderzoeksvraag
-  \item \ldots
-\end{itemize}
+De hedendaagse bedrijfswereld ondergaat een fundamentele overgang waarbij de focus verschuift van enkel financiële winstgevendheid naar een breder kader van duurzaamheid en maatschappelijke verantwoordelijkheid. Dit kader wordt aangeduid als ESG: Environmental, Social, and Governance. Wat ooit begon als een vrijwillige deelname voor maatschappelijk verantwoord ondernemen, is vandaag de dag geëvolueerd naar een strikt juridisch gereguleerd landschap. Europese richtlijnen zoals de Corporate Sustainability Reporting Directive (CSRD) verplichten bedrijven tot een ongeëvenaarde mate van transparantie over hun impact op mens en milieu.
+
+Voor organisaties zoals Turtle Srl brengt deze evolutie een beduidende administratieve en technologische werklast met zich mee. Bedrijven worden geconfronteerd met gedetailleerde ESG-vragenlijsten en de daarbij horende standaarden zoals de European Sustainability Reportin Standards (ESRS). Het correct beantwoorden van deze vragen vereist het doorzoeken van grote hoeveelheden ongestructureerde data. Hoewel Large Language Models (LLM's) een mogelijkheid bieden om dit proces te automatiseren, kampen ze met fundamentele tekortkomingen zoals hallucinaties en een gebrek aan domeinspecifieke bedrijfskennis.
+
+Deze bachelorproef onderzoekt hoe Retrieval-Augmented Generation (RAG) kan ingezet worden om een betrouwbaar, transparant en performant RAG-configuratie te bekomen dat Turtle Srl kan helpen bij het ontwikkelen van hun PoC rond interne ESG-rapportage.
 
 \section{\IfLanguageName{dutch}{Probleemstelling}{Problem Statement}}%
 \label{sec:probleemstelling}
 
-Uit je probleemstelling moet duidelijk zijn dat je onderzoek een meerwaarde heeft voor een concrete doelgroep. De doelgroep moet goed gedefinieerd en afgelijnd zijn. Doelgroepen als ``bedrijven,'' ``KMO's'', systeembeheerders, enz.~zijn nog te vaag. Als je een lijstje kan maken van de personen/organisaties die een meerwaarde zullen vinden in deze bachelorproef (dit is eigenlijk je steekproefkader), dan is dat een indicatie dat de doelgroep goed gedefinieerd is. Dit kan een enkel bedrijf zijn of zelfs één persoon (je co-promotor/opdrachtgever).
+% Uit je probleemstelling moet duidelijk zijn dat je onderzoek een meerwaarde heeft voor een concrete doelgroep. De doelgroep moet goed gedefinieerd en afgelijnd zijn. Doelgroepen als ``bedrijven,'' ``KMO's'', systeembeheerders, enz.~zijn nog te vaag. Als je een lijstje kan maken van de personen/organisaties die een meerwaarde zullen vinden in deze bachelorproef (dit is eigenlijk je steekproefkader), dan is dat een indicatie dat de doelgroep goed gedefinieerd is. Dit kan een enkel bedrijf zijn of zelfs één persoon (je co-promotor/opdrachtgever).
+
+De kern van het probleem situeert bevindt zich op het snijvlak van juridische compliance omtrent ESG en de technologische beperkingen van ‘stand-alone’ LLM’s. Turtle Srl moet voldoen aan steeds strengere rapportage-eisen, maar deze data handmatig verwerken, of met behulp van LLM’s is een tijdrovende en foutgevoelige taak.
+
+De nood aan ESG-rapportage is niet langer optioneel. Het is een overlevingsvoorwaarde geworden in de mondiale supply chain. De EU, stakeholders en klanten eisen gedetailleerde ESG rapporten die transparant weergeven wat de impact op mens en milieu is. De structurele uitdaging hierbij is de fragmentatie en heterogeniteit van de data. Zo is de informatie vaak verspreid over verschillende databronnen en kan het verschillende dataformaten aannemen. Daarnaast is ook de juridisch bewijslast verzwaard, aangezien elke claim in een rapport terug moet te vinden zijn in de documenten van het bedrijf.
+
+Hoewel LLM’s  sterke tekstuele vaardigheden hebben, zijn ze voor deze specifieke taak onvoldoende als 'stand-alone' oplossing. Een eerste probleem is de knowledge cut-off, waardoor ze niet op de hoogte zijn van de meest recente veranderingen omtrent ESG richtlijnen die na het pre-training proces worden gemaakt. Daarnaast is er het risico op hallucinaties wanneer ze niet over de juiste context beschikken, wat binnen een audit-context onaanvaardbaar is. Ten slotte bieden standaard LLM's geen automatische bronvermelding, wat de traceerbaarheid van de gegenereerde antwoorden bemoeilijkt.
+
+De beoogde doelgroep van dit onderzoek is mijn stagebedrijf, Turtle Srl. De resultaten van deze studie zullen direct bijdragen aan de ontwikkeling van hun Proof-of-Concept (PoC) om aan ESG-rapportage te doen door middel van een RAG-systeem.
 
 \section{\IfLanguageName{dutch}{Onderzoeksvraag}{Research question}}%
 \label{sec:onderzoeksvraag}
 
-Wees zo concreet mogelijk bij het formuleren van je onderzoeksvraag. Een onderzoeksvraag is trouwens iets waar nog niemand op dit moment een antwoord heeft (voor zover je kan nagaan). Het opzoeken van bestaande informatie (bv. ``welke tools bestaan er voor deze toepassing?'') is dus geen onderzoeksvraag. Je kan de onderzoeksvraag verder specifiëren in deelvragen. Bv.~als je onderzoek gaat over performantiemetingen, dan 
+Dit onderzoek vertrekt vanuit de volgende onderzoeksvraag:
+
+\textit{Welke combinatie van chunking strategie, embedding model en LLM resulteert in een optimaal RAG-systeem voor Turtle Srl’s PoC?}
+
+Om deze hoofdvraag te beantwoorden, worden de volgende deelvragen onderzocht:
+
+\begin{itemize}
+  \item	Waar komt de nood aan ESG-rapportage vandaan?
+  \item	Welke structurele en juridische uitdagingen zijn er bij het beantwoorden van ESG-vragenlijsten (zoals EcoVadis en VSME)?
+  \item	Welke tekortkomingen en uitdagingen hebben standaard LLM’s bij het beantwoorden van ESG questionnaires?
+  \item Hoe beïnvloeden verschillende chunking strategieën de retrieval-kwaliteit van interne ESG-documenten?
+  \item Welke functie heeft een embedding model binnen een RAG-pipeline?
+  \item Wat is de taak van een LLM binnen de RAG-architectuur?
+  \item Welke RAG framework is geschikt voor het aanmaken van aangepaste modules met behulp van open source-oplossingen?
+  \item Hoe wordt een dynamische RAG pipeline gemaakt om combinaties van verschillende embedding modellen, chunking strategieën en LLM’s systematisch te vergelijken?
+  \item Welke meetwaarden worden gebruikt om de variabele RAG-componenten te evalueren?
+\end{itemize}
 
 \section{\IfLanguageName{dutch}{Onderzoeksdoelstelling}{Research objective}}%
 \label{sec:onderzoeksdoelstelling}
 
-Wat is het beoogde resultaat van je bachelorproef? Wat zijn de criteria voor succes? Beschrijf die zo concreet mogelijk. Gaat het bv.\ om een proof-of-concept, een prototype, een verslag met aanbevelingen, een vergelijkende studie, enz.
+% Wat is het beoogde resultaat van je bachelorproef? Wat zijn de criteria voor succes? Beschrijf die zo concreet mogelijk. Gaat het bv.\ om een proof-of-concept, een prototype, een verslag met aanbevelingen, een vergelijkende studie, enz.
+
+Het beoogde resultaat van deze bachelorproef is een vergelijkende studie en een technisch adviesrapport voor de realisatie van een Proof-of-Concept voor Turtle Srl.
+
+De criteria voor succes zijn als volgt gedefinieerd:
+
+\begin{itemize}
+  \item Betrouwbaarheid: Het systeem moet een faithfulness-score (getrouwheid aan de bron) behalen die hallucinaties tot een minimum beperkt.
+  \item Traceerbaarheid: Elk gegenereerd antwoord moet voorzien zijn van correcte source attribution, waarbij direct verwezen wordt naar de metadata (bestandsnaam en paginanummer) in de vector database.
+  \item Efficiëntie: De gekozen configuratie moet een optimaal evenwicht bieden tussen de rekenkosten (token-verbruik) en de snelheid van antwoorden (latency). Aangezien dat, naast het voldoen aan de technische requirements, de PoC van Turtle Srl die zal volgen uit dit onderzoek ook business value moet zal moeten hebben.
+  \item Modulariteit: De voorgestelde architectuur moet dynamisch zijn, wat betekent dat componenten (zoals een embedding model) vervangen kunnen worden zonder de gehele pipeline te herschrijven.
+\end{itemize}
+
+Uiteindelijk zal dit leiden tot een technisch ontwerp van een dynamische RAG-pipeline, gebouwd met Haystack 2.x, PocketFlow en Hypster, waarmee Turtle Srl hun ESG-workflows op een verantwoorde en schaalbare manier kan automatiseren.
 
 \section{\IfLanguageName{dutch}{Opzet van deze bachelorproef}{Structure of this bachelor thesis}}%
 \label{sec:opzet-bachelorproef}
@@ -39,12 +72,10 @@ Wat is het beoogde resultaat van je bachelorproef? Wat zijn de criteria voor suc
 % geven van de opbouw van de rest van de tekst. Deze sectie bevat al een aanzet
 % die je kan aanvullen/aanpassen in functie van je eigen tekst.
 
-De rest van deze bachelorproef is als volgt opgebouwd:
+Na deze inleiding volgt de literatuurstudie in Hoofdstuk~\ref{ch:stand-van-zaken} waarin de theoretische fundamenten van ESG en RAG uiteen worden gezet.
 
-In Hoofdstuk~\ref{ch:stand-van-zaken} wordt een overzicht gegeven van de stand van zaken binnen het onderzoeksdomein, op basis van een literatuurstudie.
-
-In Hoofdstuk~\ref{ch:methodologie} wordt de methodologie toegelicht en worden de gebruikte onderzoekstechnieken besproken om een antwoord te kunnen formuleren op de onderzoeksvragen.
+Daarna volgt de methodologie in Hoofdstuk~\ref{ch:methodologie}. Hier wordt de experimentele opzet en evaluatie van de RAG-pipeline toegelicht, gebaseerd op het evaluatieframework van \autocite{Es2024}.
 
 % TODO: Vul hier aan voor je eigen hoofstukken, één of twee zinnen per hoofdstuk
 
-In Hoofdstuk~\ref{ch:conclusie}, tenslotte, wordt de conclusie gegeven en een antwoord geformuleerd op de onderzoeksvragen. Daarbij wordt ook een aanzet gegeven voor toekomstig onderzoek binnen dit domein.
+Tot slot wordt in Hoofdstuk~\ref{ch:conclusie} een conclusie gegeven en een antwoord geformuleerd op de onderzoeksvragen, en worden aanbevelingen geformuleerd voor zowel verder onderzoek als praktische implementatie. 

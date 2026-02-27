@@ -4,7 +4,6 @@
 %===============================================================================
 
 \documentclass[dutch,dit,thesis]{hogentreport}
-
 % TODO:
 % - If necessary, replace the option `dit`' with your own department!
 %   Valid entries are dbo, dbt, dgz, dit, dlo, dog, dsa, soa
@@ -18,7 +17,7 @@
 
 %% For source code highlighting, requires pygments to be installed
 %% Compile with the -shell-escape flag!
-%% \usepackage[chapter]{minted}
+%\usepackage[chapter]{minted}
 %% If you compile with the make_thesis.{bat,sh} script, use the following
 %% import instead:
 \usepackage[chapter,outputdir=../output]{minted}
@@ -46,19 +45,35 @@
 }
 
 % Other packages not already included can be imported here
+\usepackage{morewrites}
+
+\usepackage{float} % voor code block
+
+\usepackage[acronym]{glossaries}
+
+\makeglossaries
+
+\newacronym{esg}{ESG}{Environmental, Social en Governance}
+\newacronym{poc}{PoC}{Proof of Concept}
+\newacronym{llm}{LLM}{Large Language Model}
+\newacronym{rag}{RAG}{Retrieval-Augmented Generation}
+\newacronym{mvo}{MVO}{maatschappelijk verantwoord ondernemen}
+\newacronym{eu}{EU}{Europese Unie}
+\newacronym{csrd}{CSRD}{Corporate Sustainability Reporting Directive}
+\newacronym{esrs}{ESRS}{European Sustainability Reporting Standards}
 
 %%---------- Document metadata -------------------------------------------------
 % TODO: Replace this with your own information
 \author{Vancoppernolle Bavo}
-\supervisor{Dhr. F. Van Houte}
-\cosupervisor{Mevr. S. Beeckman}
+\supervisor{Mevr. N. Declercq}
+\cosupervisor{Dhr. G. Gueli}
 \title[Optionele ondertitel]%
-    {Titel van de bachelorproef}
+    {Een vergelijkende studie van RAG-configuraties met variabele chunkingstrategieën, embedding modellen en LLM's, geoptimaliseerd voor ESG-vraagstukken}
 \academicyear{\advance\year by -1 \the\year--\advance\year by 1 \the\year}
 \examperiod{1}
 \degreesought{\IfLanguageName{dutch}{Professionele bachelor in de toegepaste informatica}{Bachelor of applied computer science}}
 \partialthesis{false} %% To display 'in partial fulfilment'
-%\institution{Internshipcompany BVBA.}
+\institution{Turtle S.r.l.}
 
 %% Add global exceptions to the hyphenation here
 \hyphenation{back-slash}
@@ -110,6 +125,13 @@
 
 \listoffigures
 
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\textwidth]{../graphics/gantt.png}
+  \caption{Planning bachelorproef 2025--2026}
+  \label{fig:gantt}
+\end{figure}
+
 % If you included tables and/or source code listings, uncomment the appropriate
 % lines.
 \listoftables
@@ -119,6 +141,9 @@
 % Als je een lijst van afkortingen of termen wil toevoegen, dan hoort die
 % hier thuis. Gebruik bijvoorbeeld de ``glossaries'' package.
 % https://www.overleaf.com/learn/latex/Glossaries
+\clearpage
+
+\printglossary[type=\acronymtype]
 
 %---------- Kern ---------------------------------------------------------------
 
@@ -153,9 +178,10 @@
 Het onderwerp van deze bachelorproef is gebaseerd op een onderzoeksvoorstel dat vooraf werd beoordeeld door de promotor. Dat voorstel is opgenomen in deze bijlage.
 
 %% TODO: 
-%\section*{Samenvatting}
+\section*{Samenvatting}
 
 % Kopieer en plak hier de samenvatting (abstract) van je onderzoeksvoorstel.
+De afgelopen jaren neemt de regulering rond duurzaamheid en emissierapportage toe. Een voorbeeld is de Corporate Sustainability Reporting Directive (CSRD), die bedrijven verplicht om hun milieu-impact transparant en digitaal te rapporteren. De huidige emissiedata in ESG-rapporten is vaak heterogeen, onnauwkeurig en moeilijk automatisch te verwerken, wat de ontwikkeling van betrouwbare, geautomatiseerde rapportagesystemen moeilijk maakt. Tegelijkertijd bieden Retrieval-Augmented Generation (RAG)-architecturen, waarin een LLM wordt gekoppeld aan een externe kennisbron, nieuwe mogelijkheden om domeinspecifieke documentaten te doorzoeken en accurate antwoorden te genereren. Binnen deze architectuur is de keuze van het embeddingmodel cruciaal, omdat dit model bepaalt welke documentcontext wordt opgehaald en dus een directe impact heeft op nauwkeurigheid, betrouwbaarheid en efficiëntie. In deze bachelorproef wordt, vertrekkend vanuit een concrete casus bij Turtle Srl, onderzocht: “Hoe kan de keuze van het embeddingmodel voor een RAG-architectuur helpen bij het identificeren van en rapporteren over de uitstoot van productiebedrijven?”. Het doel is om een proof-of-concept te ontwikkelen met een constante RAG-architectuur en drie variabele embeddingmodellen. Deze architecturen worden getest op een vaste dataset van duurzaamheids- en uitstootrapporten met behulp van een vragenlijst van 30 domeinspecifieke vragen. De prestaties van de embeddingmodellen en het RAG-systeem worden geëvalueerd via RAGAS- en MTEB-metrics. Het onderzoek bevat een literatuurstudie, requirementsanalyse, een experimentele opzet, simulaties van de verschillende embeddingmodellen en een vergelijkende analyse van de prestaties. Er wordt verwacht dat de modellen meetbare verschillen zullen tonen op vlak van context recall, precisie, faithfulness en latency, wat toelaat om sterktes en beperkingen per model te identificeren en te koppelen aan praktijkcriteria zoals kosten, snelheid en compliance-risico. Het resultaat is een beslissingskader in de vorm van een flowchart waarmee productiebedrijven, en in het bijzonder Turtle Srl en haar klanten, onderbouwd kunnen kiezen welk embeddingmodel het best past bij hun RAG-architectuur voor ESG- en emissierapportage, en zo zowel de kwaliteit als de efficiëntie van hun rapportageprocessen verbeteren.
 
 % Verwijzing naar het bestand met de inhoud van het onderzoeksvoorstel
 \input{../voorstel/voorstel-inhoud}

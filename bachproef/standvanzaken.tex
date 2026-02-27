@@ -7,45 +7,213 @@
 
 % Pas na deze inleidende paragraaf komt de eerste sectiehoofding.
 
-Dit hoofdstuk bevat je literatuurstudie. De inhoud gaat verder op de inleiding, maar zal het onderwerp van de bachelorproef *diepgaand* uitspitten. De bedoeling is dat de lezer na lezing van dit hoofdstuk helemaal op de hoogte is van de huidige stand van zaken (state-of-the-art) in het onderzoeksdomein. Iemand die niet vertrouwd is met het onderwerp, weet nu voldoende om de rest van het verhaal te kunnen volgen, zonder dat die er nog andere informatie moet over opzoeken \autocite{Pollefliet2011}.
+Deze literatuurstudie een overzicht van de huidige stand van zaken voor dit onderzoek. Het probleemdomein betreft de nood aan \gls{esg}-rapportage en de uitdagingen die daarbij komen kijken. Aangezien de \gls{poc} waar dit onderzoek voor dient, zich richt op het beantwoorden van \gls{esg}-gerelateerde vragenlijsten. Daarnaast worden de tekortkomingen van \glspl{llm} besproken op vlak van \gls{esg}-rapportage. Het oplossingsdomein focust op \gls{rag} en hoe dit een oplossing kan zijn voor een betere rapportage op basis van interne bedrijfsdocumenten. Verder wordt er besproken hoe een dynamische \gls{rag} configuratie kan worden opgesteld om efficiënt de variabele componenten te implementeren en evalueren.
 
-Je verwijst bij elke bewering die je doet, vakterm die je introduceert, enz.\ naar je bronnen. In \LaTeX{} kan dat met het commando \texttt{$\backslash${textcite\{\}}} of \texttt{$\backslash${autocite\{\}}}. Als argument van het commando geef je de ``sleutel'' van een ``record'' in een bibliografische databank in het Bib\LaTeX{}-formaat (een tekstbestand). Als je expliciet naar de auteur verwijst in de zin (narratieve referentie), gebruik je \texttt{$\backslash${}textcite\{\}}. Soms is de auteursnaam niet expliciet een onderdeel van de zin, dan gebruik je \texttt{$\backslash${}autocite\{\}} (referentie tussen haakjes). Dit gebruik je bv.~bij een citaat, of om in het bijschrift van een overgenomen afbeelding, broncode, tabel, enz. te verwijzen naar de bron. In de volgende paragraaf een voorbeeld van elk.
+\section{ESG en ESG-rapportage}
 
-\textcite{Knuth1998} schreef een van de standaardwerken over sorteer- en zoekalgoritmen. Experten zijn het erover eens dat cloud computing een interessante opportuniteit vormen, zowel voor gebruikers als voor dienstverleners op vlak van informatietechnologie~\autocite{Creeger2009}.
+\subsection{Evolutie van ESG}
 
-Let er ook op: het \texttt{cite}-commando voor de punt, dus binnen de zin. Je verwijst meteen naar een bron in de eerste zin die erop gebaseerd is, dus niet pas op het einde van een paragraaf.
+In de hedendaagse bedrijfsvoering is de overgang van een primaire focus op winst naar duurzame waarde creatie onomkeerbaar geworden. In deze beweging staat het concept \gls{esg} centraal, wat staat voor Envorinmental, Social en Governance. De Environmental pilaar beoordeelt de inspanningen van een bedrijf om het milieu te beschermen \autocite{Radzi2023}. De Social pilaar beschrijft hoe een bedrijf omgaat met mensen en zakelijke relaties \autocite{Radzi2023}. En de Governance pilaar biedt richtlijnen voor het management van een bedrijf \autocite{Radzi2023}. Het dient als een kader om maatschappelijke inspanningen meetbaar en kwantificeerbaar te maken.
+
+\subsection{Voordelen van ESG-rapportage}
+
+De literatuur toont aan dat inspanningen leveren om verbeteringen te maken op vlak van \gls{esg} en het correct rapporteren, kan leiden tot verschillende voordelen voor bedrijven. \autocite{Aydogmus2022} onderzochten de impact van \gls{esg}-prestaties op de bedrijfswaarde en winstgevendheid en stelt vast dat \gls{esg}-scores een positieve en sterke relatie hebben met winstgevendheid. \textcite{Lew2024} bestudeerde het maatschappelijke belang van \gls{mvo}. Daaruit blijkt dat inspanningen in \gls{esg} bijdragen aan een beter imago van ondernemingen en zowel operationele als financiële risico’s verminderen \autocite{Lew2024}. Verdere studies tonen aan dat er een positief verband ligt tussen hogere \gls{esg}-scores van bedrijven en de toegang tot goedkopere financieringsbronnen en bedrijfsmiddelen \autocite{Gholami2022}. \textcite{Fornasari2024} noemt het openbaar van niet-financiële bedrijfsinformatie, bijvoorbeeld \gls{esg}: “een strategisch instrument om vertrouwen te kweken, risico's te beperken en de legitimiteit en het succes van bedrijven op lange termijn te waarborgen”. Aangezien de nadruk bij \gls{mvo} ligt op een nood aan transparantie en het voldoen aan maatschappelijke eisen \autocite{Fornasari2024}.
+
+\subsection{Juridisch kader}
+
+Een belangrijke drijfveer achter de evolutie van \gls{esg} is het wettelijke kader. Voorheen was niet-financiële rapportage gebaseerd op vrijwillig deelname \autocite{Centre.2023}. Maar om greenwashing tegen te gaan en het ontwikkelen van duurzame producten, heeft de \gls{eu} strikte wetgevingen opgesteld \autocite{Commission2020}. In 2022 heeft de \gls{eu} de \gls{csrd} aangenomen, dat gedetailleerde rapportagevereisten introduceert en verplicht voor bijna 50.000 ondernemingen \autocite{Fornasari2024,AccountancyEurope2024}. Met behulp van deze richtlijnen kunnen bedrijven hun \gls{esg}-informatie op een gestructureerde en vergelijkbare manier presenteren, met als doel een meer transparante en verantwoordelijke bedrijfsvoering \autocite{Darnall2022}. De \gls{csrd} vereist rapportage volgens de \gls{esrs}. Dit betekend dat de rapportage van bedrijven in een digitaal, machinaal leesbaar formaat moet worden opgeleverd \autocite{Centre.2023}. Verder wordt externe verificatie verplicht en wordt uitgevoerd door externe auditors \autocite{Centre.2023}. Deze strengere regelgeving zorgt voor een toename in de administratieve last en de complexiteit die bedrijven ervaren bij het beantwoorden van \gls{esg}-vragenlijsten.
+
+\section{Uitdagingen ESG-rapportage}
+
+De transitie naar een economie waar ESG een grotere rol speelt, heeft geleid tot de introductie van complexe wettelijke kaders en richtlijnen, zoals de CSRD en ESRS. Voor organisaties zoals Turtle Srl brengt dit structurele uitdagingen met zich mee.
+
+\subsection{Datastructuur en fragmentatie}
+
+Uit de literatuur blijkt dat een eerste bewezen struikelblok de heterogene aard van ESG-data is. ESG-informatie bestaat uit zowel gestructureerde data als ongestructureerde data \autocite{Lavin2021}. Gestructureerde data zijn gegevens die eenvoudig kunnen worden verwerkt via ETL-procedures, en zijn terug te vinden in databases en spreadsheets \autocite{Peng2024}. Ongestructureerde data, zoals documenten, pdf’s en e-mails, vormen vanwege hun niet-gestandaardiseerde formaten een uitdaging voor het uittrekken van belangrijke informatie \autocite{Peng2024,Morales2022}. \textcite{FundsEurope2025} rapporteert dat 55\% van de bedrijven uitdagingen verwacht op het gebied van datakwaliteit en consistentie bij CSRD-rapportage, en 45\% van de bedrijven zijn bezorgd over het feit of zij voldoende resources hebben om aan de richtlijnen te voldoen. Dit maakt het handmatig samenbrengen van deze gefragmenteerde bronnen tot een samenhangend rapport een foutgevoelig en tijdrovend proces \autocite{Gharpure2025}.
+
+\subsection{Kosten- en tijdsintensiviteit}
+
+Verder wordt in de literatuur besproken dat de bewijslast voor ESG-claims de afgelopen jaren sterk is toegenomen \autocite{Centre.2023,Lew2024}. Bedrijven moeten niet alleen rapporteren over hun eigen impact, maar vaak ook over die van hun volledige toeleveringsketen \autocite{Fornasari2024,Gharpure2025}. Daarnaast besteden organisaties jaarlijks gemiddelde 7.500 personeelsuren aan het proces van data-extractie, verificatie en het schrijven van duurzaamheidsrapporten \autocite{Gharpure2025}. Voor middelgrote ondernemingen vormen de administratieve last en de kosten die daarmee gepaard gaan een valkuil voor effectieve het streven naar een meer duurzaam beleid.
+
+\subsection{Auditeerbaarheid en transparantie}
+
+In tegenstelling tot financiële verslaglegging, die steunt op decennia aan gestandaardiseerde processen, is ESG-rapportering nog volop in ontwikkeling \autocite{Yadav2024}. Er is een strikte noodzaak voor traceerbaarheid. Elke bewering in een ESG-rapport moet gestaafd kunnen worden met brondocumentatie om beschuldigingen van greenwashing te voorkomen. Dit maakt de source attribution niet alleen een technische wens, maar een juridische en ethische noodzaak.
+
+\section{Tekortkomingen van LLM's}
+
+LLM’s zoals GPT-4 of Gemini zijn de afgelopen jaren sterk geëvolueerd. Ze worden ingezet voor het uitvoeren van uiteenlopende taken zoals het samenvatten van video-opnames, vertalen van teksten of het genereren van code. Toch schieten ze fundamenteel tekort voor de specifieke eisen van ESG-rapportage, waar feitelijke precisie, juridische traceerbaarheid en actualiteit onherroepelijk zijn \autocite{Alansari2025}.
+
+\subsection{Inefficiëntie bij gefragmenteerde data}
+
+Zoals eerder beschreven, is ESG-data sterk gefragmenteerd. Standaard LLM's zijn getraind op enorme hoeveelheden algemene tekst, maar missen de specifieke structuur om verbanden te leggen tussen gefragmenteerde bedrijfsdocumenten. Zonder een extern mechanisme, zoals de Retriever in een RAG-systeem, kan een LLM geen informatie ophalen uit specifieke PDF-bestanden of spreadsheets die niet in zijn trainingsset zaten \autocite{BerniakWozny2025}. Hierdoor blijft de unieke context van een bedrijf onbereikbaar voor het model.
+
+\subsection{Hallucinaties}
+
+In een domein waar cijfers en feiten de basis vormen voor juridische verantwoording, is het risico op hallucinaties van LLM's een risico. In een onderzoek van \autocite{Rahman2024}, waarin 6 LLM’s getest werden op een publieke dataset, blijkt dat de totale feitelijke hallucinatie tussen 59\% en 82\% ligt. Een model kan op basis van taalpatronen een zeer overtuigend antwoord formuleren, terwijl de onderliggende cijfers feitelijk onjuist zijn of gebaseerd zijn op een verkeerde interpretatie van de context. Voor ESG-rapportage is een "ongeveer correct" antwoord onvoldoende; elk cijfer moet exact zijn.
+
+\subsection{Knowledge Cut-off}
+
+ESG-standaarden en bedrijfsresultaten evolueren razendsnel. De CSRD-richtlijnen worden continu verfijnd en bedrijfsgegevens blijven toenemen en veranderen per kwartaal. Vanwege de knowledge cut-off is de interne kennis van een LLM statisch en per definitie verouderd zodra het model is getraind. Een model dat is getraind in 2024, heeft geen kennis van een duurzaamheidsrapport dat in 2025 is gepubliceerd \autocite{Dye2021}. Dit gebrek aan actualiteit maakt een standaard LLM ongeschikt voor real-time rapportage of auditing.
+
+\section{RAG}
+
+Om deze tekortkomingen op te lossen, biedt RAG, geïntroduceerd door \textcite{Lewis2020}, een veelbelovend architectuurpatroon. Het kernidee achter RAG is dat LLM’s, hoewel krachtig in het vastleggen van taalpatronen en algemene kennis tijdens pre-training, beperkt zijn in hun vermogen om actuele, domeinspecifieke of feitelijke informatie te onthouden en correct toe te passen. Door een externe kennisbron te combineren met een LLM, kunnen RAG-systemen relevante documenten ophalen en deze gebruiken als context voor het genereren van antwoorden \autocite{Lewis2020}. Door te verwijzen naar externe bronnen verhoogt de feitelijke correctheid van het model en vermindert de oplevering van onjuiste informatie \autocite{Gianluca2024}. Omdat een LLM niet meer moet vertrouwen op de parametrische kennis die tijdens de pre-training is opgeslagen, werkt die nu als een actieve verwerker van externe, niet parametrische data. Wanneer een gebruiker een vraag stelt, zoekt het systeem eerst in de externe database naar relevante datafragmenten. Deze fragmenten worden daarna samen met de oorspronkelijke vraag als context aan de LLM gegeven. Gegeven de noodzaak tot accurate antwoorden en correcte bronvermelding voor de casus van Turtle Srl, vormt de implementatie van een RAG-systeem de basis voor hun PoC.
+
+\subsection{Werking standaard RAG-architectuur}
+
+RAG koppelt een retriever aan een generator, waarbij semantisch relevante datafragmenten uit een externe kennisbank worden opgehaald. Deze dienen als context voor de generatie van nauwkeurige antwoorden \autocite{Lewis2020,Gianluca2024}.
+
+Dit proces beschreven als een model dat twee componenten combineert. De retriever ($p_{\eta}(z|x)$) met parameters $\eta$ berekent een kansverdeling over tekstfragmenten ($z$) gegeven een vraag ($x$). Het resultaat is een top-K selectie van de meest relevante datafragmenten. De generator ($p_{\theta}(y_i|x, z, y_{1:i-1})$) met parameters $\theta$ genereert het huidige token ($y_i$) gebaseerd op de oorspronkelijke vraag ($x$), het opgehaalde fragment ($z$), en de reeds gegenereerde tokens ($y_{1:i-1}$) \autocite{Lewis2020}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{grail.jpg}
-  \caption[Voorbeeld figuur.]{\label{fig:grail}Voorbeeld van invoegen van een figuur. Zorg altijd voor een uitgebreid bijschrift dat de figuur volledig beschrijft zonder in de tekst te moeten gaan zoeken. Vergeet ook je bronvermelding niet!}
+  \includegraphics[width=0.8\textwidth]{RAG_component_overzicht.png}
+  \caption[Werking standaard RAG architectuur]{\label{fig:rag_component_overview}Schematische weergave van het RAG-model waarbij relevante documenten uit een externe bron worden opgehaald om de tekstgeneratie te ondersteunen \autocite{Lewis2020}.}
 \end{figure}
 
-\begin{listing}
-  \begin{minted}{python}
-    import pandas as pd
-    import seaborn as sns
+\subsection{Dynamische aanpak}
 
-    penguins = sns.load_dataset('penguins')
-    sns.relplot(data=penguins, x="flipper_length_mm", y="bill_length_mm", hue="species")
+Voor het vergelijken van verschillende variabele componenten in een RAG-systeem, is een dynamische architectuur nodig die de variabiliteit van componenten ondersteunt.
+
+\subsubsection{Component-gebaseerde architectuur}
+
+Pipeline-orchestration binnen RAG verwijst naar het beheer van de gegevensstroom tussen de retriever, de generator en de tussenliggende verwerkingsstappen \autocite{Zhang2025GenAI}. In moderne architecturen is de verschuiving merkbaar van lineaire ketens naar graafgebaseerde workflows.
+
+Voor dit onderzoek wordt Haystack 2.x ingezet. Waar eerdere versies van dergelijke frameworks vaak rigide waren, introduceert Haystack 2.x een architectuur gebaseerd op een gerichte graaf \autocite{HaystackPipelines2026}. Elke stap in de pipeline dient als een onafhankelijk component met strikt gedefinieerde in- en uitgangen (sockets). Deze dynamiek is cruciaal voor de ESG-casus van Turtle Srl, aangezien het toelaat om metadata (zoals paginanummers uit Qdrant) op een transparante manier door te geven aan de generation laag zonder de integriteit van de tekstfragmenten te verstoren \autocite{HaystackMetadataRouter2026}.
+
+\subsubsection{Hyperparameterization}
+
+Hyperparameterization in de context van RAG is het systematisch variëren van systeeminstellingen of componenten om de prestaties te optimaliseren. In dit onderzoek worden drie hoofdvariabelen geïdentificeerd, wat resulteert in een testmatrix van 27 unieke configuraties ($3^3$ indien men drie variabelen met drie opties hanteert).
+
+In een bedrijfscontext zoals die van Turtle Srl is de meest accurate configuratie vaak ook de duurste of traagste. Hyperparameter-optimalisatie (HPO) is noodzakelijk om een superieure Pareto-front, de verzameling van de best mogelijke oplossingen in een probleem met meerdere requirements, te bereiken: de set configuraties die de best mogelijke balans bieden tussen tegenstrijdige doelstellingen zoals operationele kosten, latentie en feitelijke nauwkeurigheid \autocite{Barker2025}. Zonder systematische tuning riskeert men een systeem dat weliswaar accuraat is, maar door hoge inferentiekosten niet schaalbaar is voor grootschalige ESG-rapportage.
+
+In dit onderzoek wordt deze dynamische aanpak ingevuld door de technische samenwerking tussen Hypster en PocketFlow. Hypster is een configuration framework dat het mogelijk maakt om verschillende hyperparameters - zoals variabel chunking, embeddings en LLM’s – te definiëren als injecteerbare variabelen. Dankzij deze parameters is het mogelijk om met 1 pipeline alle mogelijke combinaties van de variabele componenten te testen.
+
+\begin{listing}[H]
+  \begin{minted}{python}
+    import os
+    import llm
+    from hypster import HP, instantiate
+
+    def llm_config(hp: HP):
+    model_name = hp.select(["gpt-4o-mini", "gpt-4o"], name="model_name")
+    temperature = hp.float(0.0, name="temperature", min=0.0, max=1.0)
+    max_tokens = hp.int(256, name="max_tokens", max=2048)
+
+    return {
+        "model_name": model_name,
+        "temperature": temperature,
+        "max_tokens": max_tokens
+    }
+
   \end{minted}
-  \caption[Voorbeeld codefragment]{Voorbeeld van het invoegen van een codefragment.}
+  \caption[Voorbeeld codefragment HyPSTER - variabele LLM's]{Een voorbeeld van de syntax om meerdere LLM's, hier gpt-4o-mini en gpt-4o, te definiëren in een variabele met HyPSTER. Bron: https://github.com/gilad-rubin/hypster/blob/master/docs/getting-started/usage-examples/llms-and-generative-ai.md}
 \end{listing}
 
-\lipsum[7-20]
+PocketFlow is een flow-orchestrator dat de experimentele loop zal coördineren. Het framework garandeert dat de 27 combinaties systematisch worden getoetst op hun vermogen om "kennisconflicten" te verminderen — situaties waarin geëxtraheerde documenten botsen met de interne kennis van het LLM — terwijl de inferentiekosten beheersbaar blijven \autocite{Fu2024}.
 
-\begin{table}
+\subsubsection{Chunking}
+
+Het eerste component in een RAG-pipeline is chunking. Chunking is de techniek waarbij documenten worden opgesplitst in kleinere tekstdelen, die chunks worden genoemd. De manier waarop documenten worden opgedeeld, bepaalt welke informatie kan worden opgehaald en hoe efficiënt de LLM relevante antwoorden kan genereren met deze informatie \autocite{Moro2025}.
+
+De literatuur toont dat chunking een belangrijke rol speelt de pipeline. Een eerste factor is het limiet op de hoeveelheid tokens die een LLM kan verwerken. Zonder chunking zou een LLM, vanwege een beperkt context window, onmogelijk grote documenten in het kunnen geheugen opslaan. Daarnaast zijn zoekopdrachten in vectordatabases effectiever wanneer ze worden uitgevoerd op kleinere datafragmenten. Te grote chunks veroorzaken ruis door irrelevante informatie te groeperen met een relevant fragment uit een document. Dit zorgt ervoor dat het embedding-model minder goed in staat is om de relevante context van een chunk te herkennen. Bovendien verlaagd chunking de rekenkosten en latency, door enkel de belangrijkste chunks naar de LLM te sturen.
+
+Bij het opstellen van een chunking-strategie zijn er 3 parameters van belang:
+
+\begin{itemize}
+  \item \textbf{Chunk size} is een numerieke waarde die aangeeft hoeveel tekens, of tokens, er 1 chunk worden opgenomen. Een kleinere chunk size zorgt voor meer granulaire chunks, terwijl een grotere chunk size meer context per chunk behoudt \autocite{Guenther2024}.
+  \item \textbf{Chunk overlap} is mate waarin opeenvolgende chunks elkaar mogen overlappen om de continuïteit van de context tussen chunks te waarborgen \autocite{GomezCabello2025}.
+  \item \textbf{Context length} is de totale capaciteit van de LLM om informatie te verwerken. De chunking-strategie moet zo worden gekozen dat de opgehaalde chunks (top-k resultaten) de contextlengte van het LLM niet overschrijden.
+\end{itemize}
+
+\subsubsection{Vector embeddings en vector database}
+
+Embedding modellen transformeren tekst naar numerieke vectoren (vector embeddings) die in een hoog-dimensionale ruimte worden opgeslagen. De essentie van RAG is gebaseerd op de veronderstelling dat semantisch gelijke teksten dicht bij elkaar liggen in deze ruimte.
+
+De pipeline die verder in dit onderzoek wordt opgezet, gebruikt text-embedding-3-large (OpenAI), BGE-M3 (BAAI) en multilingual-e5-large-instruct (intfloat) als variabele embeddingmodellen.
+
+De daaruit volgende embeddings worden opgeslagen in een vector database. De vector database een cruciaal element voor de efficiënte opslag en toegankelijkheid van semantische informatie \autocite{Pawlik2025}. Het is een gespecialiseerd systeem dat specifiek is ontworpen om hoog-dimensionale vectordata te verwerken, indexeren, vergelijken en op te slaan. Tijdens een zoekopdracht wordt de gegenereerde query-vector vergeleken met deze opgeslagen vectoren om de meest relevante informatie te identificeren en in een zo kort mogelijke tijd op te halen \autocite{Rahul2024}.
+
+De vector database heeft ook de mogelijkheid om metadata toe te voegen aan de vector embeddings. Dit gebeurt aan de hand van labels die toegekend worden aan de vectoren en samen worden opgeslagen. Deze labels bevatten data zoals een datum, categorie, user-ID of taal.
+
+\subsubsection{LLM}
+
+Het generatieve component, het LLM, gebruikt de context uit de vector database om samen met de gestelde vraag een coherent antwoord te formuleren. Concreet bouwt de LLM binnen RAG voort op zijn in‑context learning‑capaciteiten: de opgehaalde ESG‑fragmenten fungeren als uitgebreide prompt, waardoor het model tijdens generatie kan “redeneren over bewijs” in plaats van te vertrouwen op verouderde of onvolledige trainingskennis \autocite{Wang2025}. Studies tonen dat dit hybridemodel 20\% tot 30\% betere prestaties oplevert op knowledge‑intensive vraag-en-antwoordtaken dan pure seq2seq‑modellen \autocite{Lewis2020}. RAG overtreft bijvoorbeeld BART en T5 op Natural Questions, WebQuestions en TriviaQA, terwijl de gegenereerde antwoorden specifieker zijn, en feitelijk meer correct \autocite{Lewis2020}.
+
+%\begin{itemize}
+%  \item \textbf{gpt-4o} 
+%  \item \textbf{gemini-2.5-flash} 
+%  \item \textbf{Mistral Large 2.1} 
+%\end{itemize}
+
+\section{Evaluatie RAG}
+
+In dit deel van de literatuurstudie wordt de stand van zaken rond de evaluatie van RAG besproken, met bijzondere aandacht voor domeinspecifieke use cases zoals ESG‑rapportage. De evaluatie van een RAG-systeem teruggeeft hangt immers af van twee afzonderlijke processen — retrieval en generatie — waardoor verouderde NLP‑metrics (zoals BLEU of ROUGE) slechts een beperkt beeld geven van de werkelijke kwaliteit \autocite{Yu2024}. Voor de Proof of Concept bij Turtle Srl, waar verschillende combinaties van chunking, embedding‑modellen en LLM’s op een vaste ESG‑vragenlijst worden geëvalueerd, is een gericht evaluatiekader nodig dat zowel inhoudelijke kwaliteit (faithfulness, answer relevancy) als operationele aspecten (latency, kosten) en juridische vereisten (source attribution) dekt.
+
+\subsection{Evolutie van het evalueren}
+
+De evaluatie van taalmodellen is historisch geëvolueerd van n‑gram‑gebaseerde metrics naar semantische en taak‑specifieke benchmarks. N-gram-gebaseerde evaluatie, zoals BLEU en ROUGE, is een evaluatiemethode die de kwaliteit van gegenereerde tekst beoordeelt door de overlap te meten tussen de modeloutput en een referentietekst. Deze vorm van evaluatie is echter beperkt in bruikbaarheid tot het evalueren van machinevertalingen en samenvattingen.
+
+Met de opkomst van transformer‑gebaseerde modellen werden semantische metrics zoals BERTScore geïntroduceerd, die contextuele embeddings gebruiken om de semantische gelijkenis tussen output en referentie te schatten \autocite{Devlin2019}. Daarnaast ontstond ook MTEB (Massive Text Embedding Benchmark). Een benchmark dat embedding‑modellen evalueert op reeks van taken (retrieval, clustering, classificatie, reranking). Hoewel MTEB nuttig kan zijn bij de initiële selectie van het embedding‑model, stellen \textcite{Tang2024} vast dat prestaties van embedding-modellen op MTEB niet overeenkomen met een benchmark die ontworpen is voor domeinspecifieke datasets.
+
+Voor RAG‑systemen is het probleem nog complexer, aangezien de evaluatie zowel rekening moet houden met de kwaliteit van de opgehaalde context (retrieval) als van de getrouwheid (faithfulness) van de gegenereerde tekst. \textcite{Yu2024} tonen in hun survey dat bestaande benchmarks en prestatie-indicatoren onvoldoende zijn om deze interactie te vangen, en pleiten voor een Unified Evaluation Process waarin retrieval‑ en generatie‑metrics gecombineerd worden. Dit heeft geleid tot de ontwikkeling van RAG‑specifieke evaluatieframeworks zoals RAGAS en ARES, die expliciete evaluatie metrics definiëren voor de veelzijdige componenten en processen binnen RAG.
+
+Voor de PoC van Turtle Srl zijn klassieke benchmarks (BLEU, ROUGE, MTEB) daarom niet bruikbaar. Zaken zoals: de mate waarin antwoorden gegrond zijn in interne ESG‑documenten, of alle noodzakelijke informatie effectief wordt opgehaald, en of bronvermelding correct en volledig is worden niet geëvalueerd. Een domeinspecifiek RAG‑evaluatiekader, geïnspireerd door onder meer \textcite{Yu2024}, is dus noodzakelijk.
+
+\subsection{Het RAGAS framework}
+
+De academische standaard voor het kwantificeren van RAG-prestaties is het RAGAS framework. RAGAS, ontwikkeld door \textcite{Es2024}, introduceert metrieken die de "RAG Triad" (Query, Context, Answer) evalueren. De interactie tussen de query, de opgehaalde context en het gegenereerde antwoord worden geëvalueerd met 4 metrieken. Het framework gebruikt LLM-as-a-judge, een krachtige LLM die de output van een andere LLM evalueert, waardoor menselijke tussenkomst overbodig wordt.
+
+De metrieken zijn onderverdeeld in 2 categorieën op vlak van welk component ze evalueren. De generator wordt beoordeeld op faithfulness en answer relevancy en de op vlak van context precision en context recall.
+
+\begin{figure}
   \centering
-  \begin{tabular}{lcr}
-    \toprule
-    \textbf{Kolom 1} & \textbf{Kolom 2} & \textbf{Kolom 3} \\
-    $\alpha$         & $\beta$          & $\gamma$         \\
-    \midrule
-    A                & 10.230           & a                \\
-    B                & 45.678           & b                \\
-    C                & 99.987           & c                \\
-    \bottomrule
-  \end{tabular}
-  \caption[Voorbeeld tabel]{\label{tab:example}Voorbeeld van een tabel.}
-\end{table}
+  \includegraphics[width=0.8\textwidth]{ragas.png}
+  \caption[Voorbeeld figuur.]{\label{fig:grail}Overzicht van de implementatie en interpretatie van RAGAS-metrieken binnen het RAGAS framework. Bron: \autocite{Kaarthick2024Ragas}}
+\end{figure}
 
+Faithfulness, of getrouwheid, meet of het gegenereerde antwoord uitsluitend gebaseerd is op de opgehaalde context. Dit is cruciaal om hallucinaties op te sporen: elk cijfer in een ESG-rapport moet immers herleidbaar zijn naar de bron. Answer Relevancy beoordeelt in welke mate het antwoord daadwerkelijk een oplossing biedt voor de gestelde vraag, zonder overbodige informatie. Context Precision evalueert of de meest relevante documentfragmenten bovenaan de zoekresultaten stonden. Voor ESG-audits is dit essentieel om de efficiëntie van de retriever te bepalen. Context Recall controleert of alle benodigde informatie om de vraag te beantwoorden daadwerkelijk aanwezig was in de opgehaalde fragmenten \autocite{Dong2025,Roychowdhury2024}.
+
+%\begin{figure}
+%  \centering
+%  \includegraphics[width=0.8\textwidth]{grail.jpg}
+%  \caption[Voorbeeld figuur.]{\label{fig:grail}Voorbeeld van invoegen van een figuur. Zorg altijd voor een uitgebreid bijschrift dat de figuur volledig beschrijft zonder in de tekst te moeten gaan zoeken. Vergeet ook je bronvermelding niet!}
+%\end{figure}
+%
+%\begin{listing}
+%  \begin{minted}{python}
+%    import os
+%    import llm
+%    from hypster import HP, instantiate
+%
+%    def llm_config(hp: HP):
+%    model_name = hp.select(["gpt-4o-mini", "gpt-4o"], name="model_name")
+%    temperature = hp.float(0.0, name="temperature", min=0.0, max=1.0)
+%    max_tokens = hp.int(256, name="max_tokens", max=2048)
+%
+%    return {
+%        "model_name": model_name,
+%        "temperature": temperature,
+%        "max_tokens": max_tokens
+%    }
+%
+%  \end{minted}
+%  \caption[Tekst in lijst code fragmenten]{Tekst onder code blok}
+%\end{listing}
+%
+%\lipsum[7-20]
+%
+%\begin{table}
+%  \centering
+%  \begin{tabular}{lcr}
+%    \toprule
+%    \textbf{Kolom 1} & \textbf{Kolom 2} & \textbf{Kolom 3} \\
+%    $\alpha$         & $\beta$          & $\gamma$         \\
+%    \midrule
+%    A                & 10.230           & a                \\
+%    B                & 45.678           & b                \\
+%    C                & 99.987           & c                \\
+%    \bottomrule
+%  \end{tabular}
+%  \caption[Voorbeeld tabel]{\label{tab:example}Voorbeeld van een tabel.}
+%\end{table}

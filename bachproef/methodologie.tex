@@ -26,5 +26,53 @@
 %% Maak voor elke fase (behalve het literatuuronderzoek) een NIEUW HOOFDSTUK aan
 %% en geef het een gepaste titel.
 
-\lipsum[21-25]
+De methodologie van dit onderzoek is zodanig opgesteld om zowel wetenschappelijke geldigheid als praktische toepasbaarheid voor Turtle Srl te waarborgen. Het centrale doel is het systematisch ontwerpen, opzetten en evalueren van een dynamische RAG pipeline die het mogelijk maakt om de  variabele componenten (chunking strategieën, embedding modellen en LLM’s) te testen op één vaste ESG vragenlijst, zonder voor elke mogelijke combinatie een aparte pipeline te moeten bouwen. De gekozen aanpak volgt een sequentieel maar iteratief raamwerk in zes fases, waarbij elke fase deliverables oplevert aan de hand van de doelstellingen en gekozen onderzoeksmethoden. Om de reproduceerbaarheid, repliceerbaarheid en herbruikbaarheid van dit onderzoek te waarborgen, wordt per fase gedocumenteerd welke beslissingen genomen worden en hoe data en configuraties vastgelegd worden.
 
+\section{Fase 1: Requirements verzamelen}
+
+In de eerste fase staat het verzamelen en verduidelijken van requirements centraal. Het doel is om een beeld te krijgen van de noden en eisen van Turtle Srl omtrent ESG rapportage en de criteria waaraan de beoogde optimale configuratie moet voldoen. Daarvoor worden semigestructureerde interviews afgenomen met belanghebbenden van het bedrijf (bijvoorbeeld ESG analisten, data engineers en management) om zowel functionele als niet functionele vereisten in kaart te brengen. Functionele vereisten omvatten onder meer de nood aan bronvermelding, de dekking van specifieke ESRS standaarden en de gewenste vraagtypes in de golden set. Niet functionele vereisten hebben betrekking op criteria die relevant zijn voor de business waarde, zoals latency, kosten per query en dataprivacy.
+
+Parallel aan deze interviews wordt een literatuuronderzoek uitgevoerd naar RAG architecturen, chunking strategieën, embedding modellen, evaluatie frameworks (zoals RAGAS, ARES) en domeinspecifieke toepassingen in ESG  en duurzaamheidsrapportage. Op basis van deze twee informatiestromen wordt een geprioriteerde lijst van requirements opgesteld met behulp van de MoSCoW-methode , aangevuld met een eerste “long list” van mogelijke interessante alternatieven voor de variabele componenten in de RAG pipeline. Deze artefacten vormen de basis voor de daaropvolgende selectie  en ontwerpfases.
+
+\section{Fase 2: Opstellen short list}
+
+In de tweede fase wordt de long list van mogelijke alternatieven herwerkt tot een beheersbare short list van de meest veelbelovende opties per variabel component. Het doel is om, op basis van de in fase 1 gedefinieerde requirements, een onderbouwde selectie te maken van de interessantste embedding modellen, chunking strategieën en LLM’s voor verdere experimentele evaluatie.
+
+Gedurende deze systematische vergelijking worden de belangrijkste eigenschappen en prestaties per alternatief samengebracht in een samenvattende tabel. Voor embedding modellen kan dit onder meer MTEB scores, meertalige recall, vector dimensionaliteit en inference kosten omvatten; voor LLM’s bijvoorbeeld contextlengte, meertalige ondersteuning, faithfulness scores uit de literatuur en kosten per token. Elk alternatief wordt gescoord tegen de requirements (bijvoorbeeld bronvermelding, meertaligheid, ESG relevantie) en reeds bestaande literatuur, wat resulteert in een shortlist per component.
+
+Deze aanpak levert een short list op van de mogelijke technologieën voor de variabele componenten, aangevuld een vergelijkende tabel. Op basis van deze informatie kan bepaalde worden welke modellen of strategieën wel of niet toepasbaar zijn voor de experimentele opzet.
+
+\section{Fase 3: Input data en golden set voorbereiden}
+
+Fase 3 richt zich op de voorbereiding van de domeinspecifieke inputdata en het samenstellen van een “golden set” van vragen voor de latere evaluatie. Het doel is om enerzijds een representatieve dataset aan bedrijfsdocumenten te verzamelen die de interne ESG informatie van Turtle Srl weergeeft, en anderzijds een gestandaardiseerde vragenlijst op te stellen waarmee de RAG configuraties in fase 5 worden getest.
+
+Via bijkomende interviews met domeinexperten wordt bepaald welke documenten nodig zijn om een dataset te verkrijgen die bruikbaar is voor ESG rapportage. Deze data kan bestaan uit jaarverslagen, duurzaamheidsrapporten, beleidsdocumenten of interne richtlijnen. Indien nodig worden documenten geanonimiseerd voordat ze in de experimentele omgeving worden opgenomen om de veiligheid van de data te verzekeren.
+
+Daarnaast wordt een golden set van vragen opgesteld. Deze set omvat ESG-gerelateerde vragen, zoals questionnaires van Ecovadis en VSME, om een vragenlijst te bekomen die representatief is voor Turtle Srl. Voor elke vraag wordt waar mogelijk een referentie antwoord, bijbehorende brondocumenten en relevante pagina  of sectienummers vastgelegd. Deze metadata maakt het mogelijk om zowel automatische evaluatie, met RAGAS, als handmatige expert evaluatie (bijvoorbeeld audits) uit te voeren.
+
+Deze fase resulteert in een gestructureerde verzameling van contextdata die in de vector database zal worden geïndexeerd, en een vragenlijst die als vaste benchmark dient voor alle RAG configuraties.
+
+\section{Fase 4: Ontwikkeling van dynamische RAG-pipeline}
+In de vierde fase wordt de RAG pipeline ontworpen en geïmplementeerd. De centrale doelstelling is een dynamische proefopstelling te bouwen die toelaat om de variabele componenten (zoals bepaald in fase 2) op een efficiënte manier te combineren en te testen. Zonder een nieuwe pipeline te moeten maken voor iedere combinatie van de componenten.
+
+Technisch wordt gekozen voor een component gebaseerde architectuur waarin modules voor documentconversie, chunking, embedding, vectoropslag, retrieval en generatie als afzonderlijke bouwstenen worden gedefinieerd. De configuratielaag, in JSON, bepaalt per experimentele run welke chunking strategie, welk embedding model en welk LLM worden gebruikt. Dit maakt het mogelijk om de alle combinaties van de short list systematisch te doorlopen.
+
+Belangrijke aandachtspunten bij de implementatie zijn: meertalige ondersteuning (om zowel Engelstalige als anderstalige ESG documenten te kunnen verwerken), bronvermelding via metadata payloads in de vector database, en logging voorzien van alle relevante runtime informatie (latency, tokenverbruik, gebruikte configuratie, RAG metrics). Op het einde van deze fase wordt een werkende, dynamische RAG pipeline opgeleverd die conform is met de technische vereisten van het bedrijf.
+
+\section{Fase 5: Pipeline testen}
+
+In fase 5 wordt de pipeline getest, met als doel om voor alle geselecteerde configuraties resultaten te verzamelen op basis van de metrics die in fase 1 als requirements zijn gedefinieerd.
+
+De onderzoeksmethode bestaat uit gecontroleerde runs van de pipeline. De golden set vragenlijst uit fase 3 wordt meerdere keren door de pipeline geleid, telkens met een andere configuratie van chunking strategie, embedding model en LLM. Voor elke combinatie worden zowel inhoudelijke metrics (bijvoorbeeld RAGAS scores voor faithfulness, answer relevancy, context precision en context recall) als operationele metrics (latency per vraag, kosten per query, geheugenverbruik) geregistreerd. Daarnaast kunnen steekproeven van antwoorden door ESG experten worden beoordeeld om de automatische evaluatie te valideren.
+
+De resultaten worden opgeslagen in een Jupyter Notebook zodat ze in de volgende fase op een gestructureerde manier kunnen worden geanalyseerd. Uit deze fase komt een volledige set aan experimentele resultaten die toelaat om de verschillende RAG configuraties onderling te vergelijken op basis van dezelfde vragen en evaluatiemetrics.
+
+\section{Fase 6: Resultaten verwerken en conclusie trekken}
+
+De laatste fase richt zich op het verwerken, analyseren en interpreteren van de verzamelde resultaten en om te zetten in duidelijke inzichten voor de PoC van Turtle Srl.
+
+De resultaten uit fase 5 worden visueel voorgesteld in de vorm van grafieken en tabellen die per metric en per component (chunker, embedder, LLM) de prestaties weergeven. Hierbij wordt gezocht naar patronen, zoals configuraties die consequent hoge faithfulness  en answer relevancy scores hebben met lage latency en kosten. Waar relevant worden trade offs in kaart gebracht in overleg met belanghebbende van het bedrijf (bijvoorbeeld hogere nauwkeurigheid ten koste van hogere kosten of langere responstijden).
+
+Op basis van deze analyse wordt een decision tree opgesteld, waarin voor verschillende gebruiksscenario’s (bijvoorbeeld kosten sensitief versus kwaliteits gedreven) de meest geschikte combinatie van variabele componenten wordt voorgesteld. Deze beslissingsstructuur vormt samen met een samenvattende aanbeveling over de “beste” configuratie het resultaat van dit onderzoek.
+
+\lipsum[21-25]

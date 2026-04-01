@@ -1,205 +1,192 @@
 \chapter{\IfLanguageName{dutch}{Long list}{Long list}}%
 \label{ch:longlist}
 
-Op basis van de requirementsanalyse in Hoofdstuk~\ref{ch:requirementsanalyse} worden in dit hoofdstuk de mogelijke alternatieven per variabel component van de \gls{rag}-pipeline in kaart gebracht. Het doel van de long list is om, via een breed literatuuronderzoek, alle relevante kandidaten te identificeren alvorens een gemotiveerde selectie te maken. Per component wordt een overzicht geboden van de onderzochte alternatieven, gevolgd door een gefundeerde redenering waarom bepaalde opties worden uitgesloten en welke opties worden weerhouden voor de short list. De short list per component vormt de basis voor de experimentele opzet in de volgende fase.
+Op basis van de requirementsanalyse in Hoofdstuk~\ref{ch:requirementsanalyse} worden in dit hoofdstuk alle mogelijke alternatieven per variabel component van de \gls{rag}-pipeline in kaart gebracht. Het doel van de long list is om via een breed literatuuronderzoek zo veel mogelijk kandidaten te identificeren zonder a priori opties uit te sluiten. Per component worden alle gevonden alternatieven kort besproken, inclusief de opties die uiteindelijk in de short list zullen terechtkomen. Vervolgens worden ze samengebracht in een vergelijkingstabel die toont in welke mate elk alternatief voldoet aan de gedefinieerde requirements. Op basis van die tabel wordt per component duidelijk welke drie alternatieven het sterkst scoren en bijgevolg worden overgenomen in de short list.
 
 \section{Chunking-strategieën}
 \label{sec:longlist-chunking}
 
-Chunking is de eerste en fundamentele stap in de indexeringsfase van een \gls{rag}-pipeline. De keuze van strategie heeft een directe impact op de kwaliteit van de retrieval: slecht gesegmenteerde chunks verliezen semantische samenhang, terwijl te grote chunks onnodig ruis introduceren in de context die aan de \gls{llm} wordt meegegeven \autocite{Moro2025}. De literatuur identificeert verschillende families van chunking-strategieën, elk met eigen sterke punten en beperkingen.
+Chunking is de eerste en bepalende stap in de indexeringsfase van een \gls{rag}-pipeline. De keuze van strategie heeft een directe impact op de kwaliteit van de retrieval: te kleine chunks verliezen de semantische samenhang van een passage, terwijl te grote chunks onnodig ruis introduceren in de context die aan het \gls{llm} wordt meegegeven \autocite{Moro2025}. De literatuur identificeert de volgende families van chunking-strategieën als mogelijke kandidaten.
 
-\subsection{Onderzochte alternatieven}
+\subsection{Fixed-size chunking}
 
-\subsubsection{Sentence-based chunking}
+Fixed-size chunking is de eenvoudigste en meest gebruikte strategie: tekst wordt opgesplitst in blokken van een vaste tokenlengte, aangevuld met een configureerbare overlap om de continuïteit aan de randen van opeenvolgende chunks te waarborgen. \textcite{Lewis2020} gebruikten reeds segmenten van 100 woorden als retrieval-eenheid in het originele \gls{rag}-paper, wat de historische rol van fixed-size chunking als baseline bevestigt. \textcite{BhatEtAl2025} onderzochten de optimale chunk-grootte systematisch over zes datasets en stelden vast dat 64 tot 128 tokens optimaal zijn voor feitelijke vraag-en-antwoordtaken, terwijl 512 tot 1.024 tokens beter scoren voor contextueel begrip. Het voornaamste voordeel is de volledig deterministische en snelle uitvoering zonder extra modelaanroepen, wat reproduceerbaarheid maximaliseert \autocite{QuEtAl2024}. De beperking is dat de strategie de tekststructuur volledig negeert en een chunk midden in een zin of tabel kan afkappen.
 
-Bij sentence-based chunking wordt de tekst opgesplitst op zinsgrenzen. Bibliotheken zoals spaCy en NLTK worden hiervoor standaard ingezet. Het voordeel is dat elke chunk een volledige, grammaticaal correcte zin bevat. Het nadeel is echter dat veel zinnen in \gls{esg}-documenten pas betekenis krijgen in hun bredere alinea-context. Zinnen zoals \textit{``Dit percentage steeg met 12\% ten opzichte van het vorige boekjaar''} zijn op zichzelf betekenisloos zonder de verwijzing naar het onderwerp in de voorgaande zin. Wanneer zo'n zin als afzonderlijke chunk wordt opgehaald, kan de \gls{llm} er geen bruikbaar antwoord op baseren. \textcite{LatifEtAl2025} bevestigen dit: sentence-level chunking scoort lager op contextual recall dan strategieën die alinea-structuren respecteren. Dit alternatief wordt uitgesloten.
+\subsection{Sentence-based chunking}
 
-\subsubsection{Sliding window chunking}
+Bij sentence-based chunking wordt tekst opgesplitst op zinsgrenzen via bibliotheken zoals spaCy of NLTK. Het voordeel is dat elke chunk een grammaticaal volledige zin bevat. De beperking voor \gls{esg}-documenten is echter dat veel zinnen pas betekenis krijgen in hun bredere alinea-context: een zin als \textit{``Dit percentage steeg met 12\% ten opzichte van het vorige boekjaar''} is op zichzelf betekenisloos zonder de verwijzing naar het onderwerp in de voorgaande zin. Wanneer zo'n zin als afzonderlijke chunk wordt opgehaald, kan de \gls{llm} er geen bruikbaar antwoord op baseren. \textcite{LatifEtAl2025} bevestigen dat sentence-level chunking lager scoort op contextual recall dan strategieën die alinea-structuren respecteren.
 
-Sliding window chunking is technisch geen zelfstandige strategie, maar een configuratieparameter die bovenop fixed-size chunking wordt toegepast. Door een vaste overlap (\textit{overlap}) in te stellen, worden opeenvolgende chunks gedeeltelijk herhaald, wat de continuïteit van de context tussen twee aangrenzende chunks verbetert \autocite{GomezCabello2025}. Omdat sliding window in essentie een tuning-parameter is van de fixed-size baseline en geen fundamenteel andere segmentatiemethode introduceert, wordt het meegenomen als configuratie-instelling binnen de fixed-size strategie en niet als een afzonderlijk alternatief in de vergelijkende studie.
+\subsection{Sliding window chunking}
 
-\subsubsection{Document structure chunking (header-based)}
+Sliding window chunking is technisch geen zelfstandige strategie, maar een configuratieparameter bovenop fixed-size chunking. Door een vaste stap in te stellen kleiner dan de chunk-grootte ontstaat overlap tussen opeenvolgende chunks, wat de continuïteit van de context verbetert \autocite{GomezCabello2025}. Omdat het in essentie een tuning-parameter is van de fixed-size baseline en geen fundamenteel andere segmentatiemethode introduceert, wordt het beschouwd als een configuratie-instelling binnen fixed-size chunking en niet als een afzonderlijk te evalueren alternatief.
 
-Document structure chunking maakt gebruik van de opmaakstructuur van een document: koppen, secties en paginagrenzen fungeren als splitspunten. In theorie produceert dit semantisch coherente chunks die exact overeenkomen met de logische structuur van een rapport. In de praktijk is deze methode echter sterk afhankelijk van de kwaliteit van de \gls{pdf}-parser. \gls{pdf}-bestanden, en in het bijzonder gescande \gls{esg}-rapporten, verliezen tijdens de conversie naar platte tekst vaak hun opmaakinformatie: koppen worden niet herkend als \texttt{<h1>} of \texttt{<h2>}, tabellen worden platgeslagen naar losse tekstrijen en regelafstanden worden inconsistent weergegeven \autocite{Amiri2025}. Een strategie die structureel afhankelijk is van betrouwbare header-detectie is te fragiel voor de heterogene documentbasis van Turtle Srl. Dit alternatief wordt uitgesloten.
+\subsection{Recursive character chunking}
 
-\subsubsection{Agentic chunking}
+Recursive character chunking splitst tekst hiërarchisch op basis van een geordende reeks separatoren: eerst dubbele regelafstanden (\texttt{\textbackslash n\textbackslash n}), dan enkelvoudige (\texttt{\textbackslash n}), dan spaties, dan losse tekens, totdat de gewenste chunk-grootte bereikt is \autocite{LangChainDocs2024}. De strategie respecteert daarmee de natuurlijke alinea- en lijststructuur van documenten zonder afhankelijk te zijn van metadata of extra modelaanroepen. \textcite{Amiri2025} evalueerden 25 chunking-configuraties over vijf methodefamilies en 48 embedding-modellen in een domeinspecifieke context en stelden vast dat recursive token-based chunking consistent het best presteerde, met tot 45\% hogere domain-weighted precision dan de beste fixed-size variant. \textcite{SmithTroynikov2024} bevestigen in hun evaluatiestudie bij Chroma dat recursive character splitting \textit{``often performs well in practice when parametrized appropriately''}, waarbij de keuze van chunking-strategie tot 9\% verschil in recall veroorzaakt.
 
-Bij agentic chunking beslist een \gls{llm} per tekstpassage waar een logische chunk-grens ligt, op basis van semantisch redeneren. Dit levert theoretisch de meest contextueel coherente segmentatie op \autocite{Peng2024}. Het fundamentele probleem is echter de kost: voor een corpus van meerdere \gls{esg}-rapporten vereist dit honderden tot duizenden afzonderlijke \gls{llm}-aanroepen tijdens de indexering. Over een benchmark van 27 configuraties maakt dit de indexeringsfase onpraktisch duur en tijdsintensief. Bovendien ondermijnt het de reproduceerbaarheid van de experimentele opzet, aangezien de segmentatiebeslissingen van een \gls{llm} niet deterministisch zijn. Dit alternatief wordt uitgesloten.
+\subsection{Semantic chunking}
 
-\subsubsection{Late chunking}
+Semantic chunking, geformaliseerd door \textcite{Kamradt2023}, berekent de cosine-gelijkenis tussen opeenvolgende zinnen via hun embeddings. Wanneer de gelijkenis onder een drempelwaarde daalt, wordt een nieuwe chunk gestart. Dit is de enige strategie die actief betekenisgrenzen detecteert in plaats van structuur- of tekengrenzen. \textcite{MorenoCediel2026} tonen aan dat semantic chunking chunks produceert met een hogere interne semantische coherentie, wat de context precision verhoogt doordat elke chunk idealiter één onderwerp omvat. Voor \gls{esg}-documenten waarbij één sectie meerdere thema's behandelt, biedt dit een potentieel voordeel. De beperking is de berekeningskost: voor elke zin in het corpus is een embedding-aanroep vereist, wat de indexering aanzienlijk trager maakt. \textcite{QuEtAl2024} waarschuwen dat de rekenkosten van semantic chunking niet altijd worden gerechtvaardigd door de prestatiewinst en dat de keuze van het embedding-model een statistisch significantere impact heeft op retrieval-kwaliteit dan de chunking-strategie zelf.
 
-Late chunking, geïntroduceerd door \textcite{Guenther2024}, is een recent alternatief dat de volgorde van embedden en segmenteren omkeert. In plaats van eerst te segmenteren en daarna te embedden, worden alle tokens van een volledig document eerst ingebed met een long-context embedding-model, waarna de gegenereerde token-embeddings worden gesegmenteerd. Dit behoudt de globale documentcontext in elke chunk-embedding. \textcite{Guenther2024} tonen aan dat late chunking een gemiddelde relatieve verbetering van 24,47\% oplevert ten opzichte van standaard chunking zonder verdere aanpassingen. Het nadeel is dat deze methode vereist dat het embedding-model een extreem groot context-window heeft (typisch 8.192 tokens of meer) en dat de indexeringsstap aanzienlijk complexer wordt. Gezien de architecturale meerkosten en de beperkte ondersteuning in Haystack 2.x voor deze aanpak, wordt late chunking niet opgenomen in de short list voor dit onderzoek. Het wordt echter vermeld als een veelbelovende richting voor toekomstig onderzoek.
+\subsection{Document structure chunking}
 
-\subsection{Short list chunking-strategieën}
+Document structure chunking gebruikt de opmaakstructuur van een document — koppen, secties en paginagrenzen — als splitspunten. In theorie levert dit semantisch coherente chunks die nauw aansluiten bij de logische structuur van het rapport. In de praktijk is deze methode echter sterk afhankelijk van de kwaliteit van de \gls{pdf}-parser: \gls{esg}-rapporten verliezen tijdens de conversie naar platte tekst vaak hun opmaakinformatie, waardoor koppen niet herkend worden als logische scheidingspunten \autocite{Amiri2025}. Voor de heterogene documentbasis van \gls{esg}-rapporten is deze aanpak te fragiel en te sterk afhankelijk van documentkwaliteit.
 
-Uit de bovenstaande analyse worden drie strategieën weerhouden voor de vergelijkende studie. Deze drie dekken het spectrum van eenvoudig-deterministisch tot complex-semantisch, wat een zinvolle vergelijking mogelijk maakt.
+\subsection{Agentic chunking}
 
-\subsubsection{Fixed-size chunking (deterministisch, baseline)}
+Bij agentic chunking beslist een \gls{llm} per tekstpassage waar een logische chunk-grens ligt, op basis van semantisch redeneren \autocite{Comanici2025}. Dit levert theoretisch de meest contextueel coherente segmentatie op. Het fundamentele probleem is echter de kost en reproduceerbaarheid: voor een corpus van meerdere \gls{esg}-rapporten vereist dit honderden tot duizenden afzonderlijke \gls{llm}-aanroepen tijdens de indexeringsfase, wat de benchmark over 27 configuraties onpraktisch duur en tijdsintensief maakt. Bovendien zijn de segmentatiebeslissingen van een \gls{llm} niet deterministisch, wat de reproduceerbaarheid van de experimentele opzet ondermijnt.
 
-Fixed-size chunking splitst tekst in blokken van een vaste tokenlengte, standaard aangevuld met een overlap om continuïteit te waarborgen. \textcite{Lewis2020} gebruikten reeds 100-woord passages als de retrieval-eenheid in het originele \gls{rag}-paper, wat de historische rol van fixed-size chunking als baseline bevestigt. \textcite{BhatEtAl2025} voerden een systematische evaluatie uit op zes datasets en stelden vast dat de optimale chunk-grootte sterk afhankelijk is van het taaktype: 64 tot 128 tokens presteren het best voor feitelijke vraag-en-antwoordtaken, terwijl 512 tot 1.024 tokens beter scoren voor contextueel begrip. Voor \gls{esg}-rapportage, waar gedetailleerde feitelijke vragen de norm zijn, is een kleinere chunk-grootte dus te overwegen.
+\subsection{Late chunking}
 
-Het voornaamste voordeel van fixed-size chunking is de volledig deterministische en snelle uitvoering: er zijn geen extra modelaanroepen vereist, wat de reproduceerbaarheid van de experimenten maximaliseert \autocite{QuEtAl2024}. De beperking is dat de strategie de tekststructuur volledig negeert: een chunk kan midden in een zin of tabel worden afgekapt, wat de semantische kwaliteit van de retrieval-resultaten verlaagt. Desondanks is deze strategie onmisbaar als referentiepunt: zonder een vaste baseline is het onmogelijk om de meerwaarde van complexere strategieën aan te tonen.
+Late chunking, geïntroduceerd door \textcite{Guenther2024}, keert de volgorde van embedden en segmenteren om: alle tokens van een volledig document worden eerst ingebed met een long-context embedding-model, waarna de gegenereerde token-embeddings worden gesegmenteerd. Dit behoudt de globale documentcontext in elke chunk-embedding. \textcite{Guenther2024} tonen aan dat late chunking een gemiddelde relatieve verbetering van 24,47\% oplevert ten opzichte van standaard chunking zonder verdere aanpassingen. Het nadeel is dat de methode een extreem groot context-window vereist bij het embedding-model en dat de beperkte native ondersteuning in Haystack 2.x de implementatie aanzienlijk complexer maakt dan de andere alternatieven.
 
-\subsubsection{Recursive character chunking (deterministisch, structuurbewust)}
-
-Recursive character chunking splitst tekst hiërarchisch op basis van een geordende reeks separatoren: eerst dubbele regelafstanden (\texttt{\textbackslash n\textbackslash n}), dan enkelvoudige regelafstanden (\texttt{\textbackslash n}), dan spaties, dan tekens, totdat de gewenste chunk-grootte bereikt is \autocite{LangChainDocs2024}. De strategie respecteert daarmee de natuurlijke alinea- en lijststructuur van documenten zonder afhankelijk te zijn van metadata of embedding-aanroepen.
-
-\textcite{Amiri2025} evalueerden 25 chunking-configuraties over vijf methodefamilies en 48 embedding-modellen in een domeinspecifieke context. Recursive token-based chunking presteerde consistent het best van alle geteste methoden, met tot 45\% hogere domain-weighted precision dan de beste fixed-size variant. Dit resultaat is bijzonder relevant voor \gls{esg}-rapporten, die typisch zijn opgebouwd uit alinea's en bullet-lijsten per \gls{esg}-criterium. Een alinea die een volledige \gls{vsme}-richtlijn beschrijft, wordt als één coherente chunk opgehaald in plaats van willekeurig afgekapt te worden. \textcite{SmithTroynikov2024} bevestigen in hun evaluatiestudie dat recursive character splitting \textit{``often performs well in practice when parametrized appropriately''}, met chunking-strategie-keuzes die tot 9\% verschil in recall veroorzaken.
-
-\subsubsection{Semantic chunking (embedding-gebaseerd, contextbewust)}
-
-Semantic chunking, geformaliseerd door \textcite{Kamradt2023}, berekent de cosine-gelijkenis tussen opeenvolgende zinnen via hun embeddings. Wanneer de gelijkenis onder een drempelwaarde daalt, wordt een nieuwe chunk gestart. Dit is de enige strategie die actief betekenisgrenzen detecteert in plaats van structuur- of tekengrenzen te volgen. \textcite{MorenoCediel2026} tonen aan dat semantic chunking chunks produceert met een hogere interne semantische coherentie, wat de context precision verhoogt doordat elke chunk idealiter één onderwerp omvat.
-
-Voor \gls{esg}-documenten, waarbij één sectie meerdere thema's kan behandelen (zoals energieverbruik en \gls{co2}-uitstoot in dezelfde alinea), biedt semantic chunking een potentieel voordeel boven de twee deterministische alternatieven. De beperking is de berekeningskost: voor elke zin in het corpus is een embedding-aanroep vereist tijdens de indexeringsfase, wat de indexering aanzienlijk trager en duurder maakt dan de twee deterministische alternatieven. \textcite{QuEtAl2024} waarschuwen echter in hun \textit{Findings of NAACL 2025}-paper dat de rekenkosten van semantic chunking niet altijd worden gerechtvaardigd door de prestatiewinst: in hun studie had de keuze van het embedding-model een statistisch significantere impact op de retrieval-kwaliteit dan de chunking-strategie. Dit benadrukt het belang van het systematisch testen van alle combinaties in dit onderzoek.
-
-Een cruciaal implementatiedetail is de drempelwaarde voor de cosine-gelijkenissplit. \textcite{Kamradt2023} stelt de drempel standaard in op het 95e percentiel van de afstandsverdeling, maar dit is documentafhankelijk. Voor de experimentele opzet van dit onderzoek wordt de drempel handmatig bepaald en gedocumenteerd per run, in lijn met de white-box requirement uit de requirementsanalyse.
 
 \subsection{Vergelijkingstabel chunking-strategieën}
 
+
+Tabel~\ref{tab:longlist-chunking} brengt alle besproken chunking-strategieën samen en toont in welke mate ze voldoen aan de requirements uit de MoSCoW-analyse. Op basis van deze tabel worden de drie sterkst scorende strategieën overgenomen in de short list.
+
 \begin{table}[h]
   \centering
-  \caption[Vergelijking van chunking-strategieën t.o.v.\ de requirements]{\label{tab:chunking-vergelijking}Samenvattende vergelijking van de drie weerhouden chunking-strategieën ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig; ? = beperkt of implementatie-afhankelijk.}
-  \begin{tabular}{p{0.08\textwidth} p{0.38\textwidth} p{0.14\textwidth} p{0.14\textwidth} p{0.14\textwidth}}
+  \caption[Long list vergelijkingstabel chunking-strategieën]{\label{tab:longlist-chunking}Vergelijking van alle onderzochte chunking-strategieën ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig of niet van toepassing; ? = beperkt of implementatie-afhankelijk.}
+  \small
+  \begin{tabular}{p{0.04\linewidth} p{0.25\linewidth} p{0.08\linewidth} p{0.08\linewidth} p{0.07\linewidth} p{0.08\linewidth} p{0.08\linewidth} p{0.07\linewidth} p{0.08\linewidth}}
     \toprule
-    \textbf{Prio} & \textbf{Requirement} & \textbf{A: Fixed-size} & \textbf{B: Recursive} & \textbf{C: Semantic} \\
+    \textbf{P} & \textbf{Requirement} & \textbf{Fixed} & \textbf{Sent.} & \textbf{Sliding} & \textbf{Recurs.} & \textbf{Sem.} & \textbf{Doc.} & \textbf{Agent./ Late} \\
     \midrule
-    M & Context Recall (vindt relevante passages terug)       & ?              & \textbullet   & \textbullet \\
-    M & Source attribution (metadata blijft intact per chunk) & \textbullet    & \textbullet   & \textbullet \\
-    M & Haystack \texttt{@component} implementeerbaar         & \textbullet    & \textbullet   & \textbullet \\
-    S & Latentie (snelheid tijdens indexering)                & \textbullet    & \textbullet   & ?           \\
-    S & Controle over chunk-grenzen                           & \textbullet    & \textbullet   & ?           \\
-    C & Context Precision (minimale ruis in chunks)           & ---            & ?             & \textbullet \\
-    C & Semantisch coherente chunks (één onderwerp)           & ---            & ?             & \textbullet \\
+    M & Context Recall                 & ?           & ---         & ?           & \textbullet & \textbullet & ?           & ?   \\
+    M & Source attribution             & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+    M & Haystack implementeerbaar      & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & ?           & --- \\
+    M & Reproduceerbaarheid            & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ?           & --- \\
+    S & Latentie (indexering)          & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet & --- \\
+    S & Controle over chunk-grenzen    & \textbullet & ?           & \textbullet & \textbullet & ?           & ---         & --- \\
+    C & Context Precision              & ---         & ?           & ---         & ?           & \textbullet & \textbullet & \textbullet \\
+    C & Semantisch coherente chunks    & ---         & ?           & ---         & ?           & \textbullet & \textbullet & \textbullet \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+Uit de tabel blijkt dat \textbf{fixed-size chunking}, \textbf{recursive character chunking} en \textbf{semantic chunking} het breedst scoren over de Must-Have-requirements en samen het spectrum van deterministisch-snel tot semantisch-contextbewust volledig dekken. Sentence-based chunking scoort onvoldoende op Context Recall. Sliding window is geen zelfstandige strategie. Document structure chunking is te afhankelijk van documentkwaliteit. Agentic en late chunking zijn te kostbaar of te complex voor de experimentele opzet van dit onderzoek.
+
 
 \section{Embedding-modellen}
 \label{sec:longlist-embedding}
 
-Het embedding-model zet tekstchunks om in numerieke vectoren die in de vectordatabase worden opgeslagen. De kwaliteit van deze representaties bepaalt hoe goed de retriever semantisch verwante passages kan terugvinden bij een zoekopdracht. Mijn copromotor stelde specifieke eisen aan de selectie: modellen moeten meertalig zijn, geoptimaliseerd voor instruction-following, en sterk presteren op retrieval op basis van zowel vragen als trefwoorden. Als selectiecriterium werd de \gls{mteb} Leaderboard gebruikt, de academische standaard voor het vergelijken van embedding-modellen over 58 datasets en 112 talen \autocite{MuennighoffEtAl2023}.
 
-\subsection{Onderzochte alternatieven}
+Het embedding-model zet tekstchunks om in numerieke vectoren die in de vectordatabase worden opgeslagen. De kwaliteit van deze representaties bepaalt hoe goed de retriever semantisch verwante passages terugvindt bij een zoekopdracht. Mijn copromotor stelde specifieke eisen: modellen moeten meertalig zijn, geoptimaliseerd voor instruction-following en sterk presteren op retrieval op basis van zowel vragen als trefwoorden. Als objectief selectiecriterium wordt de \gls{mteb} Leaderboard gehanteerd, de academische standaard voor het vergelijken van embedding-modellen over 58 datasets en 112 talen \autocite{MuennighoffEtAl2023}.
 
-\subsubsection{Cohere embed-multilingual-v3.0}
+\subsection{OpenAI text-embedding-3-large}
 
-Cohere's embed-multilingual-v3.0 is een sterk commercieel model dat specifiek getraind is voor \textit{search} en \textit{retrieval}-taken. Het presteert uitstekend op de \gls{mteb} leaderboard voor meertalige retrieval-taken \autocite{MuennighoffEtAl2023}. Het model wordt echter uitgesloten omdat de \gls{poc} van Turtle Srl al gebruikmaakt van de Azure-infrastructuur van Microsoft, waarbinnen het OpenAI-model text-embedding-3-large native beschikbaar is. Het toevoegen van een extra externe \gls{api}-provider zoals Cohere verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen ten opzichte van het reeds geselecteerde OpenAI-model. Beide dekken de proprietaire categorie af.
+Text-embedding-3-large is OpenAI's meest performante embedding-model en de commerciële standaard voor enterprise-toepassingen. Officiële OpenAI-documentatie bevestigt een \gls{mteb} gemiddelde van 64,6\%, een MIRACL meertalige retrieval-score van 54,9\% (tegenover 31,4\% voor het vorige model ada-002), ondersteuning voor 3.072 dimensies met Matryoshka-stijl truncatie en een maximale inputlengte van 8.191 tokens \autocite{OpenAIEmbeddings2024}. Opmerkelijk is dat een ingekorte versie van 256 dimensies nog steeds beter presteert dan het volledige ada-002 model met 1.536 dimensies. Het model is native beschikbaar via de Azure OpenAI Service, de deployment-omgeving van Turtle Srl. De beperking is dat het niet lokaal kan draaien en dat elke aanroep een \gls{api}-kost met zich meebrengt.
 
-\subsubsection{Google text-embedding-004}
+\subsection{BAAI BGE-M3}
 
-Google's text-embedding-004 is beschikbaar via de Vertex AI en Gemini API en presteert competitief op meertalige \gls{mteb}-taken. Dit model wordt uitgesloten om dezelfde reden als Cohere: het introduceert een derde externe \gls{api}-provider, terwijl de Google-categorie in de \gls{llm}-component al vertegenwoordigd is via Gemini 2.5 Flash. Een verdere spreiding van externe API-afhankelijkheden vergroot de complexiteit van de experimentele opzet zonder proportionele meerwaarde voor de onderzoeksvraag.
+BGE-M3, gepubliceerd door het Beijing Academy of Artificial Intelligence, introduceert een unieke combinatie van drie retrievalfunctionaliteiten via één modelgewicht: dense retrieval (semantisch zoeken via cosine-gelijkenis), sparse retrieval (trefwoordzoeken via geleerde gewichten) en multi-vector retrieval (ColBERT-stijl token-niveau matching) \autocite{Chen2024}. Het is het eerste embedding-model dat deze drie functionaliteiten combineert. Verdere specificaties zijn ondersteuning voor meer dan 100 talen en een maximale inputlengte van 8.192 tokens. De multi-vector uitvoer sluit naadloos aan bij Qdrant's native ondersteuning voor hybride zoekopdrachten via \gls{rrf} \autocite{QdrantHybrid2025}. Dit is bijzonder relevant voor \gls{esg}-vragenlijsten waarbij zowel semantisch als op trefwoord gezocht moet kunnen worden. De beperking is de infrastructuurkost: als open-source model vereist BGE-M3 lokale inferentie of een containerized Azure-deployment.
 
-\subsubsection{Jina jina-embeddings-v2-base-multilingual}
+\subsection{Microsoft multilingual-e5-large-instruct}
 
-Het Jina-model onderscheidt zich door ondersteuning van zeer lange contexten tot 8.192 tokens \autocite{JinaAI2024}. Dit is een interessante eigenschap voor lange \gls{esg}-documenten. Het model wordt echter uitgesloten ten voordele van BGE-M3, dat dezelfde lange context (8.192 tokens) biedt én daarbovenop hybride zoeken (dense, sparse en multi-vector) ondersteunt \autocite{Chen2024}. BGE-M3 is daarmee technologisch superieur voor de specifieke eisen van dit onderzoek, waar mijn copromotor expliciet zoekopdrachten op basis van zowel vragen als trefwoorden vereist.
+De E5-modelfamilie van Microsoft Research introduceerde het concept van \textit{query-} en \textit{passage-}prefixen als instruction-tuning mechanisme \autocite{WangEtAl2022}. Mijn variant multilingual-e5-large-instruct, beschreven door \textcite{WangEtAl2024b}, initialiseert vanuit xlm-roberta-large, ondersteunt 100 talen en is getraind op 1 miljard meertalige tekstparen. Door simpelweg \texttt{query:} voor een vraag en \texttt{passage:} voor een documentchunk te plaatsen, dwingt men het model de asymmetrische relatie tussen vraag en antwoord te modelleren \autocite{Wang2024a}. Vergeleken met BGE-M3 is dit model lichter in gewicht, wat snellere lokale inferentie op een Azure-server mogelijk maakt. De beperking is de afwezigheid van hybride zoekfunctionaliteit.
 
-\subsubsection{Alibaba GTE-multilingual-base}
+\subsection{Cohere embed-multilingual-v3.0}
 
-Het GTE-multilingual-base model van Alibaba scoort sterk op algemene \gls{mteb}-benchmarks \autocite{MuennighoffEtAl2023}. Het wordt echter uitgesloten omwille van hetzelfde argument als het Jina-model: BGE-M3 biedt ingebouwde ondersteuning voor hybride zoeken die GTE-multilingual-base mist. Bovendien roept hosting van data bij een Chinees bedrijf \gls{gdpr}-gerelateerde vragen op over gegevenssoevereiniteit, wat voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl een bijkomend bezwaar is.
+Cohere's embed-multilingual-v3.0 is een sterk commercieel model dat specifiek getraind is voor search- en retrieval-taken en uitstekend presteert op de \gls{mteb}-leaderboard voor meertalige taken \autocite{MuennighoffEtAl2023}. Echter, de \gls{poc} maakt reeds gebruik van de Azure-infrastructuur met OpenAI-integratie. Het toevoegen van Cohere als derde externe \gls{api}-provider verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen ten opzichte van text-embedding-3-large, dat de proprietaire categorie reeds afdekt.
 
-\subsection{Short list embedding-modellen}
+\subsection{Google text-embedding-004}
 
-\subsubsection{OpenAI text-embedding-3-large (proprietair, Azure-native)}
+Google's text-embedding-004 is beschikbaar via Vertex AI en presteert competitief op meertalige \gls{mteb}-taken. Dit model vormt een extra externe \gls{api}-provider en introduceert geen unieke dimensie ten opzichte van de andere kandidaten. Bovendien is de Google-categorie in de \gls{llm}-component al vertegenwoordigd via Gemini 2.5 Flash, waardoor een dubbele afhankelijkheid van Google-diensten ontstaat.
 
-Text-embedding-3-large is momenteel OpenAI's meest performante embedding-model en de commerciële gouden standaard voor enterprise-toepassingen. Officiële OpenAI-documentatie bevestigt de volgende technische specificaties: een \gls{mteb} gemiddelde score van 64,6\% (een stijging van 3,6 procentpunten ten opzichte van het vorige model ada-002), een score van 54,9\% op de MIRACL meertalige retrieval-benchmark (vergeleken met 31,4\% voor ada-002), ondersteuning voor 3.072 dimensies met Matryoshka-stijl truncatie, en een maximale inputlengte van 8.191 tokens \autocite{OpenAIEmbeddings2024}. Een opmerkelijke eigenschap is dat een ingekorte versie van 256 dimensies nog steeds beter presteert dan het volledige ada-002 model met 1.536 dimensies, wat flexibele opslag mogelijk maakt \autocite{OpenAIEmbeddings2024}.
+\subsection{Jina jina-embeddings-v2-base-multilingual}
 
-Het belangrijkste voordeel voor dit onderzoek is de naadloze integratie met de Azure OpenAI Service, de deployment-omgeving van Turtle Srl. Dit elimineert infrastructuurcomplexiteit en laat toe om dit model te gebruiken als de proprietaire referentie waartegen open-source alternatieven worden afgewogen. De beperking is dat het model niet lokaal kan draaien en dat elke aanroep een \gls{api}-kost met zich meebrengt, wat relevant is voor de kostenefficiëntie-requirement.
+Het Jina-model ondersteunt contexten tot 8.192 tokens \autocite{JinaAI2024}, wat interessant is voor lange \gls{esg}-documenten. BGE-M3 biedt echter dezelfde lange context én bovendien hybride zoeken, waardoor het Jina-model technologisch inferieur is voor de specifieke eisen van dit onderzoek, zonder compenserende voordelen.
 
-\subsubsection{BAAI BGE-M3 (open-source, hybride zoeken)}
+\subsection{Alibaba GTE-multilingual-base}
 
-BGE-M3, gepubliceerd door het Beijing Academy of Artificial Intelligence, introduceert een paradigmaverschuiving in de wereld van embedding-modellen. \textcite{Chen2024} beschrijven in hun ACL 2024-paper hoe BGE-M3 drie retrievalfunctionaliteiten gelijktijdig ondersteunt via een \textit{self-knowledge distillation}-trainingsmethode: dense retrieval (semantisch zoeken via cosine-gelijkenis), sparse retrieval (trefwoordzoeken via geleerde gewichten, vergelijkbaar met BM25) en multi-vector retrieval (ColBERT-stijl token-niveau matching). Dit is het eerste embedding-model dat deze drie functionaliteiten combineert in één modelgewicht. Verdere technische specificaties zijn: ondersteuning voor meer dan 100 talen, een maximale inputlengte van 8.192 tokens, en state-of-the-art prestaties op meertalige retrieval-benchmarks zoals MIRACL.
+Het GTE-multilingual-base model van Alibaba scoort sterk op algemene \gls{mteb}-benchmarks \autocite{MuennighoffEtAl2023}. Naast het ontbreken van hybride zoekfunctionaliteit roept hosting bij een Chinese aanbieder \gls{gdpr}-vragen op over gegevenssoevereiniteit voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl, wat een bijkomende uitsluitingsgrond vormt.
 
-De multi-vector uitvoer van BGE-M3 sluit naadloos aan bij Qdrant's native ondersteuning voor hybride zoekopdrachten via Reciprocal Rank Fusion (\gls{rrf}) \autocite{QdrantHybrid2025}. Dit is bijzonder relevant voor \gls{esg}-vragenlijsten, waarbij een vraag zoals \textit{``Wat is de totale \gls{co2}-uitstoot van Scope 3?''} zowel semantisch als op trefwoordniveau gezocht moet kunnen worden. De beperking is de infrastructuurkost: als open-source model vereist BGE-M3 lokale inferentie op een GPU-server of een containerized deployment op Azure.
-
-\subsubsection{Microsoft multilingual-e5-large-instruct (open-source, instruction-tuned)}
-
-De E5-modelfamilie, ontwikkeld door Microsoft Research, introduceerde het concept van \textit{query}- en \textit{passage}-prefixen als instruction-tuning mechanisme. \textcite{WangEtAl2022} beschreven in de originele E5-paper hoe contrastief pre-trainen op CCPairs het model zelfs zonder gelabelde data laat uitblinken op de BEIR-benchmark, waarbij het modellen met 40 maal meer parameters overtreft. De specifieke variant multilingual-e5-large-instruct, beschreven door \textcite{WangEtAl2024b} in hun technisch rapport, initialiseert vanuit het xlm-roberta-large basismodel, ondersteunt 100 talen, en is getraind op 1 miljard meertalige tekstparen via contrastief pre-trainen gevolgd door instruction-tuning.
-
-Het instructie-mechanisme werkt als volgt: door simpelweg de prefix \texttt{query:} voor een vraag te plaatsen en \texttt{passage:} voor een documentchunk, dwingt men het model om de asymmetrische relatie tussen een vraag en een antwoordpassage te modelleren \autocite{Wang2024a}. Dit sluit perfect aan bij de eis van mijn copromotor voor modellen die \textit{``optimized for instructions and strong retrieval capabilities based on questions and keywords''} zijn. Vergeleken met BGE-M3 is dit model lichter in gewicht, wat snellere lokale inferentie op een Azure-server mogelijk maakt. De beperking is dat het geen hybride zoekfunctionaliteit biedt.
-
+%%----------------------------------------------------------------------
 \subsection{Vergelijkingstabel embedding-modellen}
+%%----------------------------------------------------------------------
 
 \begin{table}[h]
   \centering
-  \caption[Vergelijking van embedding-modellen t.o.v.\ de requirements]{\label{tab:embedding-vergelijking}Samenvattende vergelijking van de drie weerhouden embedding-modellen ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig; ? = beperkt of implementatie-afhankelijk.}
-  \begin{tabular}{p{0.08\textwidth} p{0.38\textwidth} p{0.14\textwidth} p{0.14\textwidth} p{0.14\textwidth}}
+  \caption[Long list vergelijkingstabel embedding-modellen]{\label{tab:longlist-embedding}Vergelijking van alle onderzochte embedding-modellen ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig; ? = beperkt of implementatie-afhankelijk.}
+  \small
+  \begin{tabular}{p{0.04\linewidth} p{0.26\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.09\linewidth}}
     \toprule
-    \textbf{Prio} & \textbf{Requirement} & \textbf{A: OpenAI} & \textbf{B: BGE-M3} & \textbf{C: E5-Instruct} \\
+    \textbf{P} & \textbf{Requirement} & \textbf{OpenAI 3-large} & \textbf{BGE-M3} & \textbf{E5-Instruct} & \textbf{Cohere v3} & \textbf{Google 004} & \textbf{Jina / GTE} \\
     \midrule
-    M & Source attribution (via metadata)       & \textbullet & \textbullet & \textbullet \\
-    M & Meertalig (NL/EN/FR/\ldots)             & \textbullet & \textbullet & \textbullet \\
-    M & Azure-compatibiliteit                   & \textbullet & \textbullet & \textbullet \\
-    M & Instruction-tuned                       & ---         & \textbullet & \textbullet \\
-    S & Hybride zoeken (keywords + semantisch)  & ---         & \textbullet & ?           \\
-    S & Lange context ($>$512 tokens)           & \textbullet & \textbullet & ---         \\
-    C & Lokale uitvoering (privacy/geen API)    & ---         & \textbullet & \textbullet \\
-    C & Kostenefficiëntie                       & ---         & \textbullet & \textbullet \\
+    M & Source attribution (via metadata)      & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+    M & Meertalig (NL/EN/FR/\ldots)            & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+    M & Azure-compatibiliteit                  & \textbullet & \textbullet & \textbullet & ?           & ?           & ?           \\
+    M & Instruction-tuned                      & ---         & \textbullet & \textbullet & \textbullet & ?           & ---         \\
+    S & Hybride zoeken (keywords + semantisch) & ---         & \textbullet & ?           & ---         & ---         & ---         \\
+    S & Lange context ($>$512 tokens)          & \textbullet & \textbullet & ---         & ?           & ?           & \textbullet \\
+    S & Geen extra API-provider                & \textbullet & \textbullet & \textbullet & ---         & ---         & \textbullet \\
+    C & Lokale uitvoering (privacy)            & ---         & \textbullet & \textbullet & ---         & ---         & \textbullet \\
+    C & Kostenefficiëntie                      & ---         & \textbullet & \textbullet & ---         & ---         & \textbullet \\
+    C & GDPR / EU-soevereiniteit               & ?           & ---         & \textbullet & ?           & ---         & ---         \\
     \bottomrule
   \end{tabular}
 \end{table}
 
+Uit de tabel blijkt dat \textbf{text-embedding-3-large}, \textbf{BGE-M3} en \textbf{multilingual-e5-large-instruct} het breedst scoren over de Must-Have-requirements en samen een ideale vergelijking vormen tussen een proprietaire baseline, een open-source hybride model en een open-source instruction-tuned model. Cohere en Google text-embedding-004 slagen niet op de Azure-compatibiliteitseis en introduceren extra API-providers. Jina en GTE scoren zwak op instruction-tuning en bieden geen hybride zoeken.
+
+
 \section{Large Language Models}
 \label{sec:longlist-llm}
 
-Het \gls{llm} vormt de generatieve kern van de \gls{rag}-pipeline. Het ontvangt de opgehaalde chunks als context en formuleert op basis daarvan een coherent antwoord. Binnen de \gls{rag}-architectuur fungeert het \gls{llm} als een actieve verwerker van niet-parametrische data: in plaats van te vertrouwen op kennis die tijdens pre-training is opgeslagen, redeneert het model over de aangeleverde documentfragmenten \autocite{Lewis2020}. Het selectieproces hieronder verantwoordt de specifieke modelkeuzes binnen deze families en gaat na welke alternatieve modellen werden overwogen en uitgesloten.
 
-\subsection{Onderzochte alternatieven}
+Het \gls{llm} vormt de generatieve kern van de \gls{rag}-pipeline. Het ontvangt de opgehaalde chunks als context en formuleert op basis daarvan een coherent antwoord. Binnen de \gls{rag}-architectuur fungeert het als een actieve verwerker van niet-parametrische data: in plaats van te vertrouwen op kennis die tijdens pre-training is opgeslagen, redeneert het model over de aangeleverde documentfragmenten \autocite{Lewis2020}. De volgende kandidaten werden onderzocht.
 
-\subsubsection{Anthropic Claude 3.5 Sonnet}
+\subsection{OpenAI GPT-4o-mini}
 
-Claude 3.5 Sonnet van Anthropic is momenteel een van de sterkste modellen voor instructie-opvolging en redeneren over lange documenten. Het wordt uitgesloten omdat Anthropic geen native integratie heeft met Azure OpenAI Service of Azure AI Foundry. Het vereist een aparte Anthropic \gls{api}-sleutel, wat een extra externe leveranciersafhankelijkheid introduceert buiten het Azure-ecosysteem. De Google Gemini-categorie dekt de \textit{niet-OpenAI proprietaire} klasse reeds af.
+GPT-4o-mini is de kostenefficiënte variant van het GPT-4o-model. De technische specificaties zijn een \gls{mmlu}-score van 82,0\%, een contextvenster van 128.000 tokens en een prijs van \$0,15 per miljoen invoertokens — meer dan 60\% goedkoper dan GPT-3.5 Turbo, terwijl het dit model substantieel overtreft \autocite{OpenAIGPT4omini2024}. Het is native beschikbaar via Azure OpenAI Service en volgt complexe systeemprompts en \gls{json}-opmaak-instructies uiterst betrouwbaar op, wat cruciaal is voor de Metadata-Aware Prompt Builder die bronvermeldingen via \texttt{<doc id>}-tags in de gegenereerde output verwacht. \textcite{TamberEtAl2025} stellen vast dat OpenAI-modellen consistent lage hallucinatiescores halen op document-gebaseerde taken in \gls{rag}-omgevingen.
 
-\subsubsection{Meta Llama 3.3 70B}
+\subsection{Google Gemini 2.5 Flash}
 
-Llama 3.3 70B is het krachtigste volledig open-source model van Meta en presteert op meerdere benchmarks op het niveau van commerciële modellen. Het model wordt uitgesloten vanwege de aanzienlijke infrastructuurvereisten voor inferentie: een 70B-parametermodel heeft minimaal twee A100 80GB-\glspl{gpu} nodig voor vlotte inferentie \autocite{MistralAIBlog2024}. Dit voegt een onnodige complexiteitslaag toe aan de Azure-deployment, terwijl Mistral Large 2 de open-source categorie efficiënter dekt met vergelijkbare prestaties op een meer behapbare hardware-footprint.
+Gemini 2.5 Flash is Googles snelste en meest kostenefficiënte model in de Gemini 2.5-familie. \textcite{Comanici2025} beschrijven een \textit{Sparse Mixture-of-Experts}-transformerarchitectuur met een contextvenster van één miljoen tokens en een ingebouwd \textit{thinking budget}: bij complexere vragen activeert het model diepgaander redeneren, terwijl het bij eenvoudige retrievaltaken dit proces overslaat voor maximale snelheid. Het model biedt een alternatief buiten het OpenAI/Microsoft-ecosysteem, wat test of de \gls{poc}-architectuur vendor-agnostisch is opgebouwd. De beperking is dat Gemini niet native op Azure draait en een afzonderlijke Google \gls{api}-sleutel vereist.
 
-\subsubsection{Cohere Command R+}
+\subsection{Mistral AI Mistral Large 2}
 
-Command R+ is door Cohere specifiek ontworpen voor \gls{rag}-toepassingen en beschikt over ingebouwde \textit{grounding} en retrieval-augmentation features. Het wordt om dezelfde reden uitgesloten als het Cohere embedding-model: het introduceren van een derde externe \gls{api}-provider verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen die niet reeds wordt gedekt door GPT, Gemini of Mistral.
+Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit. \textcite{MistralAIBlog2024} documenteren 123 miljard parameters, een contextvenster van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Als Frans bedrijf gevestigd in Parijs verwerkt Mistral AI alle data exclusief binnen de \gls{eu}, waardoor het niet valt onder de Amerikaanse CLOUD Act \autocite{MistralAIBlog2024}. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt. \textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder grouped-query attention (\gls{gqa}) die de latentie bij inferentie verlaagt.
 
-\subsubsection{DeepSeek DeepSeek-V3}
+\subsection{Anthropic Claude 3.5 Sonnet}
 
-DeepSeek-V3 is een open-source model dat op benchmarks presteert op het niveau van GPT-4, tegen een fractie van de kosten. Dit model wordt nadrukkelijk uitgesloten op grond van \gls{gdpr}-vereisten: DeepSeek is een Chinese aanbieder en het doorsturen van de vertrouwelijke \gls{esg}-documenten van Turtle Srl naar DeepSeek-servers is onverenigbaar met de Europese wetgeving inzake gegevensbescherming \autocite{HuangEtAl2023}. Voor gevoelige bedrijfsdocumenten is datagesoevereiniteit een harde uitsluitingsgrond.
+Claude 3.5 Sonnet is momenteel een van de sterkste modellen voor instructie-opvolging en redeneren over lange documenten. Het beschikt echter niet over native integratie met Azure OpenAI Service of Azure AI Foundry en vereist een aparte Anthropic \gls{api}-sleutel buiten het Azure-ecosysteem, wat een extra leveranciersafhankelijkheid introduceert. De Gemini-categorie dekt de niet-OpenAI proprietaire klasse reeds af.
 
-\subsection{Short list LLMs}
+\subsection{Meta Llama 3.3 70B}
 
-\subsubsection{OpenAI GPT-4o-mini (proprietair, Azure-native)}
+Llama 3.3 70B is het krachtigste volledig open-source model van Meta. Het is volledig vrij te gebruiken en lokaal in te zetten, maar vereist voor vlotte inferentie minimaal twee A100 80GB-\glspl{gpu} \autocite{MistralAIBlog2024}. Dit voegt een onnodige infrastructuurcomplexiteit toe aan de Azure-deployment, terwijl Mistral Large 2 de open-source/zelf-hostbare categorie efficiënter dekt met vergelijkbare prestaties op een aanzienlijk lichtere hardware-footprint.
 
-GPT-4o-mini is de kostenefficiënte variant van het GPT-4o-model en werd door OpenAI gelanceerd als het toegankelijkste model in de GPT-4-familie \autocite{OpenAIGPT4omini2024}. De technische specificaties zijn indrukwekkend voor een klein model: een \gls{mmlu}-score van 82,0\% (vergeleken met 77,9\% voor Gemini Flash en 73,8\% voor Claude Haiku op het moment van lancering), een contextvenster van 128.000 tokens, en een prijs van \$0,15 per miljoen invoertokens — meer dan 60\% goedkoper dan GPT-3.5 Turbo terwijl het dit model substantieel overtreft \autocite{OpenAIGPT4omini2024}. Het model is native beschikbaar via de Azure OpenAI Service, wat naadloze integratie in de \gls{poc}-infrastructuur van Turtle Srl garandeert.
+\subsection{Cohere Command R+}
 
-Vanuit het perspectief van \gls{rag}-faithfulness is GPT-4o-mini bijzonder geschikt. \textcite{TamberEtAl2025} stellen in hun \textit{Benchmarking LLM Faithfulness in RAG with Evolving Leaderboards}-studie vast dat OpenAI-modellen consistent lage hallucinatiescores halen op document-gebaseerde taken. De architecturale eigenschap om complexe systeemprompts en \gls{json}-opmaak exact op te volgen is cruciaal voor de Metadata-Aware Prompt Builder, die bronvermeldingen via \texttt{<doc id>}-tags in de gegenereerde output verwacht. GPT-4o-mini dient in dit onderzoek als de proprietaire baseline waartegen open-source modellen worden afgewogen.
+Command R+ is door Cohere specifiek ontworpen voor \gls{rag}-toepassingen en beschikt over ingebouwde grounding- en retrieval-augmentation features. Het introduceert echter een extra externe \gls{api}-provider naast OpenAI en Google, zonder een unieke testdimensie toe te voegen die niet reeds door GPT, Gemini of Mistral wordt gedekt.
 
-\subsubsection{Google Gemini 2.5 Flash (proprietair, redeneeroptimalisatie)}
+\subsection{DeepSeek DeepSeek-V3}
 
-Gemini 2.5 Flash is Googles snelste en meest kostenefficiënte model in de Gemini 2.5-familie. \textcite{Comanici2025} beschrijven in het technische rapport hoe het model gebaseerd is op een \textit{Sparse Mixture-of-Experts}-transformerarchitectuur met een contextvenster van één miljoen tokens. Een onderscheidende eigenschap is het hybride redeneermodel: bij complexere vragen activeert het model een ingebouwd \textit{thinking budget} voor diepgaander redeneren, terwijl het bij eenvoudigere retrievaltaken dit denkproces overslaat voor maximale snelheid. Dit is bijzonder relevant voor \gls{esg}-vragenlijsten, waarbij sommige vragen directe feitenopzoeking vereisen en andere meer redeneren over meerdere documentfragmenten vergen.
+DeepSeek-V3 is een open-source model dat op benchmarks presteert op het niveau van GPT-4, tegen een fractie van de kosten. Dit model wordt uitdrukkelijk uitgesloten op grond van \gls{gdpr}-vereisten: DeepSeek is een Chinese aanbieder en het doorsturen van de vertrouwelijke \gls{esg}-documenten van Turtle Srl naar DeepSeek-servers is onverenigbaar met de Europese wetgeving inzake gegevensbescherming \autocite{HuangEtAl2024}. Voor gevoelige bedrijfsdocumenten is datasoevereiniteit een harde uitsluitingsgrond.
 
-Gemini 2.5 Flash biedt een alternatief buiten het OpenAI/Microsoft-ecosysteem. Dit test of de \gls{poc}-architectuur vendor-agnostisch is opgebouwd, een reële bedrijfseis voor toekomstige uitbreiding van de \gls{poc}. De technische beperking is dat Gemini niet native op Azure draait: aanroepen verlopen via de Google AI \gls{api}, wat een afzonderlijke Google \gls{api}-sleutel vereist. Vanuit een Azure-server is dit technisch probleemloos via een standaard \gls{http}-client, maar het vereist extra configuratie.
-
-\subsubsection{Mistral AI Mistral Large 2 (open-source, Europese soevereiniteit)}
-
-Mistral Large 2, gelanceerd door het Europese AI-bedrijf Mistral AI, combineert indrukwekkende prestaties met een strategisch voordeel voor Europese bedrijven: \gls{gdpr}-conforme dataverwerking met volledige datasoevereiniteit binnen de \gls{eu}. \textcite{MistralAIBlog2024} documenteren de technische specificaties: 123 miljard parameters, een contextvenster van 128.000 tokens, een \gls{mmlu}-score van 84,0\%, en prestaties vergelijkbaar met GPT-4o en Claude 3 Opus op codeer- en redeneer-benchmarks. Het model is expliciet getraind om te erkennen wanneer het een oplossing niet kan vinden, wat door design de hallucinatietendens vermindert \autocite{MistralAIBlog2024}.
-
-Vanuit een data governance-perspectief is Mistral Large 2 bijzonder interessant: Mistral AI is gevestigd in Parijs en verwerkt alle data exclusief binnen de \gls{eu}, waardoor het niet valt onder de Amerikaanse CLOUD Act \autocite{MistralAIBlog2024}. Dit maakt het model tot de enige optie in de short list die volledige Europese datasoevereiniteit garandeert, een relevante factor voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl. Bijkomend voordeel is de beschikbaarheid via de Azure AI Foundry Model Catalog en de mogelijkheid tot volledig self-hosted deployment op een Azure VM, wat de architecturele flexibiliteit voor toekomstige on-premise implementaties maximaliseert.
-
-\textcite{JiangEtAl2023} legden in het originele Mistral 7B-paper de architecturale innovaties vast die de Mistral-modelfamilie kenmerken: grouped-query attention (\gls{gqa}) en sliding window attention (\gls{swa}). Deze technieken verlagen de geheugen- en berekeningsvereisten bij inferentie, wat de latentieprestaties van Mistral Large 2 op een Azure-server ten goede komt.
 
 \subsection{Vergelijkingstabel LLMs}
 
+
 \begin{table}[h]
   \centering
-  \caption[Vergelijking van LLMs t.o.v.\ de requirements]{\label{tab:llm-vergelijking}Samenvattende vergelijking van de drie weerhouden \glspl{llm} ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig; ? = beperkt of implementatie-afhankelijk.}
-  \begin{tabular}{p{0.08\textwidth} p{0.38\textwidth} p{0.14\textwidth} p{0.14\textwidth} p{0.14\textwidth}}
+  \caption[Long list vergelijkingstabel LLMs]{\label{tab:longlist-llm}Vergelijking van alle onderzochte \glspl{llm} ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig; ? = beperkt of implementatie-afhankelijk.}
+  \small
+  \begin{tabular}{p{0.04\linewidth} p{0.26\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.09\linewidth} p{0.07\linewidth} p{0.09\linewidth}}
     \toprule
-    \textbf{Prio} & \textbf{Requirement} & \textbf{A: GPT-4o-mini} & \textbf{B: Gemini 2.5 Flash} & \textbf{C: Mistral Large 2} \\
+    \textbf{P} & \textbf{Requirement} & \textbf{GPT-4o-mini} & \textbf{Gemini 2.5 Flash} & \textbf{Mistral Large 2} & \textbf{Claude 3.5} & \textbf{Llama 70B} & \textbf{Cmd R+ / DeepSeek} \\
     \midrule
-    M & Source attribution (volgt JSON-prompt)      & \textbullet & \textbullet & \textbullet \\
-    M & Faithfulness (lage hallucinatiesnelheid)    & \textbullet & \textbullet & ?           \\
-    M & Azure-compatibiliteit                      & \textbullet & ?           & \textbullet \\
-    S & Answer Relevancy (gerichte antwoorden)      & \textbullet & \textbullet & \textbullet \\
-    S & Latentie (snelle responstijd)              & \textbullet & \textbullet & ?           \\
-    S & Kosten per query (betaalbaar op schaal)     & \textbullet & \textbullet & \textbullet \\
-    C & Lokale uitvoering (self-hosting)            & ---         & ---         & \textbullet \\
-    C & GDPR / Europese datasoevereiniteit          & ?           & ---         & \textbullet \\
+    M & Source attribution (JSON-prompt)       & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ?    \\
+    M & Faithfulness (lage hallucinatierate)  & \textbullet & \textbullet & ?           & \textbullet & ?           & ?    \\
+    M & Azure-compatibiliteit                 & \textbullet & ?           & \textbullet & ---         & ?           & ---  \\
+    M & Geen extra API-provider               & \textbullet & ---         & \textbullet & ---         & \textbullet & ---  \\
+    S & Answer Relevancy                      & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+    S & Latentie (snelle responstijd)         & \textbullet & \textbullet & ?           & \textbullet & ?           & ?    \\
+    S & Kosten per query                      & \textbullet & \textbullet & \textbullet & ---         & \textbullet & \textbullet \\
+    C & Lokale uitvoering (self-hosting)      & ---         & ---         & \textbullet & ---         & \textbullet & ?    \\
+    C & GDPR / EU-soevereiniteit              & ?           & ---         & \textbullet & ?           & ?           & ---  \\
     \bottomrule
   \end{tabular}
 \end{table}

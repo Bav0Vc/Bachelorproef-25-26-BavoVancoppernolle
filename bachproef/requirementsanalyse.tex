@@ -1,4 +1,4 @@
-\chapter{\IfLanguageName{dutch}{Requirements verzamelen}}%
+\chapter{\IfLanguageName{dutch}{Requirements verzamelen}{Requirements gathering}}%
 \label{ch:requirementsanalyse}
 
 De voorgaande literatuurstudie legde de theoretische fundamenten van \gls{esg}-rapportage en \gls{rag} bloot. Dit hoofdstuk vertaalt die inzichten naar concrete eisen waaraan de te bouwen dynamische \gls{rag}-pipeline moet voldoen. De requirementsanalyse vormt de schakel tussen de probleemstelling en de technische implementatie: zij bepaalt welke criteria de optimale configuratie moet behalen en biedt de objectieve meetlat voor de vergelijkende studie in de latere fases.
@@ -60,13 +60,13 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     Must Have   & Selectie van 3 \glspl{llm}                   & GPT, Gemini 2.5 Flash en Mistral \\
     Must Have   & Golden set van \gls{esg}-vragen              & Vereist voor alle RAGAS-metrics (ground truth) \autocite{Es2024} \\
     Must Have   & Haystack 2.x met custom componenten          & White-box controle over pipeline-logica \\
-    Must Have   & Variabele chunking-strategie (3 opties)      & Kernvariabele van de vergelijkende studie \\
+    Must Have   & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
     \midrule
     Should Have & Answer Relevancy                             & Bepaalt de effectiviteit van de \gls{poc} \autocite{Es2024} \\
     Should Have & Latentie en kosten per query                 & Operationele bruikbaarheid voor Turtle Srl \\
     Should Have & Custom Document Cleaner \& Metadata Extractor & Controle over metadata-extractie uit \glspl{pdf} \\
     Should Have & Azure-hosting                                & Productie-infrastructuur van Turtle Srl \\
-    Should Have & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis} \\
+    Should Have & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
     \midrule
     Could Have  & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
     Could Have  & PocketFlow-connector (output component)      & Nuttig voor real-world integratie, niet voor benchmark \\

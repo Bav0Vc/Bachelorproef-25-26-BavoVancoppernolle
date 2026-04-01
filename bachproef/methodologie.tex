@@ -53,6 +53,7 @@ Daarnaast wordt een golden set van vragen opgesteld. Deze set omvat ESG-gerelate
 Deze fase resulteert in een gestructureerde verzameling van contextdata die in de vector database zal worden geïndexeerd, en een vragenlijst die als vaste benchmark dient voor alle RAG configuraties.
 
 \section{Fase 4: Ontwikkeling van dynamische RAG-pipeline}
+
 In de vierde fase wordt de RAG pipeline ontworpen en geïmplementeerd. De centrale doelstelling is een dynamische proefopstelling te bouwen die toelaat om de variabele componenten (zoals bepaald in fase 2) op een efficiënte manier te combineren en te testen. Zonder een nieuwe pipeline te moeten maken voor iedere combinatie van de componenten.
 
 Technisch wordt gekozen voor een component gebaseerde architectuur waarin modules voor documentconversie, chunking, embedding, vectoropslag, retrieval en generatie als afzonderlijke bouwstenen worden gedefinieerd. De configuratielaag, in JSON, bepaalt per experimentele run welke chunking strategie, welk embedding model en welk LLM worden gebruikt. Dit maakt het mogelijk om de alle combinaties van de short list systematisch te doorlopen.
@@ -74,5 +75,3 @@ De laatste fase richt zich op het verwerken, analyseren en interpreteren van de 
 De resultaten uit fase 5 worden visueel voorgesteld in de vorm van grafieken en tabellen die per metric en per component (chunker, embedder, LLM) de prestaties weergeven. Hierbij wordt gezocht naar patronen, zoals configuraties die consequent hoge faithfulness  en answer relevancy scores hebben met lage latency en kosten. Waar relevant worden trade offs in kaart gebracht in overleg met belanghebbende van het bedrijf (bijvoorbeeld hogere nauwkeurigheid ten koste van hogere kosten of langere responstijden).
 
 Op basis van deze analyse wordt een decision tree opgesteld, waarin voor verschillende gebruiksscenario’s (bijvoorbeeld kosten sensitief versus kwaliteits gedreven) de meest geschikte combinatie van variabele componenten wordt voorgesteld. Deze beslissingsstructuur vormt samen met een samenvattende aanbeveling over de “beste” configuratie het resultaat van dit onderzoek.
-
-\lipsum[21-25]

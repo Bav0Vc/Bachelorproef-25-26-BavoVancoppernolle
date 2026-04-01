@@ -87,7 +87,7 @@ Hyperparameterization in de context van RAG is het systematisch variëren van sy
 
 In een bedrijfscontext zoals die van Turtle Srl is de meest accurate configuratie vaak ook de duurste of traagste. Hyperparameter-optimalisatie (HPO) is noodzakelijk om een superieure Pareto-front, de verzameling van de best mogelijke oplossingen in een probleem met meerdere requirements, te bereiken: de set configuraties die de best mogelijke balans bieden tussen tegenstrijdige doelstellingen zoals operationele kosten, latentie en feitelijke nauwkeurigheid \autocite{Barker2025}. Zonder systematische tuning riskeert men een systeem dat weliswaar accuraat is, maar door hoge inferentiekosten niet schaalbaar is voor grootschalige ESG-rapportage.
 
-In dit onderzoek wordt deze dynamische aanpak ingevuld door de technische samenwerking tussen Hypster en PocketFlow. Hypster is een configuration framework dat het mogelijk maakt om verschillende hyperparameters - zoals variabel chunking, embeddings en LLM’s – te definiëren als injecteerbare variabelen. Dankzij deze parameters is het mogelijk om met 1 pipeline alle mogelijke combinaties van de variabele componenten te testen.
+In dit onderzoek wordt deze dynamische aanpak ingevuld Hypster. Hypster is een configuration framework dat het mogelijk maakt om verschillende hyperparameters - zoals variabel chunking, embeddings en LLM’s – te definiëren als injecteerbare variabelen. Dankzij deze parameters is het mogelijk om met 1 pipeline alle mogelijke combinaties van de variabele componenten te testen.
 
 \begin{listing}[H]
   \begin{minted}{python}
@@ -109,8 +109,6 @@ In dit onderzoek wordt deze dynamische aanpak ingevuld door de technische samenw
   \end{minted}
   \caption[Voorbeeld codefragment HyPSTER - variabele LLM's]{Een voorbeeld van de syntax om meerdere LLM's, hier gpt-4o-mini en gpt-4o, te definiëren in een variabele met HyPSTER. Bron: https://github.com/gilad-rubin/hypster/blob/master/docs/getting-started/usage-examples/llms-and-generative-ai.md}
 \end{listing}
-
-PocketFlow is een flow-orchestrator dat de experimentele loop zal coördineren. Het framework garandeert dat de 27 combinaties systematisch worden getoetst op hun vermogen om "kennisconflicten" te verminderen — situaties waarin geëxtraheerde documenten botsen met de interne kennis van het LLM — terwijl de inferentiekosten beheersbaar blijven \autocite{Fu2024}.
 
 \subsubsection{Chunking}
 

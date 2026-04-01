@@ -167,7 +167,7 @@ DeepSeek-V3 is een open-source model dat op benchmarks presteert op het niveau v
 
 GPT-4o-mini is de kostenefficiënte variant van het GPT-4o-model en werd door OpenAI gelanceerd als het toegankelijkste model in de GPT-4-familie \autocite{OpenAIGPT4omini2024}. De technische specificaties zijn indrukwekkend voor een klein model: een \gls{mmlu}-score van 82,0\% (vergeleken met 77,9\% voor Gemini Flash en 73,8\% voor Claude Haiku op het moment van lancering), een contextvenster van 128.000 tokens, en een prijs van \$0,15 per miljoen invoertokens — meer dan 60\% goedkoper dan GPT-3.5 Turbo terwijl het dit model substantieel overtreft \autocite{OpenAIGPT4omini2024}. Het model is native beschikbaar via de Azure OpenAI Service, wat naadloze integratie in de \gls{poc}-infrastructuur van Turtle Srl garandeert.
 
-Vanuit het perspectief van \gls{rag}-faithfulness is GPT-4o-mini bijzonder geschikt. \textcite{TamberEtAl2025} stellen in hun \textit{Benchmarking LLM Faithfulness in RAG with Evolving Leaderboards}-studie vast dat OpenAI-modellen consistent lage hallucinatiescores halen op document-gebaseerde taken. De architecturale eigenschap om complexe systeemprompts en \gls{xml}-opmaak exact op te volgen is cruciaal voor de Metadata-Aware Prompt Builder, die bronvermeldingen via \texttt{<doc id>}-tags in de gegenereerde output verwacht. GPT-4o-mini dient in dit onderzoek als de proprietaire baseline waartegen open-source modellen worden afgewogen.
+Vanuit het perspectief van \gls{rag}-faithfulness is GPT-4o-mini bijzonder geschikt. \textcite{TamberEtAl2025} stellen in hun \textit{Benchmarking LLM Faithfulness in RAG with Evolving Leaderboards}-studie vast dat OpenAI-modellen consistent lage hallucinatiescores halen op document-gebaseerde taken. De architecturale eigenschap om complexe systeemprompts en \gls{json}-opmaak exact op te volgen is cruciaal voor de Metadata-Aware Prompt Builder, die bronvermeldingen via \texttt{<doc id>}-tags in de gegenereerde output verwacht. GPT-4o-mini dient in dit onderzoek als de proprietaire baseline waartegen open-source modellen worden afgewogen.
 
 \subsubsection{Google Gemini 2.5 Flash (proprietair, redeneeroptimalisatie)}
 
@@ -192,7 +192,7 @@ Vanuit een data governance-perspectief is Mistral Large 2 bijzonder interessant:
     \toprule
     \textbf{Prio} & \textbf{Requirement} & \textbf{A: GPT-4o-mini} & \textbf{B: Gemini 2.5 Flash} & \textbf{C: Mistral Large 2} \\
     \midrule
-    M & Source attribution (volgt XML-prompt)      & \textbullet & \textbullet & \textbullet \\
+    M & Source attribution (volgt JSON-prompt)      & \textbullet & \textbullet & \textbullet \\
     M & Faithfulness (lage hallucinatiesnelheid)    & \textbullet & \textbullet & ?           \\
     M & Azure-compatibiliteit                      & \textbullet & ?           & \textbullet \\
     S & Answer Relevancy (gerichte antwoorden)      & \textbullet & \textbullet & \textbullet \\

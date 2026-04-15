@@ -29,7 +29,7 @@ Niet-functionele requirements beschrijven de kwaliteitseisen en randvoorwaarden 
 
 \textbf{Configureerbaarheid (white-box).} Kritieke logica, zoals de prompt-constructie en de metadata-verwerking, moet handmatig geïmplementeerd worden in plaats van te steunen op gesloten framework-functies. Mijn copromotor formuleerde dit als volgt: \textit{``be prepared to create the component ``by hand'' so that you have maximum control over the system''}. Dit sluit aan bij de keuze voor Haystack 2.x als \gls{rag}-framework, dat expliciete controle over de gegevensstroom tussen componenten mogelijk maakt \autocite{HaystackPipelines2026}.
 
-\textbf{Meertaligheid.} De gebruikte embedding-modellen moeten meertalig zijn om diverse internationale \gls{esg}-documenten te kunnen verwerken. Turtle Srl opereert in een meertalige context waarbij documenten in het Nederlands, Frans en Engels voorkomen. Dit sluit aan bij de selectiecriteria die mijn copromotor formuleerde: \textit{``try to identify 3 or 4 multilingual models''}.
+\textbf{Meertaligheid.} De gebruikte embedding-modellen moeten meertalig zijn om diverse internationale \gls{esg}-documenten te kunnen verwerken. Turtle Srl opereert in een meertalige context waarbij documenten in het Italiaans en Engels voorkomen. Dit sluit aan bij de selectiecriteria die mijn copromotor formuleerde: \textit{``try to identify 3 or 4 multilingual models''}.
 
 \textbf{Faithfulness (betrouwbaarheid).} Antwoorden moeten feitelijk consistent zijn met de opgehaalde brondocumenten om hallucinaties te voorkomen. In een audit-context is dit een absolute voorwaarde: \textit{``the generation component simply reports that information in the response''}. Dit vereiste wordt geëvalueerd via de faithfulness-metriek van het RAGAS-framework \autocite{Es2024}.
 
@@ -38,8 +38,6 @@ Niet-functionele requirements beschrijven de kwaliteitseisen en randvoorwaarden 
 \textbf{Performantie (latentie) en kostenefficiëntie.} De responstijd en de tokenkosten per configuratie moeten gemonitord worden. Een technisch optimale configuratie die in de praktijk te traag of te kostbaar is, heeft geen business value voor Turtle Srl. Dit sluit aan bij de operationele haalbaarheid van een schaalbare \gls{esg}-verwerkingspipeline.
 
 \textbf{Azure-compatibiliteit.} De \gls{poc} moet inzetbaar zijn op de Azure-infrastructuur van Turtle Srl. Dit stelt eisen aan de keuze van modellen en diensten: proprietaire modellen (OpenAI, Google) zijn beschikbaar via API's die vanuit Azure aanroepbaar zijn, terwijl open-source modellen een Azure VM- of containerdeployment vereisen.
-
-\textbf{Gebruik van Qdrant als vectordatabase.} De vectordatabase Qdrant werd door mijn copromotor vastgelegd als de te gebruiken oplossing. Qdrant biedt native ondersteuning voor multi-vector opslag, wat de hybride zoekfunctionaliteit van modellen zoals BGE-M3 mogelijk maakt \autocite{QdrantHybrid2025}.
 
 \section{Prioritering via MoSCoW}
 
@@ -55,7 +53,6 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     Must Have   & Bronvermelding (source attribution)          & Primaire functionele eis van Turtle Srl; vereist voor \gls{esg}-audits \\
     Must Have   & Context Recall                               & Als retrieval faalt, kan de \gls{llm} geen correct antwoord genereren \\
     Must Have   & Faithfulness                                 & Geen hallucinaties toegestaan in audit-context \autocite{Es2024} \\
-    Must Have   & Qdrant als vectordatabase                    & Vastgelegd door copromotor; custom componenten gebouwd rond Qdrant's datamodel \\
     Must Have   & Selectie van 3 embedding-modellen            & Meertalig, instruction-tuned, sterk in retrieval \\
     Must Have   & Selectie van 3 \glspl{llm}                   & GPT, Gemini 2.5 Flash en Mistral \\
     Must Have   & Golden set van \gls{esg}-vragen              & Vereist voor alle RAGAS-metrics (ground truth) \autocite{Es2024} \\

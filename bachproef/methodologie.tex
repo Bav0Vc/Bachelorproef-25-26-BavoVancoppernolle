@@ -1,32 +1,7 @@
-%%=============================================================================
-%% Methodologie
-%%=============================================================================
-
 \chapter{\IfLanguageName{dutch}{Methodologie}{Methodology}}%
 \label{ch:methodologie}
 
-%% TODO: In dit hoofstuk geef je een korte toelichting over hoe je te werk bent
-%% gegaan. Verdeel je onderzoek in grote fasen, en licht in elke fase toe wat
-%% de doelstelling was, welke deliverables daar uit gekomen zijn, en welke
-%% onderzoeksmethoden je daarbij toegepast hebt. Verantwoord waarom je
-%% op deze manier te werk gegaan bent.
-%% 
-%% Voorbeelden van zulke fasen zijn: literatuurstudie, opstellen van een
-%% requirements-analyse, opstellen long-list (bij vergelijkende studie),
-%% selectie van geschikte tools (bij vergelijkende studie, "short-list"),
-%% opzetten testopstelling/PoC, uitvoeren testen en verzamelen
-%% van resultaten, analyse van resultaten, ...
-%%
-%% !!!!! LET OP !!!!!
-%%
-%% Het is uitdrukkelijk NIET de bedoeling dat je het grootste deel van de corpus
-%% van je bachelorproef in dit hoofstuk verwerkt! Dit hoofdstuk is eerder een
-%% kort overzicht van je plan van aanpak.
-%%
-%% Maak voor elke fase (behalve het literatuuronderzoek) een NIEUW HOOFDSTUK aan
-%% en geef het een gepaste titel.
-
-De methodologie van dit onderzoek is zodanig opgesteld om zowel wetenschappelijke geldigheid als praktische toepasbaarheid voor Turtle Srl te waarborgen. Het centrale doel is het systematisch ontwerpen, opzetten en evalueren van een dynamische RAG pipeline die het mogelijk maakt om de  variabele componenten (chunking strategieën, embedding modellen en LLM’s) te testen op één vaste ESG vragenlijst, zonder voor elke mogelijke combinatie een aparte pipeline te moeten bouwen. De gekozen aanpak volgt een sequentieel maar iteratief raamwerk in zes fases, waarbij elke fase deliverables oplevert aan de hand van de doelstellingen en gekozen onderzoeksmethoden. Om de reproduceerbaarheid, repliceerbaarheid en herbruikbaarheid van dit onderzoek te waarborgen, wordt per fase gedocumenteerd welke beslissingen genomen worden en hoe data en configuraties vastgelegd worden.
+De methodologie van dit onderzoek is zodanig opgesteld om zowel wetenschappelijke geldigheid als praktische toepasbaarheid voor Turtle Srl te waarborgen. Het centrale doel is het systematisch ontwerpen, opzetten en evalueren van een dynamische RAG pipeline die het mogelijk maakt om de  variabele componenten (chunking strategieën, embedding modellen en LLM’s) te testen op één vaste ESG vragenlijst, zonder voor elke mogelijke combinatie een aparte pipeline te moeten bouwen. De gekozen aanpak volgt een sequentieel maar iteratief framework in zes fases, waarbij elke fase deliverables oplevert aan de hand van de doelstellingen en gekozen onderzoeksmethoden. Om de reproduceerbaarheid, repliceerbaarheid en herbruikbaarheid van dit onderzoek te waarborgen, wordt per fase gedocumenteerd welke beslissingen genomen worden en hoe data en configuraties vastgelegd worden.
 
 \section{Fase 1: Requirements verzamelen}
 
@@ -36,19 +11,19 @@ Parallel aan deze interviews wordt een literatuuronderzoek uitgevoerd naar RAG a
 
 \section{Fase 2: Opstellen short list}
 
-In de tweede fase wordt de long list van mogelijke alternatieven herwerkt tot een beheersbare short list van de meest veelbelovende opties per variabel component. Het doel is om, op basis van de in fase 1 gedefinieerde requirements, een onderbouwde selectie te maken van de interessantste embedding modellen, chunking strategieën en LLM’s voor verdere experimentele evaluatie.
+In de tweede fase wordt de long list van mogelijke alternatieven herwerkt tot een concrete short list van de meest veelbelovende opties per variabel component.
 
-Gedurende deze systematische vergelijking worden de belangrijkste eigenschappen en prestaties per alternatief samengebracht in een samenvattende tabel. Voor embedding modellen kan dit onder meer MTEB scores, meertalige recall, vector dimensionaliteit en inference kosten omvatten; voor LLM’s bijvoorbeeld contextlengte, meertalige ondersteuning, faithfulness scores uit de literatuur en kosten per token. Elk alternatief wordt gescoord tegen de requirements (bijvoorbeeld bronvermelding, meertaligheid, ESG relevantie) en reeds bestaande literatuur, wat resulteert in een shortlist per component.
+Gedurende deze systematische vergelijking worden de belangrijkste eigenschappen en prestaties per alternatief samengebracht in een samenvattende tabel. Voor embedding modellen kan dit onder meer MTEB scores, meertalige recall, vector dimensionaliteit en inference kosten omvatten; voor LLM’s bijvoorbeeld contextlengte, faithfulness scores uit de literatuur en kosten per token. Elk alternatief wordt gescoord tegen de vastegestelde requirements uit fase 1 en reeds bestaande literatuur, wat resulteert in een shortlist per component.
 
-Deze aanpak levert een short list op van de mogelijke technologieën voor de variabele componenten, aangevuld een vergelijkende tabel. Op basis van deze informatie kan bepaalde worden welke modellen of strategieën wel of niet toepasbaar zijn voor de experimentele opzet.
+Deze aanpak levert een short list op van de mogelijke technologieën voor de variabele componenten (embedding modellen, chunking strategieën en LLM's) voor verdere experimentele evaluatie, aangevuld met een vergelijkende tabel. Op basis van deze informatie kan bepaalde worden welke modellen of strategieën wel of niet toepasbaar zijn voor de experimentele opzet.
 
 \section{Fase 3: Input data en golden set voorbereiden}
 
 Fase 3 richt zich op de voorbereiding van de domeinspecifieke inputdata en het samenstellen van een “golden set” van vragen voor de latere evaluatie. Het doel is om enerzijds een representatieve dataset aan bedrijfsdocumenten te verzamelen die de interne ESG informatie van Turtle Srl weergeeft, en anderzijds een gestandaardiseerde vragenlijst op te stellen waarmee de RAG configuraties in fase 5 worden getest.
 
-Via bijkomende interviews met domeinexperten wordt bepaald welke documenten nodig zijn om een dataset te verkrijgen die bruikbaar is voor ESG rapportage. Deze data kan bestaan uit jaarverslagen, duurzaamheidsrapporten, beleidsdocumenten of interne richtlijnen. Indien nodig worden documenten geanonimiseerd voordat ze in de experimentele omgeving worden opgenomen om de veiligheid van de data te verzekeren.
+Via bijkomende interviews met belanghebbenden wordt bepaald welke documenten nodig zijn om een dataset te verkrijgen die bruikbaar is voor ESG rapportage. Deze data kan bestaan uit jaarverslagen, duurzaamheidsrapporten, beleidsdocumenten of interne richtlijnen. Indien nodig worden documenten geanonimiseerd voordat ze in de experimentele omgeving worden opgenomen om de veiligheid van de data te verzekeren.
 
-Daarnaast wordt een golden set van vragen opgesteld. Deze set omvat ESG-gerelateerde vragen, zoals questionnaires van Ecovadis en VSME, om een vragenlijst te bekomen die representatief is voor Turtle Srl. Voor elke vraag wordt waar mogelijk een referentie antwoord, bijbehorende brondocumenten en relevante pagina  of sectienummers vastgelegd. Deze metadata maakt het mogelijk om zowel automatische evaluatie, met RAGAS, als handmatige expert evaluatie (bijvoorbeeld audits) uit te voeren.
+Daarnaast wordt een golden set van vragen opgesteld, die ESG-gerelateerde vragen zoals questionnaires van Ecovadis en VSME omvat. Voor elke vraag wordt waar mogelijk een referentie antwoord, bijbehorende brondocumenten en relevante pagina  of sectienummers vastgelegd. Deze metadata maakt het mogelijk om zowel automatische evaluatie, met RAGAS, als handmatige expert evaluatie (bijvoorbeeld audits) uit te voeren.
 
 Deze fase resulteert in een gestructureerde verzameling van contextdata die in de vector database zal worden geïndexeerd, en een vragenlijst die als vaste benchmark dient voor alle RAG configuraties.
 
@@ -58,7 +33,7 @@ In de vierde fase wordt de RAG pipeline ontworpen en geïmplementeerd. De centra
 
 Technisch wordt gekozen voor een component gebaseerde architectuur waarin modules voor documentconversie, chunking, embedding, vectoropslag, retrieval en generatie als afzonderlijke bouwstenen worden gedefinieerd. De configuratielaag, in \gls{json}, bepaalt per experimentele run welke chunking strategie, welk embedding model en welk LLM worden gebruikt. Dit maakt het mogelijk om de alle combinaties van de short list systematisch te doorlopen.
 
-Belangrijke aandachtspunten bij de implementatie zijn: meertalige ondersteuning (om zowel Engelstalige als anderstalige ESG documenten te kunnen verwerken), bronvermelding via metadata payloads in de vector database, en logging voorzien van alle relevante runtime informatie (latency, tokenverbruik, gebruikte configuratie, RAG metrics). Op het einde van deze fase wordt een werkende, dynamische RAG pipeline opgeleverd die conform is met de technische vereisten van het bedrijf.
+Belangrijke aandachtspunten bij de implementatie zijn: meertalige ondersteuning (om zowel Italiaanse als Engelstalige ESG documenten te kunnen verwerken), bronvermelding via metadata payloads in de vector database, en logging voorzien van alle relevante runtime informatie (latency, tokenverbruik, gebruikte configuratie, RAG metrics). Op het einde van deze fase wordt een werkende, dynamische RAG pipeline opgeleverd die conform is met de technische vereisten van het bedrijf.
 
 \section{Fase 5: Pipeline testen}
 

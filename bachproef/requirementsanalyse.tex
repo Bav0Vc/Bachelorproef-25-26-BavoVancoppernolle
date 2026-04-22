@@ -45,30 +45,30 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
 
 \begin{table}[h]
   \centering
-  \caption[MoSCoW-prioritering van de requirements]{\label{tab:moscow}Geprioriteerde lijst van requirements voor de dynamische RAG-pipeline, ingedeeld volgens de MoSCoW-methode.}
-  \begin{tabular}{p{0.12\textwidth} p{0.30\textwidth} p{0.50\textwidth}}
+  \caption[MoSCoW-prioritering van de requirements]{\label{tab:moscow}Geprioriteerde lijst van requirements voor de dynamische RAG-pipeline, ingedeeld volgens de MoSCoW-methode (M = Must Have, S = Should Have, C = Could Have, W = Won't Have).}
+  \begin{tabular}{p{0.04\textwidth} p{0.38\textwidth} p{0.50\textwidth}}
     \toprule
-    \textbf{Prioriteit} & \textbf{Requirement} & \textbf{Verantwoording} \\
+    \textbf{P} & \textbf{Requirement} & \textbf{Verantwoording} \\
     \midrule
-    Must Have   & Bronvermelding (source attribution)          & Primaire functionele eis van Turtle Srl; vereist voor \gls{esg}-audits \\
-    Must Have   & Context Recall                               & Als retrieval faalt, kan de \gls{llm} geen correct antwoord genereren \\
-    Must Have   & Faithfulness                                 & Geen hallucinaties toegestaan in audit-context \autocite{Es2024} \\
-    Must Have   & Selectie van 3 embedding-modellen            & Meertalig, instruction-tuned, sterk in retrieval \\
-    Must Have   & Selectie van 3 \glspl{llm}                   & GPT, Gemini 2.5 Flash en Mistral \\
-    Must Have   & Golden set van \gls{esg}-vragen              & Vereist voor alle RAGAS-metrics (ground truth) \autocite{Es2024} \\
-    Must Have   & Haystack 2.x met custom componenten          & White-box controle over pipeline-logica \\
-    Must Have   & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
+    M & Bronvermelding (source attribution)          & Primaire functionele eis van Turtle Srl; vereist voor \gls{esg}-audits \\
+    M & Context Recall                               & Als retrieval faalt, kan de \gls{llm} geen correct antwoord genereren \\
+    M & Faithfulness                                 & Geen hallucinaties toegestaan in audit-context \autocite{Es2024} \\
+    M & Open-source licentie                         & Vermijdt vendor lock-in en laat vrije commerciële en lokale deployment toe \\
+    M & Selectie van 3 embedding-modellen            & Meertalig, instruction-tuned, sterk in retrieval \\
+    M & Selectie van 3 \glspl{llm}                   & GPT, Gemini 2.5 Flash en Mistral \\
+    M & Golden set van \gls{esg}-vragen              & Vereist voor alle RAGAS-metrics (ground truth) \autocite{Es2024} \\
+    M & Haystack 2.x met custom componenten          & White-box controle over pipeline-logica \\
+    M & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
     \midrule
-    Should Have & Answer Relevancy                             & Bepaalt de effectiviteit van de \gls{poc} \autocite{Es2024} \\
-    Should Have & Latentie en kosten per query                 & Operationele bruikbaarheid voor Turtle Srl \\
-    Should Have & Custom Document Cleaner \& Metadata Extractor & Controle over metadata-extractie uit \glspl{pdf} \\
-    Should Have & Azure-hosting                                & Productie-infrastructuur van Turtle Srl \\
-    Should Have & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
+    S & Answer Relevancy                             & Bepaalt de effectiviteit van de \gls{poc} \autocite{Es2024} \\
+    S & Latentie en kosten per query                 & Operationele bruikbaarheid voor Turtle Srl \\
+    S & Azure-hosting compatibiliteit                & Productie-infrastructuur van Turtle Srl \\
+    S & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
     \midrule
-    Could Have  & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
-    Could Have  & PocketFlow-connector (output component)      & Nuttig voor real-world integratie, niet voor benchmark \\
+    C & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
+    C & PocketFlow-connector (output component)      & Nuttig voor real-world integratie, niet voor benchmark \\
     \midrule
-    Won't Have  & Citation accuracy als kernmeting             & Copromotor: \textit{``I don't think we need such high precision''} \\
+    W & Citation accuracy als kernmeting             & Copromotor: \textit{``I don't think we need such high precision''} \\
     \bottomrule
   \end{tabular}
 \end{table}

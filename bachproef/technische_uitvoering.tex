@@ -1,0 +1,439 @@
+\chapter{\IfLanguageName{dutch}{Technische uitvoering}{Technical implementation}}
+\label{ch:technische-uitvoering}
+
+De voorgaande fases resulteerden in een concrete short list van negen variabele componenten --- drie chunking-strategieën, drie embedding-modellen en drie \glspl{llm} --- die samen een testmatrix van $3^3 = 27$ unieke \gls{rag}-configuraties vormen. Dit hoofdstuk beschrijft hoe deze configuraties technisch zijn uitgewerkt tot een dynamische proefopstelling. De centrale uitdaging is niet het bouwen van één werkende \gls{rag}-pipeline, maar het ontwerpen van een systeem dat alle 27 combinaties systematisch kan doorlopen zonder voor elke combinatie een afzonderlijke implementatie te vereisen. Elke architecturale en technische keuze wordt in dit hoofdstuk inhoudelijk beargumenteerd vanuit de requirements van Turtle Srl en de doelstellingen van dit onderzoek.
+
+\section{Haystack 2.x als orchestratieframework}
+\label{sec:haystack-keuze}
+
+De volledige pipeline is opgebouwd rond het open-source orchestratieframework Haystack 2.x \autocite{HaystackPipelines2026}. De keuze voor dit framework tegenover populaire alternatieven zoals LangChain of LlamaIndex is geen triviale beslissing: alle drie bieden abstracties voor het bouwen van \gls{rag}-systemen, maar zij verschillen sterk in de mate van controle die de ontwikkelaar behoudt over de interne werking.
+
+LangChain en LlamaIndex voorzien hoog-niveau abstracties die in één aanroep conversie, chunking en embedding combineren. Hoewel dit de initiële ontwikkeltijd verlaagt, maakt het de afzonderlijke componenten onzichtbaar en moeilijk uitwisselbaar: een klassiek \emph{black-box}-probleem. Voor een benchmarkopstelling waarbij de impact van elke individuele keuze --- chunker, embedder, \gls{llm} --- afzonderlijk en meetbaar moet zijn, is volledige transparantie over de gegevensstroom een harde vereiste. Wanneer een framework de internals verbergt, is het onmogelijk om te bepalen welk component verantwoordelijk is voor een bepaalde prestatieverandering.
+
+Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte graaf. Elke stap in de pipeline is een onafhankelijke, geïsoleerde component met strikt gedefinieerde in- en uitvoertypen, die in Haystack \emph{sockets} genoemd worden \autocite{HaystackPipelines2026}. Componenten worden aan elkaar gekoppeld via expliciete \texttt{connect()}-aanroepen, zodat de volledige dataflow voor de ontwikkelaar inzichtelijk is en elke component afzonderlijk vervangbaar is zonder de rest van de pipeline te raken.
+
+De tweede doorslaggevende reden is het formele protocol voor \textbf{custom componenten}. Haystack 2.x voorziet de \texttt{@component}-decorator waarmee elke Python-klasse als een native, plug-and-play-compatibele pipeline-bouwsteen kan worden geregistreerd, mits zij een \texttt{run()}-methode blootlegt met gedefinieerde uitvoertypen \autocite{HaystackPipelines2026}. Dit sluit direct aan bij de Must-Have-requirement van Turtle Srl uit de requirementsanalyse: de pipeline mag niet afhankelijk zijn van niet-aanpasbare black boxes, maar moet bestaan uit begrijpbare, uitbreidbare bouwstenen die het bedrijf zelf kan onderhouden en uitbreiden. Alle drie de chunkers en de documentreiniger zijn bijgevolg als native Haystack custom componenten geïmplementeerd, in volledige lijn met de white-box-requirement.
+
+\section{Documentverwerking: van \gls{pdf} naar schone tekst}
+\label{sec:documentverwerking}
+
+De dataset bestaat uit interne bedrijfsdocumenten van Turtle Srl in \gls{pdf}-formaat: duurzaamheidsrapporten, beleidsrichtlijnen en \gls{esg}-gerelateerde verslagen. Dergelijke documenten bevatten naast inhoudelijke tekst ook paginanummers als losstaande regels, horizontale scheidingslijnen, herhalende kopteksten en inconsistente witruimte --- artefacten die een \gls{pdf}-parser letterlijk overneemt als ruwe tekst en die de semantische kwaliteit van de latere embeddings negatief beïnvloeden.
+
+\subsection{\gls{pdf}-conversie}
+
+De conversie van \gls{pdf}-bestanden naar Haystack \texttt{Document}-objecten verloopt via de ingebouwde \texttt{PyPDFToDocument}-component, die intern gebruikmaakt van de \texttt{pypdf}-bibliotheek. De component leest elk \gls{pdf}-bestand pagina per pagina in en levert één \texttt{Document}-object per pagina op, samen met metadata die het paginanummer en het volledige bestandspad bevat. De keuze voor een per-pagina representatie is essentieel voor de later vereiste bronvermelding: elk gegenereerd chunk draagt de herkomstinformatie mee tot in de vectordatabase.
+
+\subsection{Documentreiniging}
+\label{subsec:documentcleaner}
+
+Na de conversie passeert elk document een zelfgeschreven reinigingscomponent die het \texttt{@component}-protocol van Haystack implementeert. Deze component normaliseert zowel de tekstinhoud als de metadata-structuur van elk document, en vormt daarmee een onmisbare tussenstap tussen de ruwe \gls{pdf}-uitvoer en de chunking-fase.
+
+Op het vlak van tekstnormalisatie worden vier specifieke operaties uitgevoerd via reguliere expressies.\\Ten eerste worden drie of meer opeenvolgende newlines gereduceerd tot twee, waardoor de alineastructuur bewaard blijft maar onnodige verticale witruimte verdwijnt.\\Ten tweede worden meerdere spaties en tabs samengebracht tot één spatie om horizontale ruis te elimineren.\\Ten derde worden regels die uitsluitend een getal bevatten --- typisch paginanummers die de \gls{pdf}-parser als aparte regel herkent --- volledig verwijderd.\\Tot slot worden regels die enkel bestaan uit drie of meer aaneengesloten streepjes, underscores of gelijkheidstekens verwijderd: dit zijn decoratieve scheidingslijnen zonder inhoudelijke waarde.
+
+Op het vlak van metadata wordt de structuur genormaliseerd voor gebruik verderop in de pipeline. De sleutel \texttt{page\_number}, zoals aangemaakt door de \gls{pdf}-converter, wordt hernoemd naar \texttt{page} voor consistentie doorheen alle componenten. Daarnaast wordt de bestandsnaam geëxtraheerd uit het volledige bestandspad en opgeslagen als \texttt{source}. Deze genormaliseerde bestandsnaam verschijnt later in het promptsjabloon van de querypipeline, waardoor de \gls{llm} per antwoord het brondocument expliciet kan vermelden.
+
+\begin{listing}[H]
+\begin{minted}{python}
+@component
+class DocumentCleaner:
+    @component.output_types(documents=list[Document])
+    def run(self, documents: list[Document]) -> dict:
+        cleaned = []
+        for doc in documents:
+            text = self._clean_text(doc.content or "")
+            meta = self._build_meta(doc.meta)
+            cleaned.append(Document(content=text, meta=meta))
+        return {"documents": cleaned}
+
+    def _clean_text(self, text: str) -> str:
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        text = re.sub(r"[ \t]+", " ", text)
+        text = re.sub(r"^\s*\d+\s*$", "", text, flags=re.MULTILINE)
+        text = re.sub(r"^\s*[-_=]{3,}\s*$", "", text, flags=re.MULTILINE)
+        return text.strip()
+
+    def _build_meta(self, original_meta: dict) -> dict:
+        meta = dict(original_meta)
+        meta["page"] = meta.get("page_number", "?")
+        meta["source"] = Path(meta.get("file_path", "")).name
+        return meta
+\end{minted}
+\caption[DocumentCleaner: tekstnormalisatie en metadata-extractie]{De documentreinigingscomponent normaliseert ruwe \gls{pdf}-tekst via vier reguliere expressies en standaardiseert de metadata-structuur zodat bestandsnaam en paginanummer consistent beschikbaar zijn doorheen de rest van de pipeline.}
+\label{lst:document-cleaner}
+\end{listing}
+
+\section{Custom chunking-componenten}
+\label{sec:chunkers}
+
+Zoals vastgesteld in de shortlist (Sectie~\ref{sec:shortlist-chunking}) worden drie chunking-strategieën geëvalueerd: fixed-size splitting, recursive character splitting en semantische chunking. Elk van deze strategieën is geïmplementeerd als een zelfstandig Haystack \texttt{@component} die een lijst van \texttt{Document}-objecten accepteert en een lijst van \texttt{Document}-objecten teruggeeft. Deze uniforme interface maakt de drie chunkers in de indexeringspipeline volledig verwisselbaar zonder enige aanpassing aan de overige componenten.
+
+De keuze om de chunkers als \emph{custom components} te schrijven is ingegeven door twee overwegingen. Ten eerste is dit een expliciete requirement van Turtle Srl: alle pipeline-bouwstenen moeten als begrijpbare, zelfgeschreven klassen bestaan zodat het bedrijf ze onafhankelijk kan testen, aanpassen en uitbreiden. Ten tweede laat het toe om de configuratieparameters --- chunk-grootte, overlap, scheidingstekens --- expliciet en gedocumenteerd in de broncode te verankeren, wat bijdraagt aan de reproduceerbaarheid van het experiment.
+
+\subsection{Fixed-size word splitting}
+\label{subsec:fixed-chunker}
+
+De eerste chunker is de eenvoudigste van de drie en fungeert als deterministisch referentiepunt in de benchmarkmatrix. Zonder een nulpunt is het wetenschappelijk onmogelijk om de meerwaarde van de twee complexere strategieën aan te tonen \autocite{Lewis2020}. De implementatie is een dunne wrapper rond de ingebouwde Haystack \texttt{DocumentSplitter}, geconfigureerd om te splitsen op woordgrenzen met een chunk-grootte van 150 woorden en een overlap van 20 woorden.
+
+De keuze voor woorden als spliteenheid in plaats van tekens of tokens is bewust. Tokens zijn modelspecifiek en variëren tussen tokenizers, terwijl woorden een universele, modelonafhankelijke spliteenheid vormen die reproduceerbaarheid garandeert over alle drie de embedding-modellen. Met 150 woorden en een overlap van 20 woorden worden chunks geproduceerd die gemiddeld 600 tot 750 tekens beslaan, een bereik dat empirisch sterk presteert voor \gls{esg}-gerelateerde vraag-en-antwoordtaken \autocite{BhatEtAl2025}.
+
+\begin{listing}[H]
+\begin{minted}{python}
+@component
+class FixedSizeWordSplitter:
+    def __init__(self, split_length: int = 150, split_overlap: int = 20):
+        self.internal_splitter = DocumentSplitter(
+            split_by="word",
+            split_length=split_length,
+            split_overlap=split_overlap
+        )
+
+    @component.output_types(documents=List[Document])
+    def run(self, documents: List[Document]):
+        return self.internal_splitter.run(documents=documents)
+\end{minted}
+\caption[FixedSizeWordSplitter: fixed-size chunking als deterministisch referentiepunt]{De fixed-size chunker wikkelt de Haystack \texttt{DocumentSplitter} in een \texttt{@component}-interface en splitst documenten in chunks van 150 woorden met een overlap van 20 woorden.}
+\label{lst:fixed-chunker}
+\end{listing}
+
+\subsection{Recursive character splitting}
+\label{subsec:recursive-chunker}
+
+De tweede chunker implementeert het recursive character text splitting-algoritme volledig van nul, zonder externe bibliotheek. De strategie werkt op basis van een geordende hiërarchie van scheidingstekens: \texttt{[\textbackslash n\textbackslash n, \textbackslash n, ".", " ", ""]}. Het algoritme splitst de tekst eerst op het eerste scheidingsteken in de lijst --- de dubbele newline, die alinea-grenzen markeert. Als een resulterende deeltekst na deze splitsing nog steeds groter is dan de ingestelde chunk-grootte van 150 woorden, wordt op dat fragment recursief hetzelfde algoritme toegepast, maar met de resterende scheidingstekens in de lijst. Zo wordt de tekst progressief fijner opgesplitst: eerst op alinea-grenzen, dan op regelafbrekingen, dan op zinsgrenzen, dan op spaties \autocite{LangChainDocs2024}.
+
+Dit garandeert dat alinea-integriteit maximaal wordt gerespecteerd: alleen wanneer een alinea te groot is, wordt zij op een lager niveau gesplitst. Voor \gls{esg}-rapporten die typisch gestructureerd zijn in alinea's en bullet-lijsten per criterium, is dit bijzonder relevant: een volledige \gls{vsme}-richtlijnpassage of een GRI-standaard-alinea wordt als één coherente chunk opgehaald in plaats van willekeurig afgekapt te worden \autocite{Amiri2025}.
+
+Naast de gesplitste tekst voegt deze chunker een \texttt{chunk\_id}-veld toe aan de metadata van elk gegenereerd document. Dit getal geeft de positie van het fragment binnen het originele document aan en is nuttig voor debugging en voor het reconstrueren van de oorspronkelijke volgorde bij post-retrieval analyse.
+
+\begin{listing}[H]
+\begin{minted}{python}
+def _recursive_split(self, text: str, separators: List[str]) -> List[str]:
+    if not separators:
+        return [text]
+    sep = separators[0]
+    parts = text.split(sep)
+    final_chunks, current_chunk = [], ""
+    for part in parts:
+        if len(part.split()) > self.split_length and len(separators) > 1:
+            final_chunks.extend(
+                self._recursive_split(part, separators[1:])
+            )
+        elif len((current_chunk + sep + part).split()) <= self.split_length:
+            current_chunk = current_chunk + sep + part if current_chunk else part
+        else:
+            if current_chunk:
+                final_chunks.append(current_chunk.strip())
+            current_chunk = part
+    if current_chunk:
+        final_chunks.append(current_chunk.strip())
+    return [p for p in final_chunks if p.strip()]
+\end{minted}
+\caption[RecursiveSplitter: kern van het recursieve splitsingalgoritme]{Het splitsingalgoritme verwerkt tekst hiërarchisch op basis van een geordende lijst scheidingstekens. Deelteksten die de maximale chunk-grootte overschrijden, worden recursief verder opgesplitst met het volgende scheidingsteken in de hiërarchie.}
+\label{lst:recursive-chunker}
+\end{listing}
+
+\subsection{Semantische chunking}
+\label{subsec:semantic-chunker}
+
+De derde chunker implementeert de semantische chunking-aanpak zoals geformaliseerd door \textcite{Kamradt2023}. In tegenstelling tot de twee vorige strategieën splitst deze component tekst niet op basis van structurele of tekengrenzen, maar op basis van betekenisgrenzen: een chunk-grens wordt geplaatst wanneer de cosine-gelijkenis tussen opeenvolgende zinnen onder een drempelwaarde daalt.
+
+De implementatie combineert twee Haystack-componenten intern. Een \texttt{SentenceTransformersDocumentEmbedder} met het model \texttt{sentence-transformers/all-MiniLM-L6-v2} berekent een embedding voor elke zin afzonderlijk. Een \texttt{EmbeddingBasedDocumentSplitter} berekent vervolgens de cosine-gelijkenissen tussen opeenvolgende zinnen en plaatst een chunk-grens waar de gelijkenis sterk daalt. De drempelwaarde wordt bepaald op het 95e percentiel van de afstandsverdeling binnen het document (\texttt{percentile=0.95}), conform de aanbeveling van \textcite{Kamradt2023}.
+
+De keuze voor \texttt{all-MiniLM-L6-v2} als intern model van de chunker is bewust. Dit lichtgewicht model dient uitsluitend om semantische grenzen te \emph{detecteren} tijdens de indexeringsfase; het produceert geen retrieval-embeddings. Het draait lokaal, zonder \gls{api}-aanroep, en is daarmee snel genoeg om per zin te embedden zonder de indexeringstijd onevenredig te verlengen. De uiteindelijke retrieval-embeddings worden door het geconfigureerde embedding-model aangemaakt in een volgende stap.
+
+Aanvullend worden minimum- en maximumgrenzen voor de chunk-lengte ingesteld (respectievelijk 50 en 1\,000 tekens) om te korte of te lange chunks te voorkomen. De component implementeert ook een \texttt{warm\_up()}-methode die Haystack aanroept vóór de eerste pipeline-run om het lokale model te laden --- een vereiste stap in de Haystack pipeline-levenscyclus voor componenten die een lokaal neuraal netwerk bevatten.
+
+\begin{listing}[H]
+\begin{minted}{python}
+@component
+class SemanticEmbeddingChunker:
+    def __init__(
+        self,
+        model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+        sentences_per_group: int = 1,
+        percentile: float = 0.95,
+        min_length: int = 50,
+        max_length: int = 1000,
+        device: Optional[str] = None
+    ):
+        self.embedder = SentenceTransformersDocumentEmbedder(
+            model=model_name, device=device
+        )
+        self.splitter = EmbeddingBasedDocumentSplitter(
+            document_embedder=self.embedder,
+            sentences_per_group=sentences_per_group,
+            percentile=percentile,
+            min_length=min_length,
+            max_length=max_length
+        )
+
+    def warm_up(self):
+        self.embedder.warm_up()
+
+    @component.output_types(documents=List[Document])
+    def run(self, documents: List[Document]):
+        return self.splitter.run(documents=documents)
+\end{minted}
+\caption[SemanticEmbeddingChunker: betekenisgrens-detectie via cosine-gelijkenis]{De semantische chunker detecteert chunk-grenzen op basis van cosine-gelijkenis tussen opeenvolgende zinnen. Het interne \texttt{all-MiniLM-L6-v2}-model berekent zin-embeddings lokaal; de drempelwaarde wordt bepaald op het 95e percentiel van de afstandsverdeling \autocite{Kamradt2023}.}
+\label{lst:semantic-chunker}
+\end{listing}
+
+\section{Configuratiebeheer met Hypster}
+\label{sec:hypster-config}
+
+Om de 27 unieke configuraties systematisch te kunnen doorlopen zonder handmatig 27 aparte pipeline-instanties aan te maken, wordt Hypster ingezet als configuratieframework. Hypster laat toe om variabele parameters --- zoals de keuze van chunker, embedding-model of \gls{llm} --- te definiëren als selecteerbare opties binnen een gewone Python-functie, en vervolgens elke gewenste combinatie op te vragen via een eenvoudige \texttt{instantiate()}-aanroep met een overschrijvingswoordenboek. \footnote{Hypster is beschikbaar als open-source bibliotheek op \url{https://github.com/gilad-rubin/hypster}.}
+
+De keuze voor Hypster ten opzichte van alternatieven zoals Hydra of eenvoudige \gls{json}-configuratiebestanden is ingegeven door de nauwe integratie met gewone Python-code. In Hypster wordt de configuratieruimte beschreven als een reguliere Python-functie die de \texttt{HP}-interface gebruikt. Dit betekent dat de afhankelijkheden tussen parameters --- zoals de backend dat bij een bepaald embedding-model hoort --- als gewone Python-logica kunnen worden uitgedrukt, zonder te hoeven steunen op complexe \gls{yaml}-hiërarchieën of externe schema-validatietools. Voor een onderzoeksopstelling waarbij de configuratielogica transparant en aanpasbaar moet zijn, is dit een doorslaggevend voordeel.
+
+De configuratieruimte is opgesplitst in drie geneste deelconfiguraties die via \texttt{hp.nest()} worden samengebracht: een chunking-configuratie, een embedding-configuratie en een \gls{llm}-configuratie.
+
+\textbf{De chunking-configuratie} stelt één variabele in: de naam van de chunker als tekenreeks. Het is belangrijk te benadrukken dat dit \emph{geen} chunker-instantie is, maar een identifier die later wordt gebruikt om de juiste Qdrant-collectie op te zoeken. De werkelijke chunker-objecten worden in de indexeringspipeline rechtstreeks als klassen geïnstantieerd.
+
+\textbf{De embedding-configuratie} stelt naast de modelnaam ook de backend en de \gls{api}-modelnaam in, afhankelijk van het geselecteerde model. BGE-M3 wordt aangestuurd via de NVIDIA NIM \gls{api}; Arctic-embed en E5-instruct via de Hugging Face Serverless Inference \gls{api}. Alle drie de modellen produceren vectoren van 1\,024 dimensies --- een bewust selectiecriterium uit de long list dat de interoperabiliteit met Qdrant vereenvoudigt. De dimensionaliteit wordt expliciet als veld in de configuratie opgeslagen (\texttt{"dims": 1024}) zodat de querypipeline de Qdrant-collectie met de juiste vectordimensie kan openen.
+
+\textbf{De \gls{llm}-configuratie} koppelt de modelnaam aan een backend (Mistral \gls{api}, NVIDIA NIM \gls{api} of Hugging Face Featherless \gls{api}) en een \gls{api}-modelnaam. Door de backend expliciet op te slaan in de configuratie, kan de querypipeline de juiste \gls{api}-client instantiëren zonder bijkomende conditielogica in de pipeline zelf.
+
+De \texttt{pipeline\_config}-functie combineert de drie deelconfiguraties via \texttt{hp.nest()} en verzamelt het volledige resultaat via \texttt{hp.collect(locals())} in één configuratieobject met geneste sleutels. Dit object wordt vervolgens aan de querypipeline doorgegeven.
+
+\begin{listing}[H]
+\begin{minted}{python}
+def embedding_config(hp: HP):
+    model = hp.select(
+        ["BAAI/bge-m3",
+         "snowflake/arctic-embed-1-v2.0",
+         "intfloat/multilingual-e5-large-instruct"],
+        name="model", default="BAAI/bge-m3",
+    )
+    if model == "BAAI/bge-m3":
+        backend, api_model = "nvidia", "baai/bge-m3"
+    elif model == "snowflake/arctic-embed-1-v2.0":
+        backend, api_model = "hf", "Snowflake/snowflake-arctic-embed-l-v2.0"
+    else:
+        backend, api_model = "hf", "intfloat/multilingual-e5-large"
+    return {"model": model, "backend": backend,
+            "api_model": api_model, "dims": 1024}
+
+def pipeline_config(hp: HP):
+    chunking = hp.nest(chunking_config, name="chunking")
+    embedding = hp.nest(embedding_config, name="embedding")
+    llm = hp.nest(llm_config, name="llm")
+    return hp.collect(locals())
+\end{minted}
+\caption[Hypster-configuratie: embedding-deelconfiguratie en pipeline-samenstelling]{De embedding-deelconfiguratie koppelt via conditielogica een modelnaam aan het juiste backend en de bijbehorende \gls{api}-parameters. De \texttt{pipeline\_config}-functie combineert de drie deelconfiguraties via \texttt{hp.nest()} en verzamelt ze via \texttt{hp.collect(locals())} in één object.}
+\label{lst:hypster-config}
+\end{listing}
+
+Een sleuteleigenschap van Hypster is de \texttt{instantiate()}-functie, die een configuratiefunctie combineert met een woordenboek van overschrijvingen om een concreet configuratieobject te produceren. Via puntnotatie kunnen geneste parameters rechtstreeks worden overschreven zonder de configuratiefunctie zelf aan te passen. Dit maakt het mogelijk om in de benchmarklus via één aanroep elke willekeurige combinatie te instantiëren:
+
+\begin{listing}[H]
+\begin{minted}{python}
+config = instantiate(
+    pipeline_config,
+    values={
+        "chunking.chunker_name": "RecursiveSplitter",
+        "embedding.model":       "BAAI/bge-m3",
+        "llm.name":              "Llama-3.3-70B",
+    },
+    on_unknown="raise"
+)
+\end{minted}
+\caption[Hypster \texttt{instantiate()}: één configuratie instantiëren via puntnotatie]{Via \texttt{instantiate()} met puntnotatie-overschrijvingen wordt één concrete configuratie aangemaakt. De parameter \texttt{on\_unknown="raise"} garandeert dat ongeldige sleutels onmiddellijk een fout genereren in plaats van stilzwijgend genegeerd te worden.}
+\label{lst:hypster-instantiate}
+\end{listing}
+
+\section{Indexeringspipeline}
+\label{sec:indexering}
+
+De indexeringspipeline is verantwoordelijk voor het eenmalig verwerken van alle \glspl{pdf} uit de dataset: elk document wordt omgezet naar tekst, gereinigd, opgesplitst in chunks, ingebed als vector en opgeslagen in een vectordatabase. Dit proces wordt uitgevoerd voor alle $3 \times 3 = 9$ combinaties van chunking-strategie en embedding-model, zodat alle collecties beschikbaar zijn vóór de queryloops starten.
+
+\subsection{Keuze voor Qdrant als vectordatabase}
+\label{subsec:qdrant-keuze}
+
+Voor de opslag van de vector-embeddings wordt Qdrant ingezet als vectordatabase, conform de vereiste van het stagebedrijf. Qdrant is een open-source, cloud-native vectordatabase geoptimaliseerd voor hoog-dimensionale semantische zoekopdrachten \autocite{Pawlik2025}. Naast de directe vereiste van Turtle Srl biedt Qdrant ook concrete technische voordelen voor deze proefopstelling. Elk vector-punt kan een willekeurig \gls{json}-object als payload meekrijgen naast de vectorwaarden zelf, waardoor de metadata --- bestandsnaam, paginanummer, chunk-positie --- in zijn totaliteit doorheen de volledige pipeline bewaard blijft. Qdrant integreert naadloos met Haystack 2.x via het officiële \texttt{haystack-integrations}-pakket, zowel voor de \texttt{DocumentWriter} in de indexeringsfase als voor de \texttt{QdrantEmbeddingRetriever} in de queryfase. Bovendien ondersteunt Qdrant hybride zoeken via \gls{rrf} \autocite{QdrantHybrid2025}, een eigenschap die met name voor het BGE-M3-model relevant is wanneer toekomstige uitbreidingen van de pipeline naast dense retrieval ook sparse retrieval willen inzetten.
+
+\subsection{Eén collectie per combinatie van chunker en embedding-model}
+\label{subsec:qdrant-collections}
+
+Een fundamentele architecturale beslissing in de indexeringspipeline is het aanmaken van een \emph{aparte Qdrant-collectie} voor elke combinatie van chunking-strategie en embedding-model, wat resulteert in negen collecties. De collectienaam wordt deterministisch gegenereerd via de conventie \texttt{<ChunkerKlasse>\_<model\_id>} waarbij schuine strepen worden vervangen door koppeltekens, zodat de querypipeline op basis van de Hypster-configuratie de correcte collectie kan opzoeken zonder hardgecodeerde verwijzingen.
+
+De reden voor deze strikte scheiding is tweeledig. De eerste en voornaamste reden is de incompatibiliteit van vectorruimten. Hoewel deze drie modellen hun resultaten in exact hetzelfde formaat opslaan (lijsten van 1024 getallen), zijn ze onderling niet vergelijkbaar. De modellen zijn namelijk ontwikkeld met verschillende technieken, databronnen en leerdoelen, waardoor ze informatie op een totaal andere manier interpreteren. Een cosine-gelijkenis tussen een BGE-M3-queryvector en een in dezelfde collectie opgeslagen E5-instruct-documentvector levert een semantisch zinloos getal op. Door de collecties per embedding-model strikt te scheiden, is gegarandeerd dat elke retrieval-berekening plaatsvindt binnen de vectorruimte van hetzelfde model, wat de enige conditie is waaronder cosine-gelijkenis een betekenisvolle semantische maat is.
+
+De tweede reden is experimentele isolatie. Om de impact van de chunking-strategie en het embedding-model onafhankelijk van elkaar te kunnen meten, moeten de geïndexeerde chunks per combinatie zuiver zijn: elk koppel (chunker, embedder) heeft zijn eigen, afgesloten set van afgeleiden van de originele documenten. Wanneer alle chunks in één gemeenschappelijke collectie werden samengevoegd, zouden de retrieval-resultaten een mengsel zijn van verschillende splitsstrategieën, waardoor het onmogelijk wordt om de prestatie van een specifieke configuratie te isoleren voor de vergelijkende analyse.
+
+Vóór de start van het indexeringsproces wordt de volledige Qdrant-database gewist via de Qdrant Python-client. Dit garandeert dat collecties van vorige runs niet opduiken als ruis in de huidige experimentele set, wat de reproduceerbaarheid van elke run waarborgt.
+
+\subsection{Externe embedding-\glspl{api}}
+\label{subsec:embedding-apis}
+
+De embedding-modellen worden niet lokaal uitgevoerd, maar aangestuurd via externe \gls{api}-diensten. BGE-M3 wordt opgeroepen via de NVIDIA NIM \gls{api}, waarvoor de \texttt{OpenAIDocumentEmbedder} met een aangepaste basis-URL wordt gebruikt. Arctic-embed en E5-instruct worden aangestuurd via de Hugging Face Serverless Inference \gls{api}, waarvoor de \texttt{HuggingFaceAPIDocumentEmbedder} dient. De \gls{api}-sleutels worden via omgevingsvariabelen ingeladen met \texttt{python-dotenv} en doorgegeven als Haystack \texttt{Secret}-objecten, zodat gevoelige credentials nooit als leesbare tekenreeksen in de broncode terechtkomen.
+
+\subsection{Opbouw en uitvoering van de pipeline}
+\label{subsec:indexering-opbouw}
+
+De indexeringspipeline is een lineaire keten van vijf componenten die via Haystack worden samengesteld en verbonden:
+
+\begin{enumerate}
+    \item \textbf{PyPDFToDocument} converteert alle \gls{pdf}-bestanden uit de dataset naar Haystack \texttt{Document}-objecten, één per pagina.
+    \item \textbf{DocumentCleaner} normaliseert de tekst en metadata van elk document (zie Sectie~\ref{subsec:documentcleaner}).
+    \item \textbf{Chunker} splitst elk document in kleinere fragmenten volgens de geconfigureerde strategie: \texttt{FixedSizeWordSplitter}, \texttt{RecursiveSplitter} of \texttt{SemanticEmbeddingChunker}.
+    \item \textbf{Embedder} zet elk chunk om naar een 1\,024-dimensionele vectorrepresentatie via het geconfigureerde embedding-model.
+    \item \textbf{DocumentWriter} schrijft de ingebedde chunks samen met hun payload-metadata naar de corresponderende Qdrant-collectie.
+\end{enumerate}
+
+De volledige pipeline wordt voor elk van de negen combinaties opnieuw opgebouwd en uitgevoerd. De verbindingen tussen de componenten volgen telkens hetzelfde patroon: de uitvoer \texttt{documents} van elk component stroomt naar de invoer \texttt{documents} van het volgende.
+
+\begin{listing}[H]
+\begin{minted}{python}
+indexing_pipe = Pipeline()
+indexing_pipe.add_component("converter", PyPDFToDocument())
+indexing_pipe.add_component("cleaner",   DocumentCleaner())
+indexing_pipe.add_component("chunker",   chunker)
+indexing_pipe.add_component("embedder",  embedder)
+indexing_pipe.add_component("writer",    DocumentWriter(document_store=document_store))
+
+indexing_pipe.connect("converter.documents", "cleaner.documents")
+indexing_pipe.connect("cleaner.documents",   "chunker.documents")
+indexing_pipe.connect("chunker.documents",   "embedder.documents")
+indexing_pipe.connect("embedder.documents",  "writer.documents")
+
+indexing_pipe.run({"converter": {"sources": pdf_paths}})
+\end{minted}
+\caption[Opbouw en uitvoering van de indexeringspipeline]{De indexeringspipeline verbindt vijf componenten via expliciete \texttt{connect()}-aanroepen. De \gls{pdf}-paden worden als invoer aan de converter meegegeven; de ingebedde chunks worden via de \texttt{DocumentWriter} naar de Qdrant-collectie geschreven.}
+\label{lst:indexering-pipeline}
+\end{listing}
+
+\section{Querypipeline}
+\label{sec:query-pipeline}
+
+De querypipeline is het centrale onderdeel van het experiment: voor elke van de 27 configuraties wordt voor elke vraag uit de golden set een antwoord gegenereerd. De pipeline is geïmplementeerd als een herbruikbare functie die een Hypster-configuratieobject en de volledige golden set als invoer accepteert en een lijst van gedetailleerde resultaatwoordenboeken teruggeeft.
+
+Bij de start van elke aanroep wordt gecontroleerd of de corresponderende Qdrant-collectie documenten bevat. Als een collectie leeg is --- bijvoorbeeld omdat de indexeringsfase voor die specifieke combinatie niet succesvol was --- wordt de configuratie overgeslagen en wordt een waarschuwing gelogd. Dit laat toe het volledige benchmarkproces door te laten lopen zonder dat één foute combinatie de gehele reeks onderbreekt.
+
+\subsection{Opbouw van de pipeline}
+\label{subsec:query-opbouw}
+
+De querypipeline bestaat uit vier sequentieel gekoppelde componenten:
+
+\begin{enumerate}
+    \item \textbf{TextEmbedder} zet de vraag van de gebruiker om naar een vector via hetzelfde embedding-model als waarmee de Qdrant-collectie werd geïndexeerd. Afhankelijk van de backend wordt een \texttt{OpenAITextEmbedder} (NVIDIA NIM) of een \texttt{HuggingFaceAPITextEmbedder} (Hugging Face) geïnstantieerd. Het gebruik van hetzelfde model in beide fases is een harde vereiste: queryvector en documentvectoren moeten in dezelfde vectorruimte leven opdat cosine-gelijkenis een betekenisvolle maat is.
+    \item \textbf{QdrantEmbeddingRetriever} zoekt in de geconfigureerde Qdrant-collectie naar de meest semantisch relevante chunks op basis van cosine-gelijkenis met de queryvector. De collectienaam wordt bepaald via dezelfde naamgevingsconventie als in de indexeringspipeline, op basis van de chunker-naam en het embedding-model uit de Hypster-configuratie.
+    \item \textbf{PromptBuilder} assembleert een volledige prompt voor de \gls{llm} op basis van een Jinja2-sjabloon. De opgehaalde chunks worden samen met de oorspronkelijke vraag in de prompt opgenomen.
+    \item \textbf{LLM} genereert een antwoord op basis van de opgebouwde prompt. Afhankelijk van de geconfigureerde \gls{llm} wordt een \texttt{MistralChatGenerator} (Mistral \gls{api}), een \texttt{OpenAIGenerator} met NVIDIA NIM-backend (Llama 3.3 70B) of een \texttt{OpenAIGenerator} met Hugging Face Featherless-backend (Qwen 2.5 14B) geïnstantieerd.
+\end{enumerate}
+
+De pipeline-run wordt uitgevoerd met de parameter \texttt{include\_outputs\_from=\{"retriever"\}}. Standaard geeft Haystack alleen de einduitvoer van de pipeline terug, in dit geval het \gls{llm}-antwoord. Door de retriever expliciet op te nemen in de tussentijdse uitvoer, worden ook de opgehaalde chunks beschikbaar in het resultaat. Deze chunks zijn noodzakelijk als \texttt{contexts}-veld voor de latere RAGAS-evaluatie.
+
+\begin{listing}[H]
+\begin{minted}{python}
+query_pipe = Pipeline()
+query_pipe.add_component("text_embedder",   text_embedder)
+query_pipe.add_component("retriever",
+    QdrantEmbeddingRetriever(document_store=document_store))
+query_pipe.add_component("prompt_builder",
+    PromptBuilder(template=_PROMPT_TEMPLATE,
+                  required_variables=["documents", "question"]))
+query_pipe.add_component("llm", llm_instance)
+
+query_pipe.connect("text_embedder.embedding",    "retriever.query_embedding")
+query_pipe.connect("retriever.documents",        "prompt_builder.documents")
+query_pipe.connect("prompt_builder",             "llm")
+
+response = query_pipe.run(
+    {"text_embedder": {"text": q}, "prompt_builder": {"question": q}},
+    include_outputs_from={"retriever"},
+)
+\end{minted}
+\caption[Opbouw en uitvoering van de querypipeline]{De querypipeline koppelt vier componenten via expliciete \texttt{connect()}-aanroepen. De parameter \texttt{include\_outputs\_from} laat toe de tussentijdse retriever-uitvoer op te vangen voor gebruik in de evaluatiefase.}
+\label{lst:query-pipeline}
+\end{listing}
+
+\subsection{Promptsjabloon en bronvermelding}
+\label{subsec:prompt-template}
+
+Het Jinja2-promptsjabloon is in het Nederlands opgesteld, conform de verwachting dat de \gls{esg}-vragen aan het systeem in het Nederlands worden gesteld. Het sjabloon instrueert de \gls{llm} uitdrukkelijk om de vraag te beantwoorden op basis van de aangeleverde context, en vraagt tevens om de bestandsnaam van het brondocument te vermelden na het antwoord. Dit is een directe implementatie van de bronvermeldingsrequirement: elk antwoord is traceerbaar naar het document waaruit de informatie is gehaald \autocite{HaystackMetadataRouter2026}.
+
+De opgehaalde chunks worden via een Jinja2-lus in de prompt opgenomen, samen met hun \texttt{file\_path}-metadatawaarde. Op die manier beschikt de \gls{llm} niet alleen over de inhoud van de relevante fragmenten, maar ook over hun herkomst, wat het aansporen tot correcte bronvermelding faciliteert zonder dat de prompt-instructies complexe uitvoerformattering vereisen.
+
+\begin{listing}[H]
+\begin{minted}{text}
+Beantwoord de vraag op basis van de context. Geef ook de filename
+van het document waarin de opgehaalde chunk staat, op een newline
+na het antwoord op de vraag.
+Context:
+{% for doc in documents %}
+  Bestand: {{ doc.meta['file_path'] }}
+  Inhoud: {{ doc.content }}
+{% endfor %}
+Vraag: {{question}}
+\end{minted}
+\caption[Promptsjabloon voor de querypipeline]{Het Jinja2-promptsjabloon instrueert de \gls{llm} om de vraag te beantwoorden op basis van de opgehaalde chunks en de bestandsnaam van het brondocument expliciet te vermelden, conform de bronvermeldingsrequirement van Turtle Srl.}
+\label{lst:prompt-template}
+\end{listing}
+
+\subsection{Backend-abstractie via hulpfuncties}
+\label{subsec:helper-functies}
+
+Omdat de drie \glspl{llm} verschillende \gls{api}-clients gebruiken, geven zij hun antwoorden in verschillende formaten terug. \texttt{MistralChatGenerator} geeft een \texttt{ChatMessage}-object terug met een \texttt{.content}-attribuut en een \texttt{.meta}-woordenboek dat tokenverbruik bevat. \texttt{OpenAIGenerator} geeft daarentegen een platte tekenreeks terug en plaatst de gebruiksstatistieken in een apart \texttt{meta}-lijst op het responsniveau.
+
+Een hulpfunctie normaliseert beide formaten naar één platte antwoordtekst, ongeacht de gebruikte backend. Een tweede logicablock extraheert de tokentellingen uit de modelspecifieke metadatastructuur: voor Mistral-antwoorden via \texttt{reply.meta.get("usage", \{\})}, voor OpenAI-antwoorden via de \texttt{meta}-lijst in het pipeline-antwoord. Deze abstractielaag maakt de rest van de verwerking --- het samenstellen van het resultaatwoordenboek --- volledig backend-onafhankelijk. Analoge hulpfuncties instantiëren de juiste embedder- en \gls{llm}-client op basis van de backend-veld uit de Hypster-configuratie, zodat de pipeline-opbouwcode zelf geen conditielogica over backends bevat.
+
+\subsection{Resultaatstructuur en vastgelegde metrieken}
+\label{subsec:resultaat-structuur}
+
+Voor elke vraag in de golden set wordt een gedetailleerd resultaatwoordenboek samengesteld. Dit woordenboek bevat alle informatie die nodig is voor de latere evaluatie met RAGAS en voor de vergelijkende statistische analyse:
+
+\begin{itemize}
+    \item \textbf{Identificatoren}: een uniek \texttt{question\_id}, de originele vraagstelling en de bijbehorende \gls{esg}-requirement waaraan de vraag gelinkt is.
+    \item \textbf{Grondwaarheid}: \texttt{ground\_truth}, \texttt{expected\_source}, \texttt{source\_page} en \texttt{reference\_contexts} uit de golden set, die als referentie dienen voor de RAGAS-metrics.
+    \item \textbf{Configuratie-informatie}: de namen van de gebruikte chunker, embedder en \gls{llm}, afzonderlijk en gecombineerd als \texttt{Configuration}-label.
+    \item \textbf{Gegenereerd antwoord}: de volledige antwoordtekst zoals teruggegeven door de \gls{llm} na normalisatie via de hulpfunctie.
+    \item \textbf{Opgehaalde contexten}: de tekstinhoud van de chunks die door de retriever werden geselecteerd, als lijst van tekenreeksen.
+    \item \textbf{Operationele metrieken}: \texttt{latency} in seconden (gemeten via \texttt{time.time()} rondom de pipeline-run, inclusief netwerkaanroepen), \texttt{prompt\_tokens} en \texttt{completion\_tokens} voor een nauwkeurige kostenberekening per configuratie.
+\end{itemize}
+
+De latency omvat de volledige end-to-end responstijd: van het indienen van de vraag tot het ontvangen van het \gls{llm}-antwoord, inclusief de embedding-\gls{api}-aanroep, de Qdrant-zoekopdracht en de \gls{llm}-\gls{api}-aanroep. Dit maakt latency een realistische maatstaf voor de operationele bruikbaarheid van elke configuratie in een productieomgeving.
+
+\section{Benchmarkorkestratie}
+\label{sec:benchmark-loop}
+
+De benchmarkorkestratie coördineert het volledig geautomatiseerd doorlopen van alle 27 configuraties op de volledige golden set en het opslaan van de resultaten voor verdere analyse. Dit is geïmplementeerd als een standalone script dat de querypipeline herhaaldelijk aanroept met wisselende configuraties.
+
+\subsection{Laden van de golden set}
+\label{subsec:golden-set-laden}
+
+Bij de start van de benchmarklus wordt de golden set geladen vanuit een \gls{json}-bestand. De golden set is een gestructureerde verzameling van vragen samengesteld op basis van de \gls{esg}-vragenlijsten van de \gls{vsme}-standaard, aangevuld met referentie-antwoorden, verwachte brondocumenten, relevante paginanummers en referentiecontexten. Dit is het vaste evaluatiepunt waartegen alle 27 configuraties worden gemeten, conform de reproduceerbaarheids-requirement: elke configuratie wordt op exact dezelfde vragen en met exact dezelfde ground truth beoordeeld.
+
+\subsection{Systematisch doorlopen van configuraties}
+\label{subsec:configs-doorlopen}
+
+De volledige testmatrix van 27 configuraties wordt gegenereerd via het Cartesisch product van drie lijsten: de drie chunker-namen, de drie embedding-modelnamen en de drie \gls{llm}-namen. Voor elke combinatie wordt een overschrijvingswoordenboek samengesteld en via \texttt{instantiate()} een concreet Hypster-configuratieobject aangemaakt. Dit object wordt vervolgens aan de querypipeline doorgegeven.
+
+\begin{listing}[H]
+\begin{minted}{python}
+CHUNKERS  = ["RecursiveSplitter", "FixedSizeWordSplitter",
+             "SemanticEmbeddingChunker"]
+EMBEDDERS = ["BAAI/bge-m3", "snowflake/arctic-embed-1-v2.0",
+             "intfloat/multilingual-e5-large-instruct"]
+LLMS      = ["Qwen-2.5-14B", "Llama-3.3-70B", "Mistral-Large-2"]
+
+for idx, (chunker_name, embedder_model, llm_name) in enumerate(
+        product(CHUNKERS, EMBEDDERS, LLMS), start=1):
+    overrides = {
+        "chunking.chunker_name": chunker_name,
+        "embedding.model":       embedder_model,
+        "llm.name":              llm_name,
+    }
+    config  = instantiate(pipeline_config, values=overrides,
+                          on_unknown="raise")
+    results = run_query_pipeline(config, golden_dataset)
+    all_results.extend(results)
+\end{minted}
+\caption[Benchmarklus: Cartesisch product over alle 27 configuraties]{Het Cartesisch product van drie lijsten genereert alle 27 configuraties. Per iteratie instantieert Hypster het juiste configuratieobject via puntnotatie-overschrijvingen, waarna de querypipeline voor alle vragen uit de golden set wordt uitgevoerd.}
+\label{lst:benchmark-loop}
+\end{listing}
+
+\subsection{Opslaan van resultaten}
+\label{subsec:resultaten-opslaan}
+
+Na het doorlopen van alle configuraties worden de verzamelde resultaatwoordenboeken in twee complementaire formaten opgeslagen. Ten eerste als een \gls{json}-bestand met de volledige resultaatstructuur: dit bestand dient als directe invoer voor de RAGAS-evaluatie in de volgende fase, aangezien het alle velden bevat die RAGAS nodig heeft als grondwaarheid en gegenereerde uitvoer. Ten tweede als een \gls{csv}-bestand via \texttt{pandas}, waarbij de resultaten in tabelvorm worden opgeslagen voor statistische analyse en visualisatie in een Jupyter Notebook. Het \gls{csv}-bestand gebruikt een puntkomma als scheidingsteken om compatibiliteitsproblemen te vermijden met komma's die voorkomen in de gegenereerde antwoordteksten.
+
+Beide outputbestanden worden opgeslagen in een centrale resultatendirectory, gescheiden van de broncode en de inputdata. Dit draagt bij aan de reproduceerbaarheid: de volledige benchmarkrun kan worden herhaald door de indexeringspipeline en de benchmarklus opnieuw uit te voeren, en de resultaten zullen identiek zijn voor de deterministische configuraties (fixed-size en recursive chunking) of statistisch gelijkwaardig voor de semantische chunker, waarvan de cosine-drempelwaarde documentafhankelijk is.

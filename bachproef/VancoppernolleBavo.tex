@@ -125,8 +125,8 @@
 \maketitle
 \hypersetup{pageanchor=true}
 
-\input{voorwoord}
-\input{samenvatting}
+\input{voorwoord.tex}
+\input{samenvatting.tex}
 
 %---------- Inhoud, lijst figuren, ... -----------------------------------------
 
@@ -171,20 +171,23 @@
 % om bijvoorbeeld de inleiding en/of stand van zaken over meerdere hoofdstukken
 % te verspreiden!
 
-\input{inleiding}
-\input{standvanzaken}
-\input{methodologie}
+\input{inleiding.tex}
+\input{standvanzaken.tex}
+\input{methodologie.tex}
 
 % Voeg hier je eigen hoofdstukken toe die de ``corpus'' van je bachelorproef
 % vormen. De structuur en titels hangen af van je eigen onderzoek. Je kan bv.
 % elke fase in je onderzoek in een apart hoofdstuk bespreken.
 
-\input{requirementsanalyse}
-\input{longlist}
-\input{shortlist}
+\input{requirementsanalyse.tex}
+\input{longlist.tex}
+\input{shortlist.tex}
+\input{dataset_golden_set.tex}
 \input{technische_uitvoering.tex}
+\input{pipeline_testen.tex}
+\input{resultaten.tex}
 
-\input{conclusie}
+\input{conclusie.tex}
 
 %---------- Bijlagen -----------------------------------------------------------
 
@@ -201,7 +204,7 @@ Het onderwerp van deze bachelorproef is gebaseerd op een onderzoeksvoorstel dat 
 De afgelopen jaren neemt de regulering rond duurzaamheid en emissierapportage toe. Een voorbeeld is de Corporate Sustainability Reporting Directive (CSRD), die bedrijven verplicht om hun milieu-impact transparant en digitaal te rapporteren. De huidige emissiedata in ESG-rapporten is vaak heterogeen, onnauwkeurig en moeilijk automatisch te verwerken, wat de ontwikkeling van betrouwbare, geautomatiseerde rapportagesystemen moeilijk maakt. Tegelijkertijd bieden Retrieval-Augmented Generation (RAG)-architecturen, waarin een LLM wordt gekoppeld aan een externe kennisbron, nieuwe mogelijkheden om domeinspecifieke documentaten te doorzoeken en accurate antwoorden te genereren. Binnen deze architectuur is de keuze van het embeddingmodel cruciaal, omdat dit model bepaalt welke documentcontext wordt opgehaald en dus een directe impact heeft op nauwkeurigheid, betrouwbaarheid en efficiëntie. In deze bachelorproef wordt, vertrekkend vanuit een concrete casus bij Turtle Srl, onderzocht: “Hoe kan de keuze van het embeddingmodel voor een RAG-architectuur helpen bij het identificeren van en rapporteren over de uitstoot van productiebedrijven?”. Het doel is om een proof-of-concept te ontwikkelen met een constante RAG-architectuur en drie variabele embeddingmodellen. Deze architecturen worden getest op een vaste dataset van duurzaamheids- en uitstootrapporten met behulp van een vragenlijst van 30 domeinspecifieke vragen. De prestaties van de embeddingmodellen en het RAG-systeem worden geëvalueerd via RAGAS- en MTEB-metrics. Het onderzoek bevat een literatuurstudie, requirementsanalyse, een experimentele opzet, simulaties van de verschillende embeddingmodellen en een vergelijkende analyse van de prestaties. Er wordt verwacht dat de modellen meetbare verschillen zullen tonen op vlak van context recall, precisie, faithfulness en latency, wat toelaat om sterktes en beperkingen per model te identificeren en te koppelen aan praktijkcriteria zoals kosten, snelheid en compliance-risico. Het resultaat is een beslissingskader in de vorm van een flowchart waarmee productiebedrijven, en in het bijzonder Turtle Srl en haar klanten, onderbouwd kunnen kiezen welk embeddingmodel het best past bij hun RAG-architectuur voor ESG- en emissierapportage, en zo zowel de kwaliteit als de efficiëntie van hun rapportageprocessen verbeteren.
 
 % Verwijzing naar het bestand met de inhoud van het onderzoeksvoorstel
-\input{../voorstel/voorstel-inhoud}
+\input{../voorstel/voorstel-inhoud.tex}
 
 %%---------- Andere bijlagen --------------------------------------------------
 % TODO: Voeg hier eventuele andere bijlagen toe. Bv. als je deze BP voor de

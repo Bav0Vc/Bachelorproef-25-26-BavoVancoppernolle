@@ -17,11 +17,11 @@ Gedurende deze systematische vergelijking worden de belangrijkste eigenschappen 
 
 Deze aanpak levert een short list op van de mogelijke technologieën voor de variabele componenten (embedding modellen, chunking strategieën en LLM's) voor verdere experimentele evaluatie, aangevuld met een vergelijkende tabel. Op basis van deze informatie kan bepaalde worden welke modellen of strategieën wel of niet toepasbaar zijn voor de experimentele opzet.
 
-\section{Fase 3: Input data en golden set voorbereiden}
+\section{Fase 3: Dataverzameling en opstellen van golden set}
 
 Fase 3 richt zich op de voorbereiding van de domeinspecifieke inputdata en het samenstellen van een “golden set” van vragen voor de latere evaluatie. Het doel is om enerzijds een representatieve dataset aan bedrijfsdocumenten te verzamelen die de interne ESG informatie van Turtle Srl weergeeft, en anderzijds een gestandaardiseerde vragenlijst op te stellen waarmee de RAG configuraties in fase 5 worden getest.
 
-Via bijkomende interviews met belanghebbenden wordt bepaald welke documenten nodig zijn om een dataset te verkrijgen die bruikbaar is voor ESG rapportage. Deze data kan bestaan uit jaarverslagen, duurzaamheidsrapporten, beleidsdocumenten of interne richtlijnen. Indien nodig worden documenten geanonimiseerd voordat ze in de experimentele omgeving worden opgenomen om de veiligheid van de data te verzekeren.
+Via bijkomende interviews met belanghebbenden wordt bepaald welke documenten nodig zijn om een dataset te verkrijgen die bruikbaar is voor ESG rapportage. Deze data kan bestaan uit jaarverslagen, duurzaamheidsrapporten, (energie)facturen, beleidsdocumenten of interne richtlijnen. Indien nodig worden documenten geanonimiseerd voordat ze in de experimentele omgeving worden opgenomen om de veiligheid van de data te verzekeren.
 
 Daarnaast wordt een golden set van vragen opgesteld, die ESG-gerelateerde vragen zoals questionnaires van Ecovadis en VSME omvat. Voor elke vraag wordt waar mogelijk een referentie antwoord, bijbehorende brondocumenten en relevante pagina  of sectienummers vastgelegd. Deze metadata maakt het mogelijk om zowel automatische evaluatie, met RAGAS, als handmatige expert evaluatie (bijvoorbeeld audits) uit te voeren.
 
@@ -43,7 +43,7 @@ De onderzoeksmethode bestaat uit gecontroleerde runs van de pipeline. De golden 
 
 De resultaten worden opgeslagen in een Jupyter Notebook zodat ze in de volgende fase op een gestructureerde manier kunnen worden geanalyseerd. Uit deze fase komt een volledige set aan experimentele resultaten die toelaat om de verschillende RAG configuraties onderling te vergelijken op basis van dezelfde vragen en evaluatiemetrics.
 
-\section{Fase 6: Resultaten verwerken en conclusie trekken}
+\section{Fase 6: Resultaten verzamelen en interpreteren}
 
 De laatste fase richt zich op het verwerken, analyseren en interpreteren van de verzamelde resultaten en om te zetten in duidelijke inzichten voor de PoC van Turtle Srl.
 

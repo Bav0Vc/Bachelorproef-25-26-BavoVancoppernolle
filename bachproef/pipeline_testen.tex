@@ -1,2 +1,108 @@
-\chapter{\IfLanguageName{dutch}{Pipeline testen}{Testing pipeline}}%
+\chapter{\IfLanguageName{dutch}{Pipeline testen & infrastructuur}{Testing pipeline & infrastructure}}%
 \label{ch:pipeline-testen}
+
+De vorige fase leverde een volledig geïmplementeerde, dynamische \gls{rag}-pipeline op die alle 27 configuraties kan doorlopen. Dit hoofdstuk beschrijft hoe die pipeline effectief wordt uitgevoerd: hoe de infrastructuur is opgebouwd zodat alle componenten kunnen samenwerken, welke stappen in welke volgorde worden doorlopen, en hoe de ruwe resultaten worden vastgelegd. De nadruk ligt hier niet op de implementatiekeuzes achter de individuele componenten — die zijn beschreven in Hoofdstuk~\ref{ch:technische-uitvoering} — maar op de architectuur van de uitvoeringsomgeving en de reproduceerbaarheid van de experimentele opzet als geheel.
+
+\section{Uitvoeringsomgeving}
+\label{sec:uitvoeringsomgeving}
+
+De volledige experimentele opzet draait binnen een Docker-containeromgeving die bestaat uit twee diensten die via een intern Docker-netwerk met elkaar communiceren: de \gls{rag}-applicatiecontainer en de Unstructured document-\gls{api}. Deze containerisatie heeft twee doelstellingen. Ten eerste wordt de uitvoeringsomgeving volledig van het hostsysteem geïsoleerd, zodat afhankelijkheden, libraries en bepaalde omgevingsvariabelen niet per machine verschillen. Ten tweede draagt het bij aan reproduceerbaarheid van de proefopstelling: iedereen met toegang tot de broncode en een \gls{nvidia}-\gls{gpu} kan de exacte experimentele omgeving reconstrueren via één commando.
+
+\subsection{Diensten en hun rol}
+
+\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en ragas evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde NLTK-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
+
+Scripts worden handmatig gestart via \texttt{docker exec} in de lopende container. Dit geeft volledige controle over welke fase van de pipeline op welk moment wordt uitgevoerd en laat toe om tussentijdse resultaten te inspecteren voor de volgende fase wordt gestart.
+
+\textbf{De Unstructured-dienst} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url} \texttt{http://unstructured-api:8000/general/v0/general}. De applicatiecontainer is via een \texttt{depends\_on}-conditie en een \gls{http}-healthcheck gekoppeld aan de beschikbaarheid van deze dienst: de applicatie start pas wanneer de Unstructured-\gls{api} succesvol reageert op een sokkelverbindingstest. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
+
+\subsection{GPU-toegang en modelcaching}
+
+De \gls{gpu} van de hostmachine wordt via de \gls{nvidia} container runtime beschikbaar gesteld aan de applicatiecontainer. Alle drie de embedding-modellen — BGE-M3, arctic-embed-l-v2.0 en multilingual-e5-large-instruct — draaien volledig lokaal op de \gls{gpu} via \texttt{sentence-transformers} en PyTorch. Dit omvat eveneens het interne model van de semantische chunker (\texttt{all-MiniLM-L6-v2}) en het evaluatie-embedding-model.
+
+De HuggingFace-modelcache is een Docker volume waarop de embedding-modellen slechts eenmalig worden gedownload en persistent bewaard blijven over container-herstarts heen. Vóór de eerste benchmarkrun worden alle benodigde modellen eenmalig vooraf gecached via een apart script.
+
+\subsection{Omgevingsvariabelen en credentials}
+
+Alle \gls{api}-keys en configureerbare \glsp{url} worden via een \texttt{.env}-bestand in de container geladen. Dit bestand bevat onder meer de Qdrant-verbindings\gls{url} en \gls{api}-sleutel, de HuggingFace-token voor de Featherless AI-router, de Mistral \gls{api}-key en de Unstructured-\gls{api}-\gls{url}. Credentials worden nooit als leesbare syntax in de broncode opgenomen, maar via Haystack \texttt{Secret}-objecten doorgegeven aan de componenten die ze nodig hebben.
+
+\section{Volgorde van de uitvoering}
+\label{sec:uitvoering-volgorde}
+
+De volledige pipelinerun bestaat uit drie opeenvolgende fasen die worden gecoördineerd via het hoofdscript \texttt{run\_pipeline.py}.
+
+\subsection{Fase 1: Indexering}
+
+De indexeringsfase verwerkt alle documenten uit de dataset voor alle $3 \times 3 = 9$ combinaties van chunking-strategie en embedding-model. Vóór de start wordt gecontroleerd welke Qdrant-collecties reeds bestaan, zodat een onderbroken indexering kan worden hervat zonder reeds verwerkte combinaties opnieuw te indexeren (Sectie~\ref{sec:indexering}).
+
+De negen indexeringen worden sequentieel uitgevoerd — niet parallel — omwille van twee redenen. Ten eerste verbruikt elke indexering het volledige \gls{gpu}-geheugen voor het laden van het embedding-model, waardoor parallelle uitvoering op één \gls{gpu} niet mogelijk is. Ten tweede maakt sequentiële uitvoering de logging en foutopsporing aanzienlijk eenvoudiger: problemen met een specifieke combinatie zijn direct te isoleren zonder een logbestand van gelijktijdige runs te moeten ontwarren.
+
+\subsection{Fase 2: Benchmark loop}
+\label{subsec:benchmarkloop}
+
+De benchmark loop doorloopt het volledige Cartesisch product van de 27 configuraties. Voor iedere configuratie worden alle vragen uit de golden set beantwoord. Dit \gls{json}-bestand bevat voor elke vraag naast de vraagtekst ook de ground truth, het verwachte brondocument, het verwachte paginanummer en de referentiecontexten — alle velden die later nodig zijn voor de RAGAS-evaluatie.
+
+Voor elke configuratie wordt via HyPSTER een concreet configuratieobject aangemaakt en aan de querypipeline doorgegeven. De querypipeline embeddt elke vraag lokaal via het geconfigureerde \texttt{sentence-transformers}-model, zoekt in de corresponderende Qdrant-collectie naar de meest relevante chunks, maakt de prompt en roept de geconfigureerde \gls{llm} aan via de externe \gls{api}. Het resultaatobject voor elke vraag bevat naast het gegenereerde antwoord ook de opgehaalde contexten en de operationele metrieken omtrent latency en tokenverbruik.
+
+\subsection{Fase 3: RAGAS-evaluatie}
+
+De RAGAS-evaluatiefase transformeert de ruwe antwoorden naar kwantitatieve scores. Deze fase is beschreven in Hoofdstuk~\ref{ch:resultaten}, dat volledig gewijd is aan de evaluatiemethode en de interpretatie van de scores.
+
+\section{Reproduceerbaarheid van de experimentele opzet}
+\label{sec:reproduceerbaarheid}
+
+Reproduceerbaarheid is een Must-Have-requirement van dit onderzoek (Sectie~\ref{ch:requirementsanalyse}, RQ-S-05) en is op meerdere niveaus in de uitvoeringsomgeving verankerd.
+
+\textbf{Deterministisch gedrag van chunking.} Fixed-size en recursive chunking zijn volledig deterministisch: dezelfde invoerdocumenten met dezelfde parameters produceren altijd exact dezelfde chunks. Voor semantische chunking geldt een nuance: de cosine-drempelwaarde wordt bepaald op het 95ste percentiel van de afstandsverdeling binnen het document, wat per document licht kan variëren afhankelijk van de volgorde van de afstandsberekeningen. De parameters van het interne \texttt{all-MiniLM-L6-v2}-model zijn echter vastgelegd en deterministisch, waardoor de variatie in de praktijk verwaarloosbaar is.
+
+\textbf{Vastgelegde modelversies.} Alle Python-afhankelijkheden zijn vastgelegd in \texttt{requirements.txt} met exacte versienummers. De embedding-modellen worden via hun HuggingFace-modelnaam en -revisie geladen; de gecachede versies in het Docker-volume blijven ongewijzigd gedurende het gehele experiment. De \gls{llm}-versies zijn vastgelegd via de \gls{api}-modelnaam in de Hypster-configuratie.
+
+\textbf{Identieke golden set over alle runs.} De golden set is een statisch \gls{json}-bestand dat niet wijzigt tussen runs. Elke configuratie wordt op exact dezelfde vragen in exact dezelfde volgorde geëvalueerd, waardoor de resultaten per configuratie direct vergelijkbaar zijn.
+
+\textbf{Logging van elke run.} Elk script dat via het hoofdscript wordt gestart, initialiseert een gestructureerde logger die alle uitvoer — inclusief timestamps, configuratielabels en foutmeldingen — naar een logbestand wegschrijft. De logbestandsnaam bevat de scriptnaam, datum en tijd, zodat de uitvoering en resultaten van elke run achteraf volledig herleidbaar zijn.
+
+\section{LLM-providers tijdens de benchmark loop}
+\label{sec:llm-providers}
+
+De drie geselecteerde \glspl{llm} worden via twee verschillende externe \gls{api}-diensten aangestuurd. Het onderscheid tussen de providers is relevant voor de reproduceerbaarheid en de latencymeting.
+
+\textbf{Featherless AI} is een proxy-dienst die een OpenAI-compatibele \gls{api} biedt voor open-source modellen die op de HuggingFace Hub beschikbaar zijn. Qwen 2.5 14B Instruct en Llama 3.3 70B Instruct worden via deze router aangestuurd. De requests verlopen via de \texttt{OpenAIGenerator}-component van Haystack met een aangepaste basis-\gls{url}. Een voordeel van deze aanpak is dat er geen lokale \gls{gpu}-resources nodig zijn voor de inferentie van de grote \glspl{llm}: de modellen draaien op de serverinfrastructuur van Featherless AI, terwijl de \gls{gpu} van de lokale machine beschikbaar blijft voor de embedding-modellen.
+
+\textbf{Mistral AI} stuurt Mistral Large 2 aan via de officiële Mistral \gls{api}. In Haystack wordt hiervoor de \texttt{MistralChatGenerator}-component gebruikt, die het Mistral-specifieke berichtformaat afhandelt. De antwoordextractie verschilt licht van de OpenAI-gebaseerde generator: Mistral geeft een \texttt{ChatMessage}-object terug waaruit de tekstinhoud via het \texttt{.content}-attribuut wordt geëxtraheerd, terwijl de OpenAI-generator een platte tekenreeks teruggeeft.
+
+\begin{listing}[H]
+\begin{minted}{python}
+_HF_LLM_BASE_URL = "https://router.huggingface.co/featherless-ai/v1"
+
+def _build_llm(llm_cfg: dict):
+    if llm_cfg["backend"] == "mistral":
+        return MistralChatGenerator(model=llm_cfg["api_model"])
+    if llm_cfg["backend"] == "hf":
+        return OpenAIGenerator(
+            model=llm_cfg["api_model"],
+            api_key=Secret.from_env_var("HF_TOKEN"),
+            api_base_url=_HF_LLM_BASE_URL
+        )
+\end{minted}
+\caption[\_build\_llm: backend-selectie op basis van Hypster-configuratie]{De hulpfunctie instantieert de juiste \gls{llm}-client op basis van het \texttt{backend}-veld in de Hypster-configuratie. De backend-selectielogica is volledig geïsoleerd in deze functie zodat de rest van de querypipeline geen conditielogica over providers bevat.}
+\label{lst:build-llm}
+\end{listing}
+
+\section{Invoer en uitvoer van de testfase}
+\label{sec:invoer-uitvoer}
+
+De testfase heeft twee vereiste invoerbestanden en produceert twee uitvoerbestanden.
+
+\textbf{Invoer:}
+\begin{itemize}
+    \item \texttt{data/golden\_set/questionnaire.json}: de golden set met alle vragen, grondwaarheden en referentiecontexten.
+    \item De negen Qdrant-collecties die tijdens de indexeringsfase zijn aangemaakt.
+\end{itemize}
+
+\textbf{Uitvoer:}
+\begin{itemize}
+    \item \texttt{ evaluation\_dataset.json}: voor elke vraag-configuratiecombinatie een volledig resultaatwoordenboek met het gegenereerde antwoord, de opgehaalde contexten en de operationele metrieken. Dit bestand dient als directe invoer voor de RAGAS-evaluatie in Hoofdstuk~\ref{ch:resultaten}.
+    \item \texttt{ rag\_benchmark\_results.csv}: dezelfde data in tabelvorm als \gls{csv}-bestand met puntkomma als scheidingsteken voor verdere analyse in een Jupyter Notebook.
+\end{itemize}
+
+Bij een volledige run van 27 configuraties op $n$ vragen bevat het \gls{json}-bestand $27 \times n$ rijen — één per vraag-configuratiecombinatie. Dit bestand is het centrale artefact dat alle informatie bevat om de evaluatiefase volledig te kunnen uitvoeren zonder opnieuw de benchmark loop te hoeven draaien.

@@ -85,7 +85,7 @@ Voor dit onderzoek wordt Haystack 2.x ingezet. Waar eerdere versies van dergelij
 
 Hyperparameterization in de context van RAG is het systematisch variëren van systeeminstellingen of componenten om de prestaties te optimaliseren. In dit onderzoek worden drie hoofdvariabelen geïdentificeerd, wat resulteert in een testmatrix van 27 unieke configuraties ($3^3$ indien men drie variabelen met drie opties hanteert).
 
-In een bedrijfscontext zoals die van Turtle Srl is de meest accurate configuratie vaak ook de duurste of traagste. Hyperparameter-optimalisatie (HPO) is noodzakelijk om een superieure Pareto-front, de verzameling van de best mogelijke oplossingen in een probleem met meerdere requirements, te bereiken: de set configuraties die de best mogelijke balans bieden tussen tegenstrijdige doelstellingen zoals operationele kosten, latentie en feitelijke nauwkeurigheid \autocite{Barker2025}. Zonder systematische tuning riskeert men een systeem dat weliswaar accuraat is, maar door hoge inferentiekosten niet schaalbaar is voor grootschalige ESG-rapportage.
+In een bedrijfscontext zoals die van Turtle Srl is de meest accurate configuratie vaak ook de duurste of traagste. Hyperparameter-optimalisatie (HPO) is noodzakelijk om een superieure Pareto-front, de verzameling van de best mogelijke oplossingen in een probleem met meerdere requirements, te bereiken: de set configuraties die de best mogelijke balans bieden tussen tegenstrijdige doelstellingen zoals latency, feitelijke nauwkeurigheid en het gebruik van geheugen en opslagruimte \autocite{Barker2025}. Zonder systematische tuning riskeert men een systeem dat weliswaar accuraat is, maar door hoge inferentiekosten niet schaalbaar is voor grootschalige ESG-rapportage.
 
 In dit onderzoek wordt deze dynamische aanpak ingevuld Hypster. Hypster is een configuration framework dat het mogelijk maakt om verschillende hyperparameters - zoals variabel chunking, embeddings en LLM’s – te definiëren als injecteerbare variabelen. Dankzij deze parameters is het mogelijk om met 1 pipeline alle mogelijke combinaties van de variabele componenten te testen.
 
@@ -134,6 +134,28 @@ De daaruit volgende embeddings worden opgeslagen in een vector database. De vect
 
 De vector database heeft ook de mogelijkheid om metadata toe te voegen aan de vector embeddings. Dit gebeurt aan de hand van labels die toegekend worden aan de vectoren en samen worden opgeslagen. Deze labels bevatten data zoals een datum, categorie, user-ID of taal.
 
+\subsubsection{Matryoshka Representation Learning}
+\label{subsubsec:matryoshka}
+
+Een recente innovatie in de wereld van embedding-modellen is Matryoshka Representation Learning (\gls{mrl}), geïntroduceerd door \textcite{KusupatiEtAl2022}. Het principe is vernoemd naar de Russische matroesjka-pop: net zoals die poppetjes volledig bruikbare kleinere versies van zichzelf bevatten, leert een \gls{mrl}-model embeddings waarbij de eerste $m$ dimensies van een volledige $d$-dimensionele vector op zichzelf al een semantisch zinvolle en bruikbare representatie vormen. Een model dat 1.024-dimensionele vectoren produceert, kan dankzij \gls{mrl} worden afgekapt tot 256 of 512 dimensies zonder de semantische kwaliteit noemenswaardig te verliezen.
+
+De praktische waarde voor \gls{rag}-systemen is aanzienlijk. Vectordatabases zoals Qdrant slaan embeddings op als hoogdimensionale vectoren. Omdat de geheugenvoetafdruk en de zoeksnelheid (latency) direct afhankelijk zijn van de vector-dimensie, biedt Matryoshka-truncatie een significante optimalisatie Door Matryoshka-truncatie toe te passen, kan de opslag in Qdrant worden geoptimaliseerd zonder een aparte, kleinere modelvariant te moeten trainen of inzetten. Het arctic-embed-l-v2.0-model dat in dit onderzoek wordt gebruikt, ondersteunt Matryoshka-truncatie naar 256 dimensies met minder dan 3\% kwaliteitsverlies \autocite{YuEtAl2024}, wat de operationele kosten van de vectordatabase aanzienlijk verlaagt bij grote corpora.
+
+\subsubsection{Hybride zoeken en Reciprocal Rank Fusion}
+\label{subsubsec:hybride-zoeken}
+
+Standaard semantisch zoeken in een vectordatabase werkt op basis van cosine-gelijkenis: de queryvector wordt vergeleken met alle opgeslagen documentvectoren en de meest gelijkaardige worden teruggegeven. Dit \textit{dense retrieval} is sterk voor conceptueel verwante vragen, maar mist exacte trefwoorden wanneer een gebruiker zoekt op een specifiek acroniem, een productnummer of een regelgevende code zoals ``VSME artikel B3'' \autocite{Chen2024}.
+
+\textit{Sparse retrieval} — de aanpak van klassieke zoekmachines zoals BM25 — werkt precies omgekeerd: het matcht op basis van letterlijke woordoverlap en is sterk voor trefwoordzoeken, maar mist semantisch verwante passages die een andere woordkeuze gebruiken. In een \gls{esg}-context zijn beide zoekstrategieën noodzakelijk: een gebruiker kan conceptuele vragen stellen over klimaatbeleid én specifiek zoeken op ``Scope 3 emissies'' of ``VSME B6''.
+
+Hybride zoeken combineert de resultatenlijsten van dense en sparse retrieval via \gls{rrf}, een fusietechniek die onafhankelijk is van de absolute scores van de twee systemen \autocite{Cormack2009}. \gls{rrf} kent aan elk document een gecombineerde score toe op basis van zijn \emph{rang} in elke afzonderlijke resultatenlijst, niet op basis van de ruwe score. De formule is:
+
+\begin{equation}
+\text{RRF}(d) = \sum_{r \in R} \frac{1}{k + \text{rank}_r(d)}
+\end{equation}
+
+waarbij $R$ de set van rangordes is (dense en sparse), $\text{rank}_r(d)$ de positie van document $d$ in rangorde $r$, en $k$ een constante die typisch op 60 wordt gezet. Een document dat in beide systemen hoog staat, krijgt een hoge gecombineerde score; een document dat enkel in één systeem hoog staat, scoort minder. Qdrant biedt native ondersteuning voor hybride zoeken via \gls{rrf} \autocite{QdrantHybrid2025}, wat de integratie met BGE-M3 — het enige model in dit onderzoek dat zowel dense als sparse vectoren produceert \autocite{Chen2024} — technisch eenvoudig maakt.
+
 \subsubsection{LLM}
 
 Het generatieve component, het LLM, gebruikt de context uit de vector database om samen met de gestelde vraag een coherent antwoord te formuleren. Concreet bouwt de LLM binnen RAG voort op zijn in-context learning-capaciteiten: de opgehaalde ESG-fragmenten fungeren als uitgebreide prompt, waardoor het model tijdens generatie kan “redeneren over bewijs” in plaats van te vertrouwen op verouderde of onvolledige trainingskennis \autocite{Wang2025}. Studies tonen dat dit hybridemodel 20\% tot 30\% betere prestaties oplevert op knowledge-intensive vraag-en-antwoordtaken dan pure seq2seq-modellen \autocite{Lewis2020}. RAG overtreft bijvoorbeeld BART en T5 op Natural Questions, WebQuestions en TriviaQA, terwijl de gegenereerde antwoorden specifieker zijn, en feitelijk meer correct \autocite{Lewis2020}.
@@ -160,58 +182,21 @@ Voor de PoC van Turtle Srl zijn klassieke benchmarks (BLEU, ROUGE, MTEB) daarom 
 
 \subsection{Het RAGAS framework}
 
-De academische standaard voor het kwantificeren van RAG-prestaties is het RAGAS framework. RAGAS, ontwikkeld door \textcite{Es2024}, introduceert metrieken die de "RAG Triad" (Query, Context, Answer) evalueren. De interactie tussen de query, de opgehaalde context en het gegenereerde antwoord worden geëvalueerd met 4 metrieken. Het framework gebruikt LLM-as-a-judge, een krachtige LLM die de output van een andere LLM evalueert, waardoor menselijke tussenkomst overbodig wordt.
+De academische standaard voor het kwantificeren van \gls{rag}-prestaties is het RAGAS-framework. RAGAS, ontwikkeld door \textcite{Es2024}, introduceert metrieken die de ``RAG Triad'' (Query, Context, Answer) evalueren. De interactie tussen de query, de opgehaalde context en het gegenereerde antwoord worden geëvalueerd met vier metrieken. Het framework gebruikt \textit{LLM-as-a-judge}: een krachtige \gls{llm} evalueert de output van een andere \gls{llm}, waardoor menselijke tussenkomst overbodig wordt.
 
-De metrieken zijn onderverdeeld in 2 categorieën op vlak van welk component ze evalueren. De generator wordt beoordeeld op faithfulness en answer relevancy en de op vlak van context precision en context recall.
+De metrieken zijn onderverdeeld in twee categorieën op basis van welk component ze evalueren. De generator wordt beoordeeld op faithfulness en answer relevancy; de retriever op context precision en context recall.
 
-\begin{figure}
+Faithfulness, of getrouwheid, meet of het gegenereerde antwoord uitsluitend gebaseerd is op de opgehaalde context. Dit is cruciaal om hallucinaties op te sporen: elk cijfer in een \gls{esg}-rapport moet herleidbaar zijn naar de bron. Answer Relevancy beoordeelt in welke mate het antwoord daadwerkelijk een oplossing biedt voor de gestelde vraag, zonder overbodige informatie. Context Precision evalueert of de meest relevante documentfragmenten bovenaan de zoekresultaten stonden. Context Recall controleert of alle benodigde informatie om de vraag te beantwoorden daadwerkelijk aanwezig was in de opgehaalde fragmenten \autocite{Dong2025,Roychowdhury2024}.
+
+\subsubsection{LLM-as-a-judge en self-preference bias}
+\label{subsubsec:llm-as-judge}
+
+De \textit{LLM-as-a-judge}-aanpak biedt een schaalbaar alternatief voor dure en tijdrovende menselijke evaluatie. De evaluator-\gls{llm} beoordeelt de gegenereerde antwoorden op basis van de ingediende context en grondwaarheid, zonder de inhoud van de beoordeling te herleiden naar het model dat het antwoord genereerde. Dit maakt geautomatiseerde evaluatie over grote aantallen configuraties praktisch haalbaar \autocite{Es2024}.
+
+Een fundamenteel risico van deze aanpak is echter \textit{self-preference bias}: de tendens van een \gls{llm} om uitvoer die stijlistisch of inhoudelijk lijkt op zijn eigen schrijfstijl hoger te beoordelen dan uitvoer van andere modellen \autocite{PanEtAl2024}. Wanneer hetzelfde model dat de antwoorden genereerde ook als evaluator wordt ingezet, kunnen de evaluatiescores systematisch vertekend zijn in het voordeel van dat model, ongeacht de werkelijke kwaliteit van de antwoorden \autocite{ZhengEtAl2023}. \textcite{PanEtAl2024} tonen in een grootschalige studie aan dat \glspl{llm} hun eigen uitvoer gemiddeld significant hoger scoren dan die van andere modellen, zelfs wanneer externe beoordelaars geen kwaliteitsverschil waarnemen. Deze vertekening is bijzonder problematisch in een vergelijkende studie waarbij meerdere \glspl{llm} tegen elkaar worden afgewogen: een model dat als rechter en beklaagde tegelijk optreedt, zou structureel bevoordeeld zijn ten opzichte van de andere kandidaten.
+
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{ragas.png}
   \caption[Voorbeeld figuur.]{\label{fig:grail}Overzicht van de implementatie en interpretatie van RAGAS-metrieken binnen het RAGAS framework. Bron: \autocite{Kaarthick2024Ragas}}
 \end{figure}
-
-Faithfulness, of getrouwheid, meet of het gegenereerde antwoord uitsluitend gebaseerd is op de opgehaalde context. Dit is cruciaal om hallucinaties op te sporen: elk cijfer in een ESG-rapport moet immers herleidbaar zijn naar de bron. Answer Relevancy beoordeelt in welke mate het antwoord daadwerkelijk een oplossing biedt voor de gestelde vraag, zonder overbodige informatie. Context Precision evalueert of de meest relevante documentfragmenten bovenaan de zoekresultaten stonden. Voor ESG-audits is dit essentieel om de efficiëntie van de retriever te bepalen. Context Recall controleert of alle benodigde informatie om de vraag te beantwoorden daadwerkelijk aanwezig was in de opgehaalde fragmenten \autocite{Dong2025,Roychowdhury2024}.
-
-%\begin{figure}
-%  \centering
-%  \includegraphics[width=0.8\textwidth]{grail.jpg}
-%  \caption[Voorbeeld figuur.]{\label{fig:grail}Voorbeeld van invoegen van een figuur. Zorg altijd voor een uitgebreid bijschrift dat de figuur volledig beschrijft zonder in de tekst te moeten gaan zoeken. Vergeet ook je bronvermelding niet!}
-%\end{figure}
-%
-%\begin{listing}
-%  \begin{minted}{python}
-%    import os
-%    import llm
-%    from hypster import HP, instantiate
-%
-%    def llm_config(hp: HP):
-%    model_name = hp.select(["gpt-4o-mini", "gpt-4o"], name="model_name")
-%    temperature = hp.float(0.0, name="temperature", min=0.0, max=1.0)
-%    max_tokens = hp.int(256, name="max_tokens", max=2048)
-%
-%    return {
-%        "model_name": model_name,
-%        "temperature": temperature,
-%        "max_tokens": max_tokens
-%    }
-%
-%  \end{minted}
-%  \caption[Tekst in lijst code fragmenten]{Tekst onder code blok}
-%\end{listing}
-%
-%\lipsum[7-20]
-%
-%\begin{table}
-%  \centering
-%  \begin{tabular}{lcr}
-%    \toprule
-%    \textbf{Kolom 1} & \textbf{Kolom 2} & \textbf{Kolom 3} \\
-%    $\alpha$         & $\beta$          & $\gamma$         \\
-%    \midrule
-%    A                & 10.230           & a                \\
-%    B                & 45.678           & b                \\
-%    C                & 99.987           & c                \\
-%    \bottomrule
-%  \end{tabular}
-%  \caption[Voorbeeld tabel]{\label{tab:example}Voorbeeld van een tabel.}
-%\end{table}

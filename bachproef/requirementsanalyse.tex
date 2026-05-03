@@ -35,7 +35,7 @@ Niet-functionele requirements beschrijven de kwaliteitseisen en randvoorwaarden 
 
 \textbf{Context recall (vindbaarheid).} De retrievalstap moet de relevante informatie daadwerkelijk uit de vectordatabase kunnen ophalen. mijn copromotor stelde dat dit de meest kritische stap is: \textit{``it's good enough if the retrieval component fetches it''}. Wanneer de retrieval faalt, kan de \gls{llm} per definitie geen correct antwoord genereren.
 
-\textbf{Performantie (latentie) en kostenefficiëntie.} De responstijd en de tokenkosten per configuratie moeten gemonitord worden. Een technisch optimale configuratie die in de praktijk te traag of te kostbaar is, heeft geen business value voor Turtle Srl. Dit sluit aan bij de operationele haalbaarheid van een schaalbare \gls{esg}-verwerkingspipeline.
+\textbf{Performantie (latency) en kostenefficiëntie.} De responstijd en de tokenkosten per configuratie moeten gemonitord worden. Een technisch optimale configuratie die in de praktijk te traag of te kostbaar is, heeft geen business value voor Turtle Srl. Dit sluit aan bij de operationele haalbaarheid van een schaalbare \gls{esg}-verwerkingspipeline.
 
 \textbf{Azure-compatibiliteit.} De \gls{poc} moet inzetbaar zijn op de Azure-infrastructuur van Turtle Srl. Dit stelt eisen aan de keuze van modellen en diensten: proprietaire modellen (OpenAI, Google) zijn beschikbaar via API's die vanuit Azure aanroepbaar zijn, terwijl open-source modellen een Azure VM- of containerdeployment vereisen.
 
@@ -61,7 +61,7 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     M & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
     \midrule
     S & Answer Relevancy                             & Bepaalt de effectiviteit van de \gls{poc} \autocite{Es2024} \\
-    S & Latentie en kosten per query                 & Operationele bruikbaarheid voor Turtle Srl \\
+    S & Latency                                      & Operationele bruikbaarheid voor Turtle Srl \\
     S & Azure-hosting compatibiliteit                & Productie-infrastructuur van Turtle Srl \\
     S & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
     \midrule

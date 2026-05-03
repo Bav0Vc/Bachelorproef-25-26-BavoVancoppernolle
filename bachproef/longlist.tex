@@ -56,7 +56,7 @@ Tabel~\ref{tab:longlist-chunking} brengt alle besproken chunking-strategieën sa
     M & Source attribution             & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
     M & Haystack implementeerbaar      & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & ?           & --- \\
     M & Reproduceerbaarheid            & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ?           & --- \\
-    S & Latentie (indexering)          & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet & --- \\
+    S & latency (indexering)          & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet & --- \\
     S & Controle over chunk-grenzen    & \textbullet & ?           & \textbullet & \textbullet & ?           & ---         & --- \\
     C & Context Precision              & ---         & ?           & ---         & ?           & \textbullet & \textbullet & \textbullet \\
     C & Semantisch coherente chunks    & ---         & ?           & ---         & ?           & \textbullet & \textbullet & \textbullet \\
@@ -145,7 +145,7 @@ Llama 3.3 70B Instruct, gepubliceerd door Meta \autocite{GrattafioriEtAl2024}, i
 
 \subsection{Mistral AI Mistral Large 2}
 
-Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit. \textcite{MistralAIBlog2024} documenteren 123 miljard parameters, een contextvenster van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Als Frans bedrijf gevestigd in Parijs verwerkt Mistral AI alle data exclusief binnen de \gls{eu}, waardoor het niet valt onder de Amerikaanse CLOUD Act \autocite{MistralAIBlog2024}. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt. \textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder grouped-query attention (\gls{gqa}) die de latentie bij inferentie verlaagt.
+Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit. \textcite{MistralAIBlog2024} documenteren 123 miljard parameters, een contextvenster van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Als Frans bedrijf gevestigd in Parijs verwerkt Mistral AI alle data exclusief binnen de \gls{eu}, waardoor het niet valt onder de Amerikaanse CLOUD Act \autocite{MistralAIBlog2024}. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt. \textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder grouped-query attention (\gls{gqa}) die de latency bij inferentie verlaagt.
 
 \subsection{Anthropic Claude 3.5 Sonnet}
 
@@ -177,7 +177,7 @@ DeepSeek-V3 is een open-source model dat op benchmarks presteert op het niveau v
     M & Meertalig (IT/EN)             & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet \\
     M & Context ($\geq$32K tokens)    & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
     S & Answer Relevancy              & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
-    S & Latentie (snelle respons)     & \textbullet & ?           & ?           & \textbullet & ?           & ?           \\
+    S & latency (snelle respons)     & \textbullet & ?           & ?           & \textbullet & ?           & ?           \\
     S & Azure-compatibiliteit         & \textbullet & \textbullet & \textbullet & ---         & ---         & ---         \\
     C & Lokale uitvoering             & \textbullet & \textbullet & \textbullet & ---         & ?           & \textbullet \\
     C & GDPR / EU-soevereiniteit      & \textbullet & \textbullet & \textbullet & ?           & ?           & ---         \\

@@ -49,9 +49,25 @@
 
 \usepackage{float} % voor code block
 
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.geometric,calc}
+
+\definecolor{dbfill}{HTML}{FF99FF}
+\definecolor{dbstroke}{HTML}{333333}
+\definecolor{idxfill}{HTML}{F0F0FF}
+\definecolor{idxstroke}{HTML}{9393DB}
+\definecolor{qefill}{HTML}{FFFAF0}
+\definecolor{qestroke}{HTML}{D4A017}
+\definecolor{textstroke}{HTML}{404040}
+
 \usepackage[acronym]{glossaries}
 
 \makeglossaries
+
+\newglossaryentry{nvidia}{
+    name={NVIDIA},
+    description={Een Amerikaans technologiebedrijf dat gespecialiseerd is in grafische processoren (GPU's)}
+}
 
 \newacronym{esg}{ESG}{Environmental, Social en Governance}
 \newacronym{poc}{PoC}{Proof of Concept}
@@ -79,15 +95,17 @@
 \newacronym{mrl}{MRL}{Matryoshka Representation Learning}
 \newacronym{oom}{OOM}{Out-of-Memory}
 \newacronym{url}{URL}{Uniform Resource Locator}
+\newacronym{cuda}{CUDA}{Compute Unified Device Architecture}
+\newacronym{cpu}{CPU}{Central Processing Unit}
 
 %%---------- Document metadata -------------------------------------------------
 % TODO: Replace this with your own information
 \author{Vancoppernolle Bavo}
 \supervisor{Mevr. N. Declercq}
 \cosupervisor{Dhr. G. Gueli}
-\title[Optionele ondertitel]%
+\title[een vergelijkende studie van chunking-, embedding- en LLM-configuraties]%
     %{Een vergelijkende studie van RAG\\-configuraties met variabele chunking-\\strategieën, embedding modellen en LLM's,\\geoptimaliseerd voor ESG-vraagstukken}
-    {RAG voor ESG rapportage:\\een vergelijkende studie van\\chunking-, embedding- en LLM-configuraties}
+    {RAG voor ESG rapportage:}
     \academicyear{\advance\year by -1 \the\year--\advance\year by 1 \the\year}
 \examperiod{1}
 \degreesought{\IfLanguageName{dutch}{Professionele bachelor in de toegepaste informatica}{Bachelor of applied computer science}}

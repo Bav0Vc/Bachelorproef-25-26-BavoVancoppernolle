@@ -14,32 +14,100 @@ Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte acyclisc
 
 \begin{figure}[H]
     \centering
-    \begin{mermaid}
-    flowchart TD
-        %% Styling
-        classDef database fill:#f9f,stroke:#333,stroke-width:2px;
-        classDef idxStyle fill:#f0f0ff,stroke:#9393db,stroke-width:1px;
-        classDef qeStyle fill:#fffaf0,stroke:#d4a017,stroke-width:1px;
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        font=\sffamily,
+        >=Latex,
+        node distance=8mm and 10mm,
+        proc/.style={
+            rectangle,
+            rounded corners=2pt,
+            draw=textstroke,
+            fill=white,
+            minimum height=10mm,
+            minimum width=22mm,
+            align=center,
+            inner sep=4pt,
+            line width=0.9pt
+        },
+        db/.style={
+            cylinder,
+            shape border rotate=90,
+            aspect=0.28,
+            draw=dbstroke,
+            fill=dbfill,
+            minimum height=14mm,
+            minimum width=18mm,
+            align=center,
+            inner sep=3pt,
+            line width=1.2pt
+        },
+        groupbox/.style={
+            rounded corners=4pt,
+            inner sep=8pt,
+            line width=1pt
+        },
+        flow/.style={
+            -{Latex[length=3mm,width=2mm]},
+            draw=textstroke,
+            line width=1pt
+        },
+        bidiflow/.style={
+            {Latex[length=3mm,width=2mm]}-{Latex[length=3mm,width=2mm]},
+            draw=textstroke,
+            line width=1pt
+        }
+    ]
 
-        %% Indexing Pipeline
-        subgraph IDX ["Indexing Pipeline · 9 collections"]
-            direction LR
-            A["Raw Documents"] --> B["Converter"] --> C["Cleaner"] --> D["Chunker ×3"] --> E["Meta Cleaner"] --> F["Embedder ×3"] --> W["Writer"]
-        end
-        class IDX idxStyle
+    % Indexing Pipeline
+    \node[proc] (A) {Raw Documents};
+    \node[proc, right=of A] (B) {Converter};
+    \node[proc, right=of B] (C) {Cleaner};
+    \node[proc, right=of C] (D) {Chunker $\times 3$};
+    \node[proc, right=of D] (E) {Meta Cleaner};
+    \node[proc, right=of E] (F) {Embedder $\times 3$};
+    \node[proc, right=of F] (W) {Writer};
 
-        %% Qdrant
-        W --> VDB
-        VDB[("Qdrant")]:::database
-        VDB <-->|"vector search"| J
+    \draw[flow] (A) -- (B);
+    \draw[flow] (B) -- (C);
+    \draw[flow] (C) -- (D);
+    \draw[flow] (D) -- (E);
+    \draw[flow] (E) -- (F);
+    \draw[flow] (F) -- (W);
 
-        %% Query & Evaluation
-        subgraph QE ["Query & Evaluation · 27 configs"]
-            direction LR
-            H["Golden Set"] --> I["Text Embedder"] --> J["Retriever"] --> K["Prompt Builder"] --> L["LLM ×3"] --> M["Results"] --> N["RAGAS Metrics"] --> O["Leaderboard"]
-        end
-        class QE qeStyle
-        \end{mermaid}
+    % Query & Evaluation
+    \node[proc, below=22mm of A] (H) {Golden Set};
+    \node[proc, right=of H] (I) {Text Embedder};
+    \node[proc, right=of I] (J) {Retriever};
+    \node[proc, right=of J] (K) {Prompt Builder};
+    \node[proc, right=of K] (L) {LLM $\times 3$};
+    \node[proc, right=of L] (M) {Results};
+    \node[proc, right=of M] (N) {RAGAS Metrics};
+    \node[proc, right=of N] (O) {Leaderboard};
+
+    \draw[flow] (H) -- (I);
+    \draw[flow] (I) -- (J);
+    \draw[flow] (J) -- (K);
+    \draw[flow] (K) -- (L);
+    \draw[flow] (L) -- (M);
+    \draw[flow] (M) -- (N);
+    \draw[flow] (N) -- (O);
+
+    % Shared vector database
+    \node[db, below=11mm of $(W)!0.5!(J)$] (VDB) {Qdrant};
+    \draw[flow] (W) -- (VDB);
+    \draw[bidiflow] (VDB) -- node[right, fill=white, inner sep=1.5pt] {vector search} (J);
+
+    % Background group boxes
+    \begin{scope}[on background layer]
+        \node[groupbox, draw=idxstroke, fill=idxfill, fit=(A)(B)(C)(D)(E)(F)(W),
+            label={[font=\bfseries\sffamily, text=idxstroke]north:Indexing Pipeline $\cdot$ 9 collections}] {};
+        \node[groupbox, draw=qestroke, fill=qefill, fit=(H)(I)(J)(K)(L)(M)(N)(O),
+            label={[font=\bfseries\sffamily, text=qestroke]north:Query \& Evaluation $\cdot$ 27 configs}] {};
+    \end{scope}
+
+    \end{tikzpicture}%
+    }
     \caption{Visuele weergave van de volledige pipeline-architectuur met centrale Qdrant-opslag.}
     \label{fig:pipeline-flow}
 \end{figure}
@@ -76,9 +144,9 @@ UnstructuredFileConverter(
 \label{lst:unstructured-config}
 \end{listing}
 
-De parameter document_creation_mode="one-doc-per-page" zorgt ervoor dat de UnstructuredFileConverter één Haystack Document-object per fysieke pagina van de PDF produceert \autocite{UnstructuredDocs2024}. Voor dit onderzoek is specifiek voor deze configuratie gekozen om de metadata-precisie te waarborgen zonder de contextuele samenhang van de tekst te verbreken. Door documenten per pagina te creëren, blijft het paginanummer direct gekoppeld aan de tekstinhoud. Er werd niet gekozen voor de  “one-doc-per-element” document creation mode, omdat deze resulteert in een versnipperde tekst die bestaat uit kleine fragmenten zoals losse tabelcellen of titels \autocite{UnstructuredDocs2024}. Daarnaast zou de “one-doc-per-file” optie geen mogelijkheid bieden tot het toekennen van de paginanummers aan de metadata van iedere chunk, aangezien deze de inhoud van een volledig document omzet naar één Haystack Document \autocite{UnstructuredDocs2024}. “one-doc-per-page” behoudt  de logische flow van de informatie binnen een pagina en fungeert bovendien als een uniform startpunt voor de vergelijking tussen de drie verschillende chunking-strategieën. Hierdoor kan in dit onderzoek objectief gemeten worden hoe de Fixed, Recursive en Semantic chunking strategieën de pagina-brede informatie verder verwerken tot de beoogde fragmentgrootte van 150 woorden, zonder dat de resultaten vooraf worden beïnvloed door de visuele segmentatie van de converter.
+De parameter \mintinline{python}{document_creation_mode=”one-doc-per-page”} zorgt ervoor dat de UnstructuredFileConverter één Haystack Document-object per fysieke pagina van de PDF produceert \autocite{UnstructuredDocs2024}. Voor dit onderzoek is specifiek voor deze configuratie gekozen om de metadata-precisie te waarborgen zonder de contextuele samenhang van de tekst te verbreken. Door documenten per pagina te creëren, blijft het paginanummer direct gekoppeld aan de tekstinhoud. Er werd niet gekozen voor de \mintinline{python}{“one-doc-per-element”} document creation mode, omdat deze resulteert in een versnipperde tekst die bestaat uit kleine fragmenten zoals losse tabelcellen of titels \autocite{UnstructuredDocs2024}. Daarnaast zou de \mintinline{python}{“one-doc-per-file”} optie geen mogelijkheid bieden tot het toekennen van de paginanummers aan de metadata van iedere chunk, aangezien deze de inhoud van een volledig document omzet naar één Haystack Document \autocite{UnstructuredDocs2024}. \mintinline{python}{“one-doc-per-page”} behoudt de logische flow van de informatie binnen een pagina en fungeert bovendien als een uniform startpunt voor de vergelijking tussen de drie verschillende chunking-strategieën. Hierdoor kan in dit onderzoek objectief gemeten worden hoe de Fixed, Recursive en Semantic chunking strategieën de pagina-brede informatie verder verwerken tot de beoogde fragmentgrootte van 150 woorden, zonder dat de resultaten vooraf worden beïnvloed door de visuele segmentatie van de converter.
 
-De \texttt{strategy="hi\_res"} activeert de nauwkeurigste verwerkingsstrategie om de paginalayout te analyseren en elementen correct te identificeren. Dit is trager dan de standaard \texttt{fast}-strategie, maar noodzakelijk om de extractie van tabelinhoud en afbeeldingen met tekst te waarborgen.
+De \mintinline{python}{strategy="hi_res"} activeert de nauwkeurigste verwerkingsstrategie om de paginalayout te analyseren en elementen correct te identificeren. Dit is trager dan de standaard \texttt{fast}-strategie, maar noodzakelijk om de extractie van tabelinhoud en afbeeldingen met tekst te waarborgen.
 
 \subsection{Documentreiniging}
 \label{subsec:documentcleaner}
@@ -268,7 +336,7 @@ Hoewel de kernlogica voor de tekstsplitsing gebruikmaakt van de robuuste impleme
 
 Ten eerste garandeert deze abstractielaag een uniforme interface binnen de proefopstelling. Door elke strategie te wrappen in een gestandaardiseerd \texttt{@component}, kunnen de 27 unieke configuraties op een modulaire wijze door de pipeline worden gestroomlijnd zonder dat de orchestrator kennis hoeft te hebben van de onderliggende library-specifieke parameters.
 
-Ten tweede maakt deze aanpak het mogelijk om hyperparameters consistent af te dwingen. Door variabelen zoals de \texttt{split_length} en de modelonafhankelijke spliteenheid 'woorden' vast te leggen binnen de component-definitie, wordt gegarandeerd dat de vergelijking tussen de verschillende embedding-modellen valide blijft. Dit elimineert de kans op meetfouten die zouden ontstaan bij het gebruik van inconsistente, modelspecifieke tokenizers tijdens de chunking-fase.
+Ten tweede maakt deze aanpak het mogelijk om hyperparameters consistent af te dwingen. Door variabelen zoals de \mintinline{python}{split_length} en de modelonafhankelijke spliteenheid 'woorden' vast te leggen binnen de component-definitie, wordt gegarandeerd dat de vergelijking tussen de verschillende embedding-modellen valide blijft. Dit elimineert de kans op meetfouten die zouden ontstaan bij het gebruik van inconsistente, modelspecifieke tokenizers tijdens de chunking-fase.
 
 Ten derde bevordert deze encapsulatie de reproduceerbaarheid van het experiment. De custom componenten fungeren als een 'contract' dat de exacte configuratie van de Haystack-splitters bevriest. Hierdoor is de proefopstelling onafhankelijk van eventuele wijzigingen in de standaardinstellingen van toekomstige framework-updates.
 
@@ -374,7 +442,7 @@ Na de conversie met behulp van de UnstructuredFileConverter \ref{lst:unstructure
 
 \subsection{Geheugenbeheer bij Semantische Chunking}
 
-Vanwege de beperkte GPU-capaciteit (VRAM) is een specifieke tweetraps-uitvoering geïmplementeerd voor de \texttt{SemanticEmbeddingChunker}. Omdat deze chunker een eigen intern embedding-model gebruikt, wordt dit model na de segmentatiefase expliciet naar de CPU verplaatst en het GPU-geheugen gewist voordat het primaire embedding-model wordt geladen.
+Vanwege de beperkte GPU-capaciteit (VRAM) is een specifieke tweetraps-uitvoering geïmplementeerd voor de \texttt{SemanticEmbeddingChunker}. Omdat deze chunker een eigen intern embedding-model gebruikt, wordt dit model na de segmentatiefase expliciet naar de \gls{cpu} verplaatst en het GPU-geheugen gewist voordat het primaire embedding-model wordt geladen.
 
 \begin{listing}[H]
 \begin{minted}{python}

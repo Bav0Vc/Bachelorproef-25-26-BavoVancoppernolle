@@ -1,4 +1,4 @@
-\chapter{\IfLanguageName{dutch}{Pipeline testen & infrastructuur}{Testing pipeline & infrastructure}}%
+\chapter{\IfLanguageName{dutch}{Pipeline testen \& infrastructuur}{Testing pipeline \& infrastructure}}%
 \label{ch:pipeline-testen}
 
 De vorige fase leverde een volledig geïmplementeerde, dynamische \gls{rag}-pipeline op die alle 27 configuraties kan doorlopen. Dit hoofdstuk beschrijft hoe die pipeline effectief wordt uitgevoerd: hoe de infrastructuur is opgebouwd zodat alle componenten kunnen samenwerken, welke stappen in welke volgorde worden doorlopen, en hoe de ruwe resultaten worden vastgelegd. De nadruk ligt hier niet op de implementatiekeuzes achter de individuele componenten — die zijn beschreven in Hoofdstuk~\ref{ch:technische-uitvoering} — maar op de architectuur van de uitvoeringsomgeving en de reproduceerbaarheid van de experimentele opzet als geheel.
@@ -6,7 +6,7 @@ De vorige fase leverde een volledig geïmplementeerde, dynamische \gls{rag}-pipe
 \section{Uitvoeringsomgeving}
 \label{sec:uitvoeringsomgeving}
 
-De volledige experimentele opzet draait binnen een Docker-containeromgeving die bestaat uit twee diensten die via een intern Docker-netwerk met elkaar communiceren: de \gls{rag}-applicatiecontainer en de Unstructured document-\gls{api}. Deze containerisatie heeft twee doelstellingen. Ten eerste wordt de uitvoeringsomgeving volledig van het hostsysteem geïsoleerd, zodat afhankelijkheden, libraries en bepaalde omgevingsvariabelen niet per machine verschillen. Ten tweede draagt het bij aan reproduceerbaarheid van de proefopstelling: iedereen met toegang tot de broncode en een \gls{nvidia}-\gls{gpu} kan de exacte experimentele omgeving reconstrueren via één commando.
+De volledige experimentele opzet draait binnen een Docker-containeromgeving die bestaat uit twee diensten die via een intern Docker-netwerk met elkaar communiceren: de \gls{rag}-applicatiecontainer en de Unstructured document-\gls{api}. Deze containerisatie heeft twee doelstellingen. Ten eerste wordt de uitvoeringsomgeving volledig van het hostsysteem geïsoleerd, zodat afhankelijkheden, libraries en bepaalde omgevingsvariabelen niet per machine verschillen. Ten tweede draagt het bij aan reproduceerbaarheid van de proefopstelling: iedereen met toegang tot de broncode en een NVIDIA-\gls{gpu} kan de exacte experimentele omgeving reconstrueren via één commando.
 
 \subsection{Diensten en hun rol}
 
@@ -14,7 +14,7 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 Scripts worden handmatig gestart via \texttt{docker exec} in de lopende container. Dit geeft volledige controle over welke fase van de pipeline op welk moment wordt uitgevoerd en laat toe om tussentijdse resultaten te inspecteren voor de volgende fase wordt gestart.
 
-\textbf{De Unstructured-dienst} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url} \texttt{http://unstructured-api:8000/general/v0/general}. De applicatiecontainer is via een \texttt{depends\_on}-conditie en een \gls{http}-healthcheck gekoppeld aan de beschikbaarheid van deze dienst: de applicatie start pas wanneer de Unstructured-\gls{api} succesvol reageert op een sokkelverbindingstest. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
+\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url} \texttt{http://unstructured-api:8000/general/v0/general}. De applicatiecontainer is via een \texttt{depends\_on}-conditie en een \gls{http}-healthcheck gekoppeld aan de beschikbaarheid van deze dienst: de applicatie start pas wanneer de Unstructured-\gls{api} succesvol reageert op een sokkelverbindingstest. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
 
 \subsection{GPU-toegang en modelcaching}
 
@@ -24,7 +24,7 @@ De HuggingFace-modelcache is een Docker volume waarop de embedding-modellen slec
 
 \subsection{Omgevingsvariabelen en credentials}
 
-Alle \gls{api}-keys en configureerbare \glsp{url} worden via een \texttt{.env}-bestand in de container geladen. Dit bestand bevat onder meer de Qdrant-verbindings\gls{url} en \gls{api}-sleutel, de HuggingFace-token voor de Featherless AI-router, de Mistral \gls{api}-key en de Unstructured-\gls{api}-\gls{url}. Credentials worden nooit als leesbare syntax in de broncode opgenomen, maar via Haystack \texttt{Secret}-objecten doorgegeven aan de componenten die ze nodig hebben.
+Alle \gls{api}-keys en configureerbare \glspl{url} worden via een \texttt{.env}-bestand in de container geladen. Dit bestand bevat onder meer de Qdrant-verbindings\gls{url} en \gls{api}-sleutel, de HuggingFace-token voor de Featherless AI-router, de Mistral \gls{api}-key en de Unstructured-\gls{api}-\gls{url}. Credentials worden nooit als leesbare syntax in de broncode opgenomen, maar via Haystack \texttt{Secret}-objecten doorgegeven aan de componenten die ze nodig hebben.
 
 \section{Volgorde van de uitvoering}
 \label{sec:uitvoering-volgorde}

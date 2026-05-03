@@ -351,8 +351,6 @@ In de definitieve implementatie is de embedding-configuratie bewust vereenvoudig
 
 \begin{listing}[H]
 \begin{minted}{python}
-from hypster import HP
-
 def embedding_config(hp: HP):
   model = hp.select(
     [
@@ -374,8 +372,6 @@ Daarnaast worden de drie chunking-componenten gedefinieerd binnen een HyPSTER-co
 
 \begin{listing}[H]
 \begin{minted}{python}
-from hypster import HP
-
 def chunking_config(hp: HP):
   chunker_name = hp.select(
     [
@@ -397,8 +393,6 @@ De \gls{llm}-configuratie koppelt elke modelnaam aan een \gls{api}-provider en e
 
 \begin{listing}[H]
 \begin{minted}{python}
-from hypster import HP
-
 def llm_config(hp: HP):
   configs = {
     "Qwen-2.5-14B-Instruct": {
@@ -448,7 +442,6 @@ Vanwege de beperkte GPU-capaciteit (VRAM) is een specifieke tweetraps-uitvoering
 \begin{minted}{python}
 def _free_semantic_chunker_gpu(chunker: SemanticEmbeddingChunker) -> None:
   try:
-    import torch
     if not torch.cuda.is_available():
       return
   backend = getattr(getattr(chunker, 'embedder', None), 'embedding_backend', None)

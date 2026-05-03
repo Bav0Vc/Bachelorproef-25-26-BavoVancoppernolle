@@ -76,7 +76,7 @@ Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte acyclisc
     \draw[flow] (F) -- (W);
 
     % Query & Evaluation
-    \node[proc, below=22mm of A] (H) {Golden Set};
+    \node[proc, below=70mm of A] (H) {Golden Set};
     \node[proc, right=of H] (I) {Text Embedder};
     \node[proc, right=of I] (J) {Retriever};
     \node[proc, right=of J] (K) {Prompt Builder};
@@ -94,7 +94,7 @@ Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte acyclisc
     \draw[flow] (N) -- (O);
 
     % Shared vector database
-    \node[db, below=11mm of $(W)!0.5!(J)$] (VDB) {Qdrant};
+    \node[db] (VDB) at ($(W)!0.5!(J)$) {Qdrant};
     \draw[flow] (W) -- (VDB);
     \draw[bidiflow] (VDB) -- node[right, fill=white, inner sep=1.5pt] {vector search} (J);
 

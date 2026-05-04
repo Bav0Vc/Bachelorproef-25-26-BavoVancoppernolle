@@ -10,11 +10,11 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 \subsection{Diensten en hun rol}
 
-\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas} evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde NLTK-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
+\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas}-evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde NLTK-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
 
 Scripts worden handmatig gestart via \texttt{docker exec} in de draaiende container. Dit geeft volledige controle over welke fase van de pipeline op welk moment wordt uitgevoerd en laat toe om tussentijdse resultaten te inspecteren voor de volgende fase wordt gestart.
 
-\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url} \texttt{http://unstructured-api:8000/general/v0/general}. De applicatiecontainer is via een \texttt{depends\_on}-conditie en een \gls{http}-healthcheck gekoppeld aan de beschikbaarheid van deze dienst: de applicatie start pas wanneer de Unstructured-\gls{api} succesvol reageert op een sokkelverbindingstest. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
+\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url} \texttt{http://unstructured-api:8000/general/v0/general}. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
 
 \subsection{GPU-toegang en modelcaching}
 
@@ -24,7 +24,7 @@ De HuggingFace-modelcache is een Docker volume waarop de embedding-modellen slec
 
 \subsection{Omgevingsvariabelen en credentials}
 
-Alle \gls{api}-keys en configureerbare \glspl{url} worden via een \texttt{.env}-bestand in de container geladen. Dit bestand bevat onder meer de Qdrant-verbindings\gls{url} en \gls{api}-sleutel, de HuggingFace-token voor de Featherless AI-router, de Mistral \gls{api}-key en de Unstructured-\gls{api}-\gls{url}. Credentials worden nooit als leesbare syntax in de broncode opgenomen, maar via Haystack \texttt{Secret}-objecten doorgegeven aan de componenten die ze nodig hebben.
+Alle \gls{api}-keys en configureerbare \glspl{url} worden via een \texttt{.env}-bestand in de container geladen. Dit bestand bevat onder meer de Qdrant-verbindings\gls{url} en \gls{api}-key, de HuggingFace-token voor de Featherless AI-router, de Mistral \gls{api}-key en de Unstructured-\gls{api}-\gls{url}. Credentials worden nooit als leesbare syntax in de broncode opgenomen, maar via Haystack \texttt{Secret}-objecten doorgegeven aan de componenten die ze nodig hebben.
 
 \section{Volgorde van de uitvoering}
 \label{sec:uitvoering-volgorde}
@@ -46,7 +46,7 @@ Voor elke configuratie wordt via HyPSTER een concreet configuratieobject aangema
 
 \subsection{Fase 3: \gls{ragas}-evaluatie}
 
-De \gls{ragas}-evaluatiefase transformeert de ruwe antwoorden naar kwantitatieve scores. Deze fase is beschreven in Hoofdstuk~\ref{ch:resultaten}, dat volledig gewijd is aan de evaluatiemethode en de interpretatie van de scores.
+De \gls{ragas}-evaluatiefase transformeert de ruwe antwoorden naar kwantitatieve scores. Deze fase is beschreven in Hoofdstuk~\ref{ch:resultaten}, dat volledig gewijd is aan de evaluatiemethode en de interpretatie van de scores. Om self-preference bias te vermijden, wordt \textbf{gpt:oss-20b} als onafhankelijke judge ingesteld voor alle RAGAS-evaluaties
 
 \section{Reproduceerbaarheid van de experimentele opzet}
 \label{sec:reproduceerbaarheid}
@@ -87,6 +87,8 @@ def _build_llm(llm_cfg: dict):
 \caption[\_build\_llm: backend-selectie op basis van Hypster-configuratie]{De hulpfunctie instantieert de juiste \gls{llm}-client op basis van het \texttt{backend}-veld in de HyPSTER-configuratie. De backend-selectielogica is volledig geïsoleerd in deze functie zodat de rest van de querypipeline geen conditielogica over providers bevat.}
 \label{lst:build-llm}
 \end{listing}
+
+\textbf{Limitatie:} Het gebruik van een externe proxy-dienst zoals Featherless AI voor Qwen en Llama introduceert netwerk-latency die onafhankelijk is van de modelarchitectuur. Bij de interpretatie van de responstijden (latency) moet hiermee rekening worden gehouden in de vergelijking met Mistral, die via een eigen \gls{api} wordt aangeroepen.
 
 \section{Invoer en uitvoer van de testfase}
 \label{sec:invoer-uitvoer}

@@ -9,11 +9,11 @@ De requirements werden verzameld via twee complementaire bronnen. Enerzijds werd
 
 Functionele requirements beschrijven wat het systeem concreet moet kunnen doen. Zij zijn direct afgeleid van de bedrijfsnoden van Turtle Srl en de kerntaken van een \gls{rag}-pipeline.
 
-\textbf{Geautomatiseerde ESG-beantwoording.} Het systeem moet in staat zijn om automatisch antwoorden te genereren op vragen uit diverse \gls{esg}-vragenlijsten, zoals EcoVadis en \gls{vsme}. Dit is de kernfunctionaliteit van de te bouwen \gls{poc} en vloeit rechtstreeks voort uit de opdracht van mijn copromotor: \textit{``a chatbot capable of answering questions from various questionnaires''}.
+\textbf{Geautomatiseerde \gls{esg}-beantwoording.} Het systeem moet in staat zijn om automatisch antwoorden te genereren op vragen uit diverse \gls{esg}-vragenlijsten, zoals EcoVadis en \gls{vsme}. Dit is de kernfunctionaliteit van de te bouwen \gls{poc} en vloeit rechtstreeks voort uit de opdracht van mijn copromotor: \textit{``a chatbot capable of answering questions from various questionnaires''}.
 
 \textbf{Bronvermelding (source attribution).} Bij elk gegenereerd antwoord moet het systeem expliciet aangeven welke brondocumenten als basis dienden. Deze eis werd door mijn copromotor omschreven als essentieel: \textit{``It is essential for the system to clearly indicate which documents it used to generate each answer''}. Vanuit de literatuur wordt deze eis bevestigd door de juridische traceerbaarheidsvereisten van de \gls{csrd}, waarbij elke bewering in een \gls{esg}-rapport herleidbaar moet zijn naar brondocumentatie \autocite{Centre.2023}. In de technische implementatie wordt dit gerealiseerd via een aangepaste \textit{Metadata-Aware Prompt Builder} die chunks opmaakt met \gls{json} die bron- en paginametadata bevatten.
 
-\textbf{Multi-pillar ESG-ondersteuning.} De \gls{poc} moet informatie kunnen ontsluiten over de drie \gls{esg}-pijlers: Environmental, Social en Governance. Dit garandeert dat de vergelijkende studie representatief is voor de volledige breedte van de rapportage-eisen waarmee Turtle Srl geconfronteerd wordt.
+\textbf{Multi-pillar \gls{esg}-ondersteuning.} De \gls{poc} moet informatie kunnen ontsluiten over de drie \gls{esg}-pijlers: Environmental, Social en Governance. Dit garandeert dat de vergelijkende studie representatief is voor de volledige breedte van de rapportage-eisen waarmee Turtle Srl geconfronteerd wordt.
 
 \textbf{Kennisretrieval via \gls{rag}.} Het systeem moet externe kennis ophalen uit een vectordatabase om de interne, statische kennis van het taalmodel aan te vullen. Dit is de architecturale kern die hallucinaties tegengaat en actualiteit waarborgt, zoals uiteengezet in de literatuurstudie \autocite{Lewis2020}.
 
@@ -68,7 +68,7 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     C & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
     C & PocketFlow-connector (output component)      & Nuttig voor real-world integratie, niet voor benchmark \\
     \midrule
-    W & Citation accuracy als kernmeting             & Copromotor: \textit{``I don't think we need such high precision''} \\
+    W & Citation accuracy als kernmeting             & Specifieke paginavermelding is voor mijn copromotor geen belangrijke vereiste \\
     \bottomrule
   \end{tabular}
 \end{table}

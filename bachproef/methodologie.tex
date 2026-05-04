@@ -33,7 +33,7 @@ In de vierde fase wordt de \gls{rag} pipeline ontworpen en geïmplementeerd. De 
 
 Technisch wordt gekozen voor een component gebaseerde architectuur waarin modules voor documentconversie, chunking, embedding, vectoropslag, retrieval en generatie als afzonderlijke bouwstenen worden gedefinieerd. De configuratielaag, in \gls{json}, bepaalt per experimentele run welke chunking strategie, welk embedding model en welk \gls{llm} worden gebruikt. Dit maakt het mogelijk om de alle combinaties van de short list systematisch te doorlopen.
 
-Belangrijke aandachtspunten bij de implementatie zijn: meertalige ondersteuning (om zowel Italiaanse als Engelstalige \gls{esg} documenten te kunnen verwerken), bronvermelding via metadata payloads in de vector database, en logging voorzien van alle relevante runtime informatie (latency, tokenverbruik, gebruikte configuratie, \gls{rag} metrics). Op het einde van deze fase wordt een werkende, dynamische \gls{rag} pipeline opgeleverd die conform is met de technische vereisten van het bedrijf.
+Belangrijke aandachtspunten bij de implementatie zijn: meertalige ondersteuning (om zowel Italiaanse als Engelstalige \gls{esg} documenten te kunnen verwerken), bronvermelding via metadata payloads in de vector database, en logging voorzien van alle relevante runtime informatie (latency, tokenverbruik, gebruikte configuratie, \gls{ragas} metrics). Op het einde van deze fase wordt een werkende, dynamische \gls{rag} pipeline opgeleverd die conform is met de technische vereisten van het bedrijf.
 
 \section{Fase 5: Pipeline testen}
 

@@ -144,7 +144,7 @@ UnstructuredFileConverter(
 \label{lst:unstructured-config}
 \end{listing}
 
-De parameter \mintinline{python}{document_creation_mode=”one-doc-per-page”} zorgt ervoor dat de UnstructuredFileConverter één Haystack Document-object per fysieke pagina van de PDF produceert \autocite{UnstructuredDocs2024}. Voor dit onderzoek is specifiek voor deze configuratie gekozen om de metadata-precisie te waarborgen zonder de contextuele samenhang van de tekst te verbreken. Door documenten per pagina te creëren, blijft het paginanummer direct gekoppeld aan de tekstinhoud. Er werd niet gekozen voor de \mintinline{python}{“one-doc-per-element”} document creation mode, omdat deze resulteert in een versnipperde tekst die bestaat uit kleine fragmenten zoals losse tabelcellen of titels \autocite{UnstructuredDocs2024}. Daarnaast zou de \mintinline{python}{“one-doc-per-file”} optie geen mogelijkheid bieden tot het toekennen van de paginanummers aan de metadata van iedere chunk, aangezien deze de inhoud van een volledig document omzet naar één Haystack Document \autocite{UnstructuredDocs2024}. \mintinline{python}{“one-doc-per-page”} behoudt de logische flow van de informatie binnen een pagina en fungeert bovendien als een uniform startpunt voor de vergelijking tussen de drie verschillende chunking-strategieën. Hierdoor kan in dit onderzoek objectief gemeten worden hoe de Fixed, Recursive en Semantic chunking strategieën de pagina-brede informatie verder verwerken tot de beoogde fragmentgrootte van 150 woorden, zonder dat de resultaten vooraf worden beïnvloed door de visuele segmentatie van de converter.
+De parameter \mintinline{python}{document_creation_mode=”one-doc-per-page”} zorgt ervoor dat de UnstructuredFileConverter één Haystack Document-object per fysieke pagina van de \gls{pdf} produceert \autocite{UnstructuredDocs2024}. Voor dit onderzoek is specifiek voor deze configuratie gekozen om de metadata-precisie te waarborgen zonder de contextuele samenhang van de tekst te verbreken. Door documenten per pagina te creëren, blijft het paginanummer direct gekoppeld aan de tekstinhoud. Er werd niet gekozen voor de \mintinline{python}{“one-doc-per-element”} document creation mode, omdat deze resulteert in een versnipperde tekst die bestaat uit kleine fragmenten zoals losse tabelcellen of titels \autocite{UnstructuredDocs2024}. Daarnaast zou de \mintinline{python}{“one-doc-per-file”} optie geen mogelijkheid bieden tot het toekennen van de paginanummers aan de metadata van iedere chunk, aangezien deze de inhoud van een volledig document omzet naar één Haystack Document \autocite{UnstructuredDocs2024}. \mintinline{python}{“one-doc-per-page”} behoudt de logische flow van de informatie binnen een pagina en fungeert bovendien als een uniform startpunt voor de vergelijking tussen de drie verschillende chunking-strategieën. Hierdoor kan in dit onderzoek objectief gemeten worden hoe de Fixed, Recursive en Semantic chunking strategieën de pagina-brede informatie verder verwerken tot de beoogde fragmentgrootte van 150 woorden, zonder dat de resultaten vooraf worden beïnvloed door de visuele segmentatie van de converter.
 
 De \mintinline{python}{strategy="hi_res"} activeert de nauwkeurigste verwerkingsstrategie om de paginalayout te analyseren en elementen correct te identificeren. Dit is trager dan de standaard \texttt{fast}-strategie, maar noodzakelijk om de extractie van tabelinhoud en afbeeldingen met tekst te waarborgen.
 
@@ -155,7 +155,7 @@ Na de conversie passeert elk document een zelfgeschreven \texttt{DocumentCleaner
 
 Op het vlak van tekstnormalisatie worden drie of meer opeenvolgende regeleinden gereduceerd tot twee — waardoor de alineastructuur bewaard blijft maar onnodige verticale witruimte verdwijnt — en worden meerdere spaties en tabs samengebracht tot één spatie om horizontale ruis te elimineren. Documenten waarvan de inhoud na reiniging leeg is, worden verwijderd.
 
-Op het vlak van metadata normaliseert de cleaner de sleutelstructuur zodat de herkomst en het paginanummer consistent beschikbaar zijn via de sleutels \texttt{source} en \texttt{page}. De cleaner extraheert de bestandsnaam uit beschikbare paden en zorgt voor een uniforme paginering; voor Excel-bestanden wordt de werkbladnaam gebruikt, terwijl voor PDF-documenten het numerieke paginanummer wordt gehanteerd. Indien paginaspecifieke informatie ontbreekt, wordt de waarde standaard ingesteld op een vraagteken om de betrouwbaarheid van de latere bronvermelding in de pipeline te waarborgen.  Een dergelijke consistente metadata-structuur is essentieel voor de Source Attribution en Citation Accuracy, aangezien de LLM hierdoor op een uniforme wijze naar de bronnen kan verwijzen.
+Op het vlak van metadata normaliseert de cleaner de sleutelstructuur zodat de herkomst en het paginanummer consistent beschikbaar zijn via de sleutels \texttt{source} en \texttt{page}. De cleaner extraheert de bestandsnaam uit beschikbare paden en zorgt voor een uniforme paginering; voor Excel-bestanden wordt de werkbladnaam gebruikt, terwijl voor \gls{pdf}-documenten het numerieke paginanummer wordt gehanteerd. Indien paginaspecifieke informatie ontbreekt, wordt de waarde standaard ingesteld op een vraagteken om de betrouwbaarheid van de latere bronvermelding in de pipeline te waarborgen.  Een dergelijke consistente metadata-structuur is essentieel voor de Source Attribution en Citation Accuracy, aangezien de \gls{llm} hierdoor op een uniforme wijze naar de bronnen kan verwijzen.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -203,11 +203,11 @@ class DocumentCleaner:
 \section{Lokale embedding-modellen via sentence-transformers en PyTorch}
 \label{sec:lokale-embedding}
 
-In de initiële opzet van het onderzoek werden de embedding-modellen aangestuurd via externe \gls{api}-diensten, te weten de NVIDIA NIM \gls{api} en de Hugging Face Serverless Inference \gls{api}. Gedurende de implementatiefase is echter afgestapt van deze aanpak om drie concrete redenen.
+In de initiële opzet van het onderzoek werden de embedding-modellen aangestuurd via externe \gls{api}-diensten, te weten de \gls{nvidia} NIM \gls{api} en de Hugging Face Serverless Inference \gls{api}. Gedurende de implementatiefase is echter afgestapt van deze aanpak om drie concrete redenen.
 
 Ten eerste introduceerden externe \gls{api}-aanroepen een afhankelijkheid van de beschikbaarheid en latency van externe diensten tijdens de indexeringsfase. Tijdelijke storingen of rate limits bij een van de providers konden de volledige benchmarkrun onderbreken, wat de reproduceerbaarheid ondermijnde.
 
-Ten tweede bleek de stabiliteit van het aanbod bij externe providers een risicofactor. Gedurende de implementatiefase van dit onderzoek deprecieerden NVIDIA en Hugging Face diverse modellen binnen hun \gls{api}-catalogus. Dergelijke wijzigingen in de beschikbaarheid van modellen dwingen tot onvoorziene aanpassingen in de pipeline-architectuur en ondermijnen de langetermijnstabiliteit van de benchmarkopstelling.
+Ten tweede bleek de stabiliteit van het aanbod bij externe providers een risicofactor. Gedurende de implementatiefase van dit onderzoek deprecieerden \gls{nvidia} en Hugging Face diverse modellen binnen hun \gls{api}-catalogus. Dergelijke wijzigingen in de beschikbaarheid van modellen dwingen tot onvoorziene aanpassingen in de pipeline-architectuur en ondermijnen de langetermijnstabiliteit van de benchmarkopstelling.
 
 Ten derde had de Hugging Face Serverless Inference \gls{api} beperkingen op het aantal gelijktijdige aanroepen, wat de indexeringstijd voor grotere datasets onpraktisch lang maakte.
 
@@ -436,7 +436,7 @@ Na de conversie met behulp van de UnstructuredFileConverter \ref{lst:unstructure
 
 \subsection{Geheugenbeheer bij Semantische Chunking}
 
-Vanwege de beperkte GPU-capaciteit (VRAM) is een specifieke tweetraps-uitvoering geïmplementeerd voor de \texttt{SemanticEmbeddingChunker}. Omdat deze chunker een eigen intern embedding-model gebruikt, wordt dit model na de segmentatiefase expliciet naar de \gls{cpu} verplaatst en het GPU-geheugen gewist voordat het primaire embedding-model wordt geladen.
+Vanwege de beperkte \gls{gpu}-capaciteit (\gls{vram}) is een specifieke tweetraps-uitvoering geïmplementeerd voor de \texttt{SemanticEmbeddingChunker}. Omdat deze chunker een eigen intern embedding-model gebruikt, wordt dit model na de segmentatiefase expliciet naar de \gls{cpu} verplaatst en het \gls{gpu}-geheugen gewist voordat het primaire embedding-model wordt geladen.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -453,12 +453,12 @@ def _free_semantic_chunker_gpu(chunker: SemanticEmbeddingChunker) -> None:
   except Exception:
     pass
 \end{minted}
-\caption[Functie geheugenoptimalisatie]{Geheugenoptimalisatie om gelijktijdige belasting van twee embedding-modellen op de GPU te voorkomen}
+\caption[Functie geheugenoptimalisatie]{Geheugenoptimalisatie om gelijktijdige belasting van twee embedding-modellen op de \gls{gpu} te voorkomen}
 \end{listing}
 
 \subsection{Pipeline-uitvoering}
 
-De uitvoeringslogica varieert op basis van de geselecteerde chunking-methode. Voor de \texttt{SemanticEmbeddingChunker} is de pipeline opgedeeld in twee afzonderlijke fasen. Deze fysieke scheiding is noodzakelijk om het GPU-geheugen (VRAM) tussen de segmentatie- en embedding-fase vrij te maken, waardoor \gls{oom} errors worden voorkomen.
+De uitvoeringslogica varieert op basis van de geselecteerde chunking-methode. Voor de \texttt{SemanticEmbeddingChunker} is de pipeline opgedeeld in twee afzonderlijke fasen. Deze fysieke scheiding is noodzakelijk om het \gls{gpu}-geheugen (\gls{vram}) tussen de segmentatie- en embedding-fase vrij te maken, waardoor \gls{oom} errors worden voorkomen.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -479,7 +479,7 @@ embed_pipe.add_component("embedder", embedder)
 embed_pipe.add_component("writer", DocumentWriter(document_store=document_store)) embed_pipe.connect("embedder.documents", "writer.documents")
 embed_pipe.run({"embedder": {"documents": chunks}})
 \end{minted}
-\caption[Indexing pipeline semantic chunking]{Tweetraps-uitvoering voor de SemanticEmbeddingChunker ter voorkoming van Out-Of-Memory (OOM) fouten.}
+\caption[Indexing pipeline semantic chunking]{Tweetraps-uitvoering voor de SemanticEmbeddingChunker ter voorkoming van \gls{oom} fouten.}
 \end{listing}
 
 Voor de overige chunkers (\texttt{Recursive} en \texttt{FixedSize}) wordt een standaard lineaire pipeline gebruikt.
@@ -526,11 +526,11 @@ response = query_pipe.run(
 \section{Resultaatstructuur en vastgelegde metrieken}
 \label{sec:resultaat-structuur}
 
-Voor elke vraag in de golden set wordt een gedetailleerd resultaatwoordenboek samengesteld. Dit woordenboek bevat alle informatie die nodig is voor de latere evaluatie met RAGAS en voor de vergelijkende statistische analyse:
+Voor elke vraag in de golden set wordt een gedetailleerd resultaatwoordenboek samengesteld. Dit woordenboek bevat alle informatie die nodig is voor de latere evaluatie met \gls{ragas} en voor de vergelijkende statistische analyse:
 
 \begin{itemize}
     \item \textbf{Identificatoren}: een uniek \texttt{question\_id}, de originele vraagstelling en de bijbehorende \gls{esg}-requirement waaraan de vraag gelinkt is.
-    \item \textbf{Grondwaarheid}: \texttt{ground\_truth}, \texttt{expected\_source}, \texttt{source\_page} en \texttt{reference\_contexts} uit de golden set, die als referentie dienen voor de RAGAS-metrics.
+    \item \textbf{Grondwaarheid}: \texttt{ground\_truth}, \texttt{expected\_source}, \texttt{source\_page} en \texttt{reference\_contexts} uit de golden set, die als referentie dienen voor de \gls{ragas}-metrics.
     \item \textbf{Configuratie-informatie}: de namen van de gebruikte chunker, embedder en \gls{llm}, afzonderlijk en gecombineerd als \texttt{Configuration}-label.
     \item \textbf{Gegenereerd antwoord}: de volledige antwoordtekst zoals teruggegeven door de \gls{llm} na normalisatie via de hulpfunctie.
     \item \textbf{Opgehaalde contexten}: de tekstinhoud van de chunks die door de retriever werden geselecteerd, als lijst van tekenreeksen.

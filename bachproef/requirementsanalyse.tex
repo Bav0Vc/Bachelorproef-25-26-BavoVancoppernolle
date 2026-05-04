@@ -15,7 +15,7 @@ Functionele requirements beschrijven wat het systeem concreet moet kunnen doen. 
 
 \textbf{Multi-pillar ESG-ondersteuning.} De \gls{poc} moet informatie kunnen ontsluiten over de drie \gls{esg}-pijlers: Environmental, Social en Governance. Dit garandeert dat de vergelijkende studie representatief is voor de volledige breedte van de rapportage-eisen waarmee Turtle Srl geconfronteerd wordt.
 
-\textbf{Kennisretrieval via RAG.} Het systeem moet externe kennis ophalen uit een vectordatabase om de interne, statische kennis van het taalmodel aan te vullen. Dit is de architecturale kern die hallucinaties tegengaat en actualiteit waarborgt, zoals uiteengezet in de literatuurstudie \autocite{Lewis2020}.
+\textbf{Kennisretrieval via \gls{rag}.} Het systeem moet externe kennis ophalen uit een vectordatabase om de interne, statische kennis van het taalmodel aan te vullen. Dit is de architecturale kern die hallucinaties tegengaat en actualiteit waarborgt, zoals uiteengezet in de literatuurstudie \autocite{Lewis2020}.
 
 \textbf{Documentverwerking en -cleaning.} Het systeem moet \gls{pdf}-bestanden kunnen inladen, opschonen en voorzien van metadata (zoals bestandsnaam, bedrijfsnaam en publicatiejaar). Deze metadata wordt per chunk meegestuurd naar de vectordatabase, zodat bronvermelding op documentniveau mogelijk is.
 
@@ -31,7 +31,7 @@ Niet-functionele requirements beschrijven de kwaliteitseisen en randvoorwaarden 
 
 \textbf{Meertaligheid.} De gebruikte embedding-modellen moeten meertalig zijn om diverse internationale \gls{esg}-documenten te kunnen verwerken. Turtle Srl opereert in een meertalige context waarbij documenten in het Italiaans en Engels voorkomen. Dit sluit aan bij de selectiecriteria die mijn copromotor formuleerde: \textit{``try to identify 3 or 4 multilingual models''}.
 
-\textbf{Faithfulness (betrouwbaarheid).} Antwoorden moeten feitelijk consistent zijn met de opgehaalde brondocumenten om hallucinaties te voorkomen. In een audit-context is dit een absolute voorwaarde: \textit{``the generation component simply reports that information in the response''}. Dit vereiste wordt geëvalueerd via de faithfulness-metriek van het RAGAS-framework \autocite{Es2024}.
+\textbf{Faithfulness (betrouwbaarheid).} Antwoorden moeten feitelijk consistent zijn met de opgehaalde brondocumenten om hallucinaties te voorkomen. In een audit-context is dit een absolute voorwaarde: \textit{``the generation component simply reports that information in the response''}. Dit vereiste wordt geëvalueerd via de faithfulness-metriek van het \gls{ragas}-framework \autocite{Es2024}.
 
 \textbf{Context recall (vindbaarheid).} De retrievalstap moet de relevante informatie daadwerkelijk uit de vectordatabase kunnen ophalen. mijn copromotor stelde dat dit de meest kritische stap is: \textit{``it's good enough if the retrieval component fetches it''}. Wanneer de retrieval faalt, kan de \gls{llm} per definitie geen correct antwoord genereren.
 
@@ -56,7 +56,7 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     M & Open-source licentie                         & Vermijdt vendor lock-in en laat vrije commerciële en lokale deployment toe \\
     M & Selectie van 3 embedding-modellen            & Meertalig, instruction-tuned, sterk in retrieval \\
     M & Selectie van 3 \glspl{llm}                   & GPT, Gemini 2.5 Flash en Mistral \\
-    M & Golden set van \gls{esg}-vragen              & Vereist voor alle RAGAS-metrics (ground truth) \autocite{Es2024} \\
+    M & Golden set van \gls{esg}-vragen              & Vereist voor alle \gls{ragas}-metrics (ground truth) \autocite{Es2024} \\
     M & Haystack 2.x met custom componenten          & White-box controle over pipeline-logica \\
     M & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
     \midrule

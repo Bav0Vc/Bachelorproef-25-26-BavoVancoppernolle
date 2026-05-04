@@ -10,7 +10,7 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 \subsection{Diensten en hun rol}
 
-\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en ragas evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde NLTK-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
+\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas} evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde NLTK-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
 
 Scripts worden handmatig gestart via \texttt{docker exec} in de draaiende container. Dit geeft volledige controle over welke fase van de pipeline op welk moment wordt uitgevoerd en laat toe om tussentijdse resultaten te inspecteren voor de volgende fase wordt gestart.
 
@@ -40,13 +40,13 @@ De negen indexeringen worden sequentieel uitgevoerd — niet parallel — omwill
 \subsection{Fase 2: Benchmark loop}
 \label{subsec:benchmarkloop}
 
-De benchmark loop doorloopt het volledige Cartesisch product van de 27 configuraties. Voor iedere configuratie worden alle vragen uit de golden set beantwoord. Dit \gls{json}-bestand bevat voor elke vraag naast de vraagtekst ook de ground truth, het verwachte brondocument, het verwachte paginanummer en de referentiecontexten — alle velden die later nodig zijn voor de RAGAS-evaluatie.
+De benchmark loop doorloopt het volledige Cartesisch product van de 27 configuraties. Voor iedere configuratie worden alle vragen uit de golden set beantwoord. Dit \gls{json}-bestand bevat voor elke vraag naast de vraagtekst ook de ground truth, het verwachte brondocument, het verwachte paginanummer en de referentiecontexten — alle velden die later nodig zijn voor de \gls{ragas}-evaluatie.
 
 Voor elke configuratie wordt via HyPSTER een concreet configuratieobject aangemaakt en aan de querypipeline doorgegeven. De querypipeline embeddt elke vraag lokaal via het geconfigureerde \texttt{sentence-transformers}-model, zoekt in de corresponderende Qdrant-collectie naar de meest relevante chunks, maakt de prompt en roept de geconfigureerde \gls{llm} aan via de externe \gls{api}. Het resultaatobject voor elke vraag bevat naast het gegenereerde antwoord ook de opgehaalde contexten en de operationele metrieken omtrent latency en tokenverbruik.
 
-\subsection{Fase 3: RAGAS-evaluatie}
+\subsection{Fase 3: \gls{ragas}-evaluatie}
 
-De RAGAS-evaluatiefase transformeert de ruwe antwoorden naar kwantitatieve scores. Deze fase is beschreven in Hoofdstuk~\ref{ch:resultaten}, dat volledig gewijd is aan de evaluatiemethode en de interpretatie van de scores.
+De \gls{ragas}-evaluatiefase transformeert de ruwe antwoorden naar kwantitatieve scores. Deze fase is beschreven in Hoofdstuk~\ref{ch:resultaten}, dat volledig gewijd is aan de evaluatiemethode en de interpretatie van de scores.
 
 \section{Reproduceerbaarheid van de experimentele opzet}
 \label{sec:reproduceerbaarheid}
@@ -101,7 +101,7 @@ De testfase heeft twee vereiste invoerbestanden en produceert twee uitvoerbestan
 
 \textbf{Uitvoer:}
 \begin{itemize}
-    \item \texttt{evaluation\_dataset.json}: voor elke vraag-configuratiecombinatie een volledig resultaatwoordenboek met het gegenereerde antwoord, de opgehaalde contexten en de operationele metrieken. Dit bestand dient als directe invoer voor de RAGAS-evaluatie in Hoofdstuk~\ref{ch:resultaten}.
+    \item \texttt{evaluation\_dataset.json}: voor elke vraag-configuratiecombinatie een volledig resultaatwoordenboek met het gegenereerde antwoord, de opgehaalde contexten en de operationele metrieken. Dit bestand dient als directe invoer voor de \gls{ragas}-evaluatie in Hoofdstuk~\ref{ch:resultaten}.
     \item \texttt{rag\_benchmark\_results.csv}: dezelfde data in tabelvorm als \gls{csv}-bestand met puntkomma als scheidingsteken voor verdere analyse in een Jupyter Notebook.
 \end{itemize}
 

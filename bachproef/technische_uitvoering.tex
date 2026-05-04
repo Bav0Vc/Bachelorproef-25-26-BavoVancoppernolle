@@ -148,7 +148,7 @@ De parameter \mintinline{python}{document_creation_mode=”one-doc-per-page”} 
 
 De \mintinline{python}{strategy="hi_res"} activeert de nauwkeurigste verwerkingsstrategie om de paginalayout te analyseren en elementen correct te identificeren. Dit is trager dan de standaard \texttt{fast}-strategie, maar noodzakelijk om de extractie van tabelinhoud en afbeeldingen met tekst te waarborgen.
 
-De parameter \mintinline{python}{pdf_infer_table_structure: False} is specifiek gericht op PDF-extractie. Voor Excel-bestanden wordt de intrinsieke tabel- en tabbladstructuur (via page_name) door Unstructured native behouden, wat voorkomt dat data in kolommen lineair en foutief wordt samengevoegd.
+De parameter \mintinline{python}{pdf_infer_table_structure: False} is specifiek gericht op PDF-extractie. Voor Excel-bestanden wordt de intrinsieke tabel- en tabbladstructuur (via \mintinline{python}{page_name}) door Unstructured native behouden, wat voorkomt dat data in kolommen lineair en foutief wordt samengevoegd.
 
 \subsection{Documentreiniging}
 \label{subsec:documentcleaner}

@@ -342,10 +342,10 @@ Ten derde bevordert deze encapsulatie de reproduceerbaarheid van het experiment.
 
 Ten slotte biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde logica, zoals gedemonstreerd in de semantische chunker. Hierbij worden meerdere atomaire Haystack-componenten — een embedder en een splitter — gecombineerd tot één logische eenheid. Deze mate van granulariteit en controle is noodzakelijk om te voldoen aan de \emph{white-box} vereisten van dit onderzoek, waarbij elke stap in de gegevensstroom transparant en manipuleerbaar moet zijn.
 
-\section{Configuratiebeheer met Hypster}
+\section{Configuratiebeheer met HyPSTER}
 \label{sec:hypster-config}
 
-Om de 27 unieke configuraties systematisch te kunnen doorlopen zonder handmatig 27 aparte pipeline-instanties aan te maken, wordt Hypster gebruikt als configuratieframework. De configuratieruimte is opgesplitst in drie geneste deelconfiguraties.
+Om de 27 unieke configuraties systematisch te kunnen doorlopen zonder handmatig 27 aparte pipeline-instanties aan te maken, wordt HyPSTER gebruikt als configuratieframework. De configuratieruimte is opgesplitst in drie geneste deelconfiguraties.
 
 In de definitieve implementatie is de embedding-configuratie bewust vereenvoudigd: doordat alle embedding-modellen lokaal draaien via \texttt{sentence-transformers}, is de provider altijd identiek. De configuratie slaat enkel de modelnaam op en de vector-dimensionaliteit:
 
@@ -384,7 +384,7 @@ def chunking_config(hp: HP):
   )
   return { "chunker_name": chunker_name }
 \end{minted}
-\caption[Hypster chunking-configuratie]{ HyPSTER-implementatie voor de dynamische selectie van chunking-strategieën binnen de experimentele pipeline.}
+\caption[HyPSTER chunking-configuratie]{ HyPSTER-implementatie voor de dynamische selectie van chunking-strategieën binnen de experimentele pipeline.}
 \label{lst:hypster-chunking}
 \end{listing}
 
@@ -419,7 +419,7 @@ def pipeline_config(hp: HP):
   llm = hp.nest(llm_config, name="llm")
   return hp.collect(locals())
 \end{minted}
-\caption[Hypster LLM-configuratie en pipeline-samenstelling]{De \gls{llm}-configuratie koppelt elke modelnaam aan backend en \gls{api}-modelnaam. De \texttt{pipeline\_config}-functie combineert de drie deelconfiguraties via \texttt{hp.nest()} en verzamelt ze via \texttt{hp.collect(locals())} in één object.}
+\caption[HyPSTER LLM-configuratie en pipeline-samenstelling]{De \gls{llm}-configuratie koppelt elke modelnaam aan backend en \gls{api}-modelnaam. De \texttt{pipeline\_config}-functie combineert de drie deelconfiguraties via \texttt{hp.nest()} en verzamelt ze via \texttt{hp.collect(locals())} in één object.}
 \label{lst:hypster-llm}
 \end{listing}
 

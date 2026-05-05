@@ -14,7 +14,7 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 Scripts worden handmatig gestart via \texttt{docker exec} in de draaiende container. Dit geeft volledige controle over welke fase van de pipeline op welk moment wordt uitgevoerd en laat toe om tussentijdse resultaten te inspecteren voor de volgende fase wordt gestart.
 
-\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url} \texttt{http://unstructured-api:8000/general/v0/general}. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
+\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. De applicatiecontainer communiceert via het interne Docker-netwerk met deze dienst via de \gls{url}\\\texttt{http://unstructured-api:8000/general/v0/general}. De Unstructured service draait in een lokale Docker container om \textbf{rate limits} te vermijden die de uitvoeringstijd van de pipeline beïnvloeden.
 
 \subsection{GPU-toegang en modelcaching}
 
@@ -68,7 +68,7 @@ De drie geselecteerde \glspl{llm} worden via twee verschillende externe \gls{api
 
 \textbf{Featherless AI} is een proxy-dienst die een OpenAI-compatibele \gls{api} biedt voor open-source modellen die op de HuggingFace Hub beschikbaar zijn. Qwen 2.5 14B Instruct en Llama 3.3 70B Instruct worden via deze router aangestuurd. De requests verlopen via de \texttt{OpenAIGenerator}-component van Haystack met een aangepaste basis-\gls{url}. Een voordeel van deze aanpak is dat er geen lokale \gls{gpu}-resources nodig zijn voor de inferentie van de grote \glspl{llm}: de modellen draaien op de serverinfrastructuur van Featherless AI, terwijl de \gls{gpu} van de lokale machine beschikbaar blijft voor de embedding-modellen.
 
-\textbf{Mistral AI} stuurt Mistral Large 2 aan via de officiële Mistral \gls{api}. In Haystack wordt hiervoor de \texttt{MistralChatGenerator}-component gebruikt, die het Mistral-specifieke berichtformaat afhandelt. De antwoordextractie verschilt licht van de OpenAI-gebaseerde generator: Mistral geeft een \texttt{ChatMessage}-object terug waaruit de tekstinhoud via het \texttt{.content}-attribuut wordt geëxtraheerd, terwijl de OpenAI-generator een platte tekenreeks teruggeeft.
+\textbf{Mistral AI} stuurt Mistral Large 2 aan via de officiële Mistral \gls{api}. In Haystack wordt hiervoor de \texttt{MistralChatGenerator}-component gebruikt, die het Mistral-specifieke berichtformaat afhandelt. De antwoordextractie verschilt licht van de\\OpenAI-gebaseerde generator: Mistral geeft een \texttt{ChatMessage}-object terug waaruit de tekstinhoud via het \texttt{.content}-attribuut wordt geëxtraheerd, terwijl de OpenAI-generator een platte tekenreeks teruggeeft.
 
 \begin{listing}[H]
 \begin{minted}{python}

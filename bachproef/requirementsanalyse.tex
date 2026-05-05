@@ -53,9 +53,8 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     M & Bronvermelding (source attribution)          & Primaire functionele eis van Turtle Srl; vereist voor \gls{esg}-audits \\
     M & Context Recall                               & Als retrieval faalt, kan de \gls{llm} geen correct antwoord genereren \\
     M & Faithfulness                                 & Geen hallucinaties toegestaan in audit-context \autocite{Es2024} \\
-    M & Open-source licentie                         & Vermijdt vendor lock-in en laat vrije commerciële en lokale deployment toe \\
-    M & Selectie van 3 embedding-modellen            & Meertalig, instruction-tuned, sterk in retrieval \\
-    M & Selectie van 3 \glspl{llm}                   & GPT, Gemini 2.5 Flash en Mistral \\
+    M & Selectie van 3 embedding-modellen            & Sterk in retrieval \\
+    M & Selectie van 3 \glspl{llm}                   & Meertalig, instruction-tuned, open-source \\
     M & Golden set van \gls{esg}-vragen              & Vereist voor alle \gls{ragas}-metrics (ground truth) \autocite{Es2024} \\
     M & Haystack 2.x met custom componenten          & White-box controle over pipeline-logica \\
     M & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
@@ -66,7 +65,6 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     S & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
     \midrule
     C & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
-    C & PocketFlow-connector (output component)      & Nuttig voor real-world integratie, niet voor benchmark \\
     \midrule
     W & Citation accuracy als kernmeting             & Specifieke paginavermelding is voor mijn copromotor geen belangrijke vereiste \\
     \bottomrule

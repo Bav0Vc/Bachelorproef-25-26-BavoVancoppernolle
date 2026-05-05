@@ -73,13 +73,13 @@ Dit proces beschreven als een model dat twee componenten combineert. De retrieve
 
 \subsection{Dynamische aanpak}
 
-Voor het vergelijken van verschillende variabele componenten in een RAG-systeem, is een dynamische architectuur nodig die de variabiliteit van componenten ondersteunt.
+Voor het vergelijken van verschillende variabele componenten in een \gls{rag}-systeem, is een dynamische architectuur nodig die de variabiliteit van componenten ondersteunt.
 
 \subsubsection{Component-gebaseerde architectuur}
 
 Pipeline-orchestration binnen \gls{rag} verwijst naar het beheer van de gegevensstroom tussen de retriever, de generator en de tussenliggende verwerkingsstappen \autocite{Zhang2025GenAI}. In moderne architecturen is de verschuiving merkbaar van lineaire ketens naar graafgebaseerde workflows.
 
-Voor dit onderzoek wordt Haystack 2.x ingezet. Waar eerdere versies van dergelijke frameworks vaak rigide waren, introduceert Haystack 2.x een architectuur gebaseerd op een gerichte graaf \autocite{HaystackPipelines2026}. Elke stap in de pipeline dient als een onafhankelijk component met strikt gedefinieerde in- en uitgangen (sockets). Deze dynamiek is cruciaal voor de ESG-casus van Turtle Srl, aangezien het toelaat om metadata (zoals paginanummers uit Qdrant) op een transparante manier door te geven aan de generation laag zonder de integriteit van de tekstfragmenten te verstoren \autocite{HaystackMetadataRouter2026}.
+Voor dit onderzoek wordt Haystack 2.x ingezet. Waar eerdere versies van dergelijke frameworks vaak rigide waren, introduceert Haystack 2.x een architectuur gebaseerd op een gerichte graaf \autocite{HaystackPipelines2026}. Elke stap in de pipeline dient als een onafhankelijk component met strikt gedefinieerde in- en uitgangen (sockets). Deze dynamiek is cruciaal voor de \gls{esg}-casus van Turtle Srl, aangezien het toelaat om metadata (zoals paginanummers uit Qdrant) op een transparante manier door te geven aan de generation laag zonder de integriteit van de tekstfragmenten te verstoren \autocite{HaystackMetadataRouter2026}.
 
 \subsubsection{Hyperparameterization}
 
@@ -124,7 +124,7 @@ Bij het opstellen van een chunking-strategie zijn er 3 parameters van belang:
 
 Embedding modellen transformeren tekst naar numerieke vectoren (vector embeddings) die in een hoog-dimensionale ruimte worden opgeslagen. De essentie van \gls{rag} is gebaseerd op de veronderstelling dat semantisch gelijke teksten dicht bij elkaar liggen in deze ruimte.
 
-De pipeline die verder in dit onderzoek wordt opgezet, gebruikt text-embedding-3-large (OpenAI), BGE-M3 (BAAI) en multilingual-e5-large-instruct (intfloat) als variabele embeddingmodellen.
+De pipeline die verder in dit onderzoek wordt opgezet, gebruikt snowflake-arctic-embed-l-v2.0 (Snowflake), BGE-M3 (BAAI) en multilingual-e5-large-instruct (intfloat) als variabele embeddingmodellen.
 
 De daaruit volgende embeddings worden opgeslagen in een vector database. De vector database een cruciaal element voor de efficiënte opslag en toegankelijkheid van semantische informatie \autocite{Pawlik2025}. Het is een gespecialiseerd systeem dat specifiek is ontworpen om hoog-dimensionale vectordata te verwerken, indexeren, vergelijken en op te slaan. Tijdens een zoekopdracht wordt de gegenereerde query-vector vergeleken met deze opgeslagen vectoren om de meest relevante informatie te identificeren en in een zo kort mogelijke tijd op te halen \autocite{Rahul2024}.
 
@@ -135,7 +135,7 @@ De vector database heeft ook de mogelijkheid om metadata toe te voegen aan de ve
 
 Een recente innovatie in de wereld van embedding-modellen is \gls{mrl}, geïntroduceerd door \textcite{KusupatiEtAl2022}. Het principe is vernoemd naar de Russische matroesjka-pop: net zoals die poppetjes volledig bruikbare kleinere versies van zichzelf bevatten, leert een \gls{mrl}-model embeddings waarbij de eerste $m$ dimensies van een volledige $d$-dimensionele vector op zichzelf al een semantisch zinvolle en bruikbare representatie vormen. Een model dat 1.024-dimensionele vectoren produceert, kan dankzij \gls{mrl} worden afgekapt tot 256 of 512 dimensies zonder de semantische kwaliteit noemenswaardig te verliezen.
 
-De praktische waarde voor \gls{rag}-systemen is aanzienlijk. Vectordatabases zoals Qdrant slaan embeddings op als hoogdimensionale vectoren. Omdat de geheugenvoetafdruk en de zoeksnelheid (latency) direct afhankelijk zijn van de vector-dimensie, biedt Matryoshka-truncatie een significante optimalisatie Door Matryoshka-truncatie toe te passen, kan de opslag in Qdrant worden geoptimaliseerd zonder een aparte, kleinere modelvariant te moeten trainen of inzetten. Het arctic-embed-l-v2.0-model dat in dit onderzoek wordt gebruikt, ondersteunt Matryoshka-truncatie naar 256 dimensies met minder dan 3\% kwaliteitsverlies \autocite{YuEtAl2024}, wat de operationele kosten van de vectordatabase aanzienlijk verlaagt bij grote corpora.
+De praktische waarde voor \gls{rag}-systemen is aanzienlijk. Vectordatabases zoals Qdrant slaan embeddings op als hoogdimensionale vectoren. Omdat de geheugenvoetafdruk en de zoeksnelheid (latency) direct afhankelijk zijn van de vectordimensie, biedt Matryoshka-truncatie een significante optimalisatie: de opslag in Qdrant kan worden beperkt zonder dat een aparte, kleinere modelvariant getraind of ingezet hoeft te worden. Het \texttt{arctic-embed-l-v2.0}-model dat in dit onderzoek wordt gebruikt, ondersteunt truncatie naar 256 dimensies met minder dan 3\% kwaliteitsverlies \autocite{YuEtAl2024}, wat de operationele kosten bij grote corpora aanzienlijk verlaagt.
 
 \subsubsection{Hybride zoeken en Reciprocal Rank Fusion}
 \label{subsubsec:hybride-zoeken}
@@ -156,15 +156,9 @@ waarbij $R$ de set van rangordes is (dense en sparse), $\text{rank}_r(d)$ de pos
 
 Het generatieve component, het \gls{llm}, gebruikt de context uit de vector database om samen met de gestelde vraag een coherent antwoord te formuleren. Concreet bouwt de \gls{llm} binnen \gls{rag} voort op zijn in-context learning-capaciteiten: de opgehaalde \gls{esg}-fragmenten fungeren als uitgebreide prompt, waardoor het model tijdens generatie kan “redeneren over bewijs” in plaats van te vertrouwen op verouderde of onvolledige trainingskennis \autocite{Wang2025}. Studies tonen dat dit hybridemodel 20\% tot 30\% betere prestaties oplevert op knowledge-intensive vraag-en-antwoordtaken dan pure seq2seq-modellen \autocite{Lewis2020}. \gls{rag} overtreft bijvoorbeeld BART en T5 op Natural Questions, WebQuestions en TriviaQA, terwijl de gegenereerde antwoorden specifieker zijn, en feitelijk meer correct \autocite{Lewis2020}.
 
-%\begin{itemize}
-%  \item \textbf{gpt-4o} 
-%  \item \textbf{gemini-2.5-flash} 
-%  \item \textbf{Mistral Large 2.1} 
-%\end{itemize}
-
 \section{Evaluatie RAG}
 
-In dit deel van de literatuurstudie wordt de stand van zaken rond de evaluatie van \gls{rag} besproken, met bijzondere aandacht voor domeinspecifieke use cases zoals \gls{esg}-rapportage. De evaluatie van een \gls{rag}-systeem teruggeeft hangt immers af van twee afzonderlijke processen — retrieval en generatie — waardoor verouderde NLP-metrics (zoals BLEU of ROUGE) slechts een beperkt beeld geven van de werkelijke kwaliteit \autocite{Yu2024}. Voor de \gls{poc} bij Turtle Srl, waar verschillende combinaties van chunking, embedding-modellen en \glspl{llm} op een vaste \gls{esg}-vragenlijst worden geëvalueerd, is een gericht evaluatiekader nodig dat zowel inhoudelijke kwaliteit (faithfulness, answer relevancy) als operationele aspecten (latency, kosten) en juridische vereisten (source attribution) dekt.
+In dit deel van de literatuurstudie wordt de stand van zaken rond de evaluatie van \gls{rag} besproken, met bijzondere aandacht voor domeinspecifieke use cases zoals \gls{esg}-rapportage. De evaluatie van een \gls{rag}-systeem teruggeeft hangt immers af van twee afzonderlijke processen — retrieval en generatie — waardoor verouderde \gls{nlp}-metrics (zoals BLEU of ROUGE) slechts een beperkt beeld geven van de werkelijke kwaliteit \autocite{Yu2024}. Voor de \gls{poc} bij Turtle Srl, waar verschillende combinaties van chunking, embedding-modellen en \glspl{llm} op een vaste \gls{esg}-vragenlijst worden geëvalueerd, is een gericht evaluatiekader nodig dat zowel inhoudelijke kwaliteit (faithfulness, answer relevancy) als operationele aspecten (latency, kosten) en juridische vereisten (source attribution) dekt.
 
 \subsection{Evolutie van het evalueren}
 

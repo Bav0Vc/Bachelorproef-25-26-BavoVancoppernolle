@@ -10,7 +10,7 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 \subsection{Diensten en hun rol}
 
-\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas}-evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde NLTK-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
+\textbf{De applicatiecontainer} bevat de volledige Python-codebase van het project: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas}-evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde \gls{nltk}-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker.
 
 Scripts worden handmatig gestart via \texttt{docker exec} in de draaiende container. Dit geeft volledige controle over welke fase van de pipeline op welk moment wordt uitgevoerd en laat toe om tussentijdse resultaten te inspecteren voor de volgende fase wordt gestart.
 

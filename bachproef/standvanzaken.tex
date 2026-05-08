@@ -47,7 +47,7 @@ In een domein waar cijfers en feiten de basis vormen voor juridische verantwoord
 
 \subsection{Knowledge Cut-off}
 
-Zowel \gls{esg}-standaarden en bedrijfsresultaten evolueren razendsnel. De \gls{csrd}-richtlijnen worden continu verfijnd en bedrijfsgegevens blijven toenemen en veranderen per kwartaal~\autocite{Fornasari2024}. Vanwege de knowledge cut-off is de interne kennis van een \gls{llm} statisch en per definitie verouderd zodra het model is getraind. Een model dat is getraind in 2024, heeft geen kennis van duurzaamheidsrapporten of nieuwe \gls{csrd}-richtlijnen die in 2025 zijn gepubliceerd~\\autocite{Dye2021}. Dit gebrek aan actualiteit maakt een standaard \gls{llm} ongeschikt voor auditing, aangezien het model geen toegang heeft tot de meest recente data. Data die nodig is om historische trends (bijv. de afgelopen vijf jaar) correct te contextualiseren met cijfers uit het huidige, post-training boekjaar.
+Zowel \gls{esg}-standaarden en bedrijfsresultaten evolueren razendsnel. De \gls{csrd}-richtlijnen worden continu verfijnd en bedrijfsgegevens blijven toenemen en veranderen per kwartaal~\autocite{Fornasari2024}. Vanwege de \gls{knowledge-cut-off} is de interne kennis van een \gls{llm} statisch en per definitie verouderd zodra het model is getraind. Een model dat is getraind in 2024, heeft geen kennis van duurzaamheidsrapporten of nieuwe \gls{csrd}-richtlijnen die in 2025 zijn gepubliceerd~\\autocite{Dye2021}. Dit gebrek aan actualiteit maakt een standaard \gls{llm} ongeschikt voor auditing, aangezien het model geen toegang heeft tot de meest recente data. Data die nodig is om historische trends (bijv. de afgelopen vijf jaar) correct te contextualiseren met cijfers uit het huidige, post-training boekjaar.
 
 \section{RAG}
 
@@ -95,7 +95,7 @@ De pipeline die verder in dit onderzoek wordt opgezet, gebruikt snowflake-arctic
 
 De daaruit volgende embeddings worden opgeslagen in een vector database. De vector database een cruciaal element voor de efficiënte opslag en toegankelijkheid van semantische informatie \autocite{Pawlik2025}. Het is een gespecialiseerd systeem dat specifiek is ontworpen om hoog-dimensionale vectordata te verwerken, indexeren, vergelijken en op te slaan. Tijdens een zoekopdracht wordt de gegenereerde query-vector vergeleken met deze opgeslagen vectoren om de meest relevante informatie te identificeren en in een zo kort mogelijke tijd op te halen~\autocite{Rahul2024}.
 
-De vector database heeft ook de mogelijkheid om metadata toe te voegen aan de vector embeddings. Dit gebeurt aan de hand van labels die toegekend worden aan de vectoren en samen worden opgeslagen. Deze labels bevatten data zoals een datum, categorie, user-ID of taal.
+De vector database heeft ook de mogelijkheid om metadata toe te voegen aan de vector embeddings. Dit gebeurt aan de hand van labels die toegekend worden aan de vectoren en samen worden opgeslagen. Deze labels bevatten data zoals een source, page, parent_id, split_id.
 
 \subsubsection{Matryoshka Representation Learning}
 \label{subsubsec:matryoshka}

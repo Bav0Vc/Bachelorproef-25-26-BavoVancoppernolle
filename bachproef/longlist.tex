@@ -38,7 +38,7 @@ Bij agentic chunking beslist een \gls{llm} per tekstpassage waar een logische ch
 
 \subsection{Late chunking}
 
-Late chunking, geïntroduceerd door \textcite{Guenther2024}, keert de volgorde van embedden en segmenteren om: alle tokens van een volledig document worden eerst ingebed met een long-context embedding-model, waarna de gegenereerde token-embeddings worden gesegmenteerd. Dit behoudt de globale documentcontext in elke chunk-embedding. \textcite{Guenther2024} tonen aan dat late chunking met 512 tokens een gemiddelde relatieve verbetering van 24,47\% oplevert ten opzichte van standaard chunking zonder verdere aanpassingen. Het nadeel is dat de methode een extreem groot context-window vereist bij het embedding-model en dat de beperkte native ondersteuning in Haystack 2.x biedt in vergelijking met andere alternatieven.
+Late chunking, geïntroduceerd door \textcite{Guenther2024}, keert de volgorde van embedden en segmenteren om: alle tokens van een volledig document worden eerst ingebed met een long-context embedding-model, waarna de gegenereerde token-embeddings worden gesegmenteerd. Dit behoudt de globale documentcontext in elke chunk-embedding. \textcite{Guenther2024} tonen aan dat late chunking met 512 tokens een gemiddelde relatieve verbetering van 24,47\% oplevert ten opzichte van standaard chunking zonder verdere aanpassingen. Het nadeel is dat de methode een extreem groot context-window vereist bij het embedding-model en dat het beperkte native ondersteuning heeft in Haystack 2.x in vergelijking met andere alternatieven.
 
 \subsection{Vergelijkingstabel chunking-strategieën}
 
@@ -53,10 +53,9 @@ Tabel~\ref{tab:longlist-chunking} brengt alle besproken chunking-strategieën sa
     \textbf{P} & \textbf{Requirement} & \textbf{Fixed} & \textbf{Sent.} & \textbf{Sliding} & \textbf{Recurs.} & \textbf{Sem.} & \textbf{Doc.} & \textbf{Agent./ Late} \\
     \midrule
     M & Context Recall                 & ?           & ---         & ?           & \textbullet & \textbullet & ?           & ?   \\
-    M & Source attribution             & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
     M & Haystack implementeerbaar      & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & ?           & --- \\
     M & Reproduceerbaarheid            & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ?           & --- \\
-    S & latency (indexering)          & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet & --- \\
+    S & latency (indexering)           & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet & --- \\
     S & Controle over chunk-grenzen    & \textbullet & ?           & \textbullet & \textbullet & ?           & ---         & --- \\
     C & Context Precision              & ---         & ?           & ---         & ?           & \textbullet & \textbullet & \textbullet \\
     C & Semantisch coherente chunks    & ---         & ?           & ---         & ?           & \textbullet & \textbullet & \textbullet \\
@@ -117,9 +116,9 @@ Nomic embed-text-v1.5, mxbai-embed-large-v1 en GTE-large-en-v1.5 zijn Apache 2.0
     M & Meertalig (IT/EN/\ldots)               & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & ?           \\
     M & Open-source licentie                   & \textbullet & \textbullet & \textbullet & ---         & ---         & ?           \\
     M & Instruction-tuned                      & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ---         \\
-    S & Hybride zoeken (keywords + semantisch) & ---         & \textbullet & ?           & ---         & ---         & ---         \\
     S & Lange context ($>$512 tokens)          & \textbullet & \textbullet & ---         & ?           & ?           & \textbullet \\
     S & Geen extra API-provider                & \textbullet & \textbullet & \textbullet & ---         & ---         & \textbullet \\
+    C & Hybride zoeken (keywords + semantisch) & ---         & \textbullet & ?           & ---         & ---         & ---         \\
     C & Lokale uitvoering (privacy)            & \textbullet & \textbullet & \textbullet & ---         & ---         & \textbullet \\
     C & Kostenefficiëntie                      & \textbullet & \textbullet & \textbullet & ---         & ---         & \textbullet \\
     C & GDPR / EU-soevereiniteit               & \textbullet & ?           & \textbullet & ---         & ---         & ?           \\
@@ -139,13 +138,17 @@ Het \gls{llm} vormt de generatieve kern van de \gls{rag}-pipeline. Het ontvangt 
 
 Qwen 2.5 14B Instruct, beschreven in het technisch rapport van het Qwen Team \autocite{QwenTeam2025}, is een 14 miljard parameter instruc\-tie\-geoptimaliseerd model dat uitgebracht is onder de Apache 2.0-licentie. Het model behaalt een \gls{mmlu}-score van 79,7\% en beschikt over een context window van 128.000 tokens. Een specifiek sterkte\-punt voor de \gls{rag}-pipeline van dit onderzoek is de expliciete post-trainingsoptimalisatie voor gestructureerde output en \gls{json}-instructieopvolging \autocite{QwenTeam2025}, wat cruciaal is voor de Metadata-Aware Prompt Builder die bronvermeldingen via gestructureerde tags verwacht. Op de Vectara Hallucination Leaderboard haalt de Qwen 2.5-familie 4,8 tot 5,9\% hallucinatiescores — beduidend beter dan de meeste alternatieve open-source modellen in dezelfde parameterklasse \autocite{TamberEtAl2025}. Het model ondersteunt 29 talen, waaronder Italiaans en Engels, en kan op een enkele Azure VM worden gehost via vLLM.
 
+Een significante beperking vanuit het perspectief van data governance is echter de herkomst van het model: Qwen 2.5 is ontwikkeld door Alibaba Cloud, een Chinese aanbieder. Cloud-gebaseerde deployment via officiële \gls{api}-endpoints valt buiten de EU-jurisdictie en impliceert gegevensoverdracht naar servers buiten de Europese Unie, wat onverenigbaar is met \gls{gdpr}-naleving voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl. Hoewel lokale deployment op een Azure VM technisch mogelijk is, biedt Alibaba geen formele EU-soevereiniteitsgaranties, waardoor dit model op de \gls{gdpr}/EU-soevereiniteitseis fundamenteel tekortschiet ten opzichte van EU-gevestigde aanbieders in deze evaluatie.
+
 \subsection{Meta Llama 3.3 70B Instruct}
 
 Llama 3.3 70B Instruct, gepubliceerd door Meta \autocite{GrattafioriEtAl2024}, is een 70 miljard parameter model uitgebracht onder de Llama 3.3 Community License. Het behaalt een \gls{mmlu}-score van 86,0\%, MMLU-Pro van 68,9\% en een IFEval-score van 92,1\% — de hoogste instructieopvolgingsscore van alle onderzochte kandidaten, wat de betrouwbaarheid van prompt-instructies in de Haystack-pipeline maximaliseert. Op de Vectara Hallucination Leaderboard scoort het model 4,1\% hallucinaties \autocite{TamberEtAl2025}, wat het tot het meest faithfulness-betrouwbare open-source model in de short list maakt. Het model ondersteunt officieel acht talen waaronder Italiaans en heeft een context window van 128.000 tokens. Llama 3.3 70B is beschikbaar op Microsoft Azure Foundry met EU-dataresidentie, wat Azure-compatibiliteit en \gls{gdpr}-naleving maximaliseert.
 
 \subsection{Mistral AI Mistral Large 2}
 
-Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit. \textcite{MistralAIBlog2024} documenteren 123 miljard parameters, een context window van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Als Frans bedrijf gevestigd in Parijs verwerkt Mistral AI alle data exclusief binnen de \gls{eu}, waardoor het niet valt onder de Amerikaanse CLOUD Act \autocite{MistralAIBlog2024}. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt. \textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder \gls{gqa} die de latency bij inferentie verlaagt.
+Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit. \textcite{MistralAIBlog2024} documenteren 123 miljard parameters, een context window van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt. \textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder \gls{gqa} die de latency bij inferentie verlaagt.
+
+Een fundamentele beperking voor de specifieke use case van dit onderzoek is echter dat Mistral Large 2 \textit{geen} instruction-tuned variant is: het model mist de post-training fine-tuning die essentieel is voor betrouwbare instructieopvolging in een interactieve chatbot-context. De \gls{poc} van Turtle Srl is een \gls{rag}-gebaseerde chatbot waarbij het \gls{llm} complexe systeemprompts, gestructureerde JSON-output-instructies en bronvermeldingsconventies moet naleven. Instruction-tuning is een expliciete Must-Have-requirement uit de requirementsanalyse: een basismodel dat niet expliciet post-training gefinetuned is voor instructieopvolging, is fundamenteel ongeschikt voor deze toepassing, ongeacht zijn sterke benchmarkprestaties op algemene taken.
 
 \subsection{Anthropic Claude 3.5 Sonnet}
 
@@ -159,6 +162,13 @@ Command R+ is door Cohere specifiek ontworpen voor \gls{rag}-toepassingen en bes
 
 DeepSeek-V3 is een open-source model dat op benchmarks presteert op het niveau van GPT-4, tegen een fractie van de kosten. Dit model wordt uitdrukkelijk uitgesloten op grond van \gls{gdpr}-vereisten: DeepSeek is een Chinese aanbieder en het doorsturen van de vertrouwelijke \gls{esg}-documenten van Turtle Srl naar DeepSeek-servers is onverenigbaar met de Europese wetgeving inzake gegevensbescherming \autocite{HuangEtAl2024}. Voor gevoelige bedrijfsdocumenten is datasoevereiniteit een harde uitsluitingsgrond.
 
+\subsection{Google Gemma 3 27B IT}
+
+Gemma 3 27B IT, uitgebracht door Google DeepMind \autocite{Gemma3Team2025}, is een 27 miljard parameter instruction-tuned open-source model beschikbaar onder de Gemma-licentie, die commercieel gebruik toelaat. Het achtervoesel \textit{IT} staat expliciet voor \textit{Instruction Tuned}: het model is na pre-training gefinetuned op het opvolgen van complexe instructies, het genereren van gestructureerde output en vraag-en-antwoord-taken, wat naadloos aansluit bij de Metadata-Aware Prompt Builder in de Haystack-pipeline. Het model beschikt over een context window van 128.000 tokens en biedt meertalige ondersteuning, waaronder Italiaans en Engels \autocite{Gemma3Team2025}. Het is beschikbaar via de Azure AI Foundry Model Catalog en kan volledig lokaal worden ingezet op een Azure VM via vLLM of Ollama, waardoor \gls{gdpr}-naleving gegarandeerd is zonder dat data de EU-infrastructuur verlaat. Met 27 miljard parameters biedt het model een gunstige latency-verhouding ten opzichte van grotere modellen in deze evaluatie.
+
+\subsection{Mistral AI Mistral Small 4 (mistral-small-4-119b-2603)}
+
+Mistral Small 4, uitgebracht in maart 2026 door Mistral AI \autocite{MistralAISmall42026}, is een 119 miljard parameter instruction-tuned model beschikbaar onder de Apache 2.0-licentie. Het combineert de Europese datasoevereiniteitsgaranties van de Mistral-modelfamilie met een volwaardige instruction-tuned architectuur — het cruciale onderscheid ten opzichte van Mistral Large 2, dat als basismodel de instruction-tuning-requirement mist. Als Frans bedrijf gevestigd in Parijs verwerkt Mistral AI alle data exclusief binnen de \gls{eu}, waardoor het niet valt onder de Amerikaanse CLOUD Act \autocite{MistralAISmall42026}. Het model ondersteunt meerdere talen waaronder Italiaans en Engels, beschikt over een context window van 128.000 tokens en behaalt sterke prestaties op meertalige instructieopvolgings- en redeneer-benchmarks. De combinatie van EU-datasoevereiniteit, instruction-tuning, Apache 2.0-licentie en Azure-compatibiliteit via de Foundry Model Catalog en volledig self-hosted deployment op een Azure VM via vLLM plaatst dit model als de sterkste kandidaat voor de data-governance-dimensie van de vergelijking.
 
 \subsection{Vergelijkingstabel LLMs}
 
@@ -166,23 +176,26 @@ DeepSeek-V3 is een open-source model dat op benchmarks presteert op het niveau v
 \begin{table}[h]
   \centering
   \caption[Long list vergelijkingstabel LLMs]{\label{tab:longlist-llm}Vergelijking van alle onderzochte \glspl{llm} ten opzichte van de prioritaire requirements. \textbullet\ = volledig ondersteund; --- = niet aanwezig; ? = beperkt of implementatie-afhankelijk.}
-  \small
-  \begin{tabular}{p{0.04\linewidth} p{0.24\linewidth} p{0.10\linewidth} p{0.10\linewidth} p{0.09\linewidth} p{0.08\linewidth} p{0.08\linewidth} p{0.08\linewidth}}
+  \footnotesize
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{p{0.03\linewidth} p{0.19\linewidth} p{0.08\linewidth} p{0.08\linewidth} p{0.08\linewidth} p{0.07\linewidth} p{0.07\linewidth} p{0.07\linewidth} p{0.08\linewidth} p{0.08\linewidth}}
     \toprule
-    \textbf{P} & \textbf{Requirement} & \textbf{Qwen 2.5 14B} & \textbf{Llama 3.3 70B Instruct} & \textbf{Mistral Large 2} & \textbf{Claude 3.5} & \textbf{Cmd R+} & \textbf{Deep\-Seek} \\
+    \textbf{P} & \textbf{Requirement} & \textbf{Qwen 14B} & \textbf{Llama 70B} & \textbf{Mist.\ L2} & \textbf{Claude 3.5} & \textbf{Cmd R+} & \textbf{Deep\-Seek} & \textbf{Gemma 27B} & \textbf{Mist.\ S4} \\
     \midrule
-    M & Source attr. (JSON-prompt)    & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ?           \\
-    M & Faithfulness (lage hall.)     & \textbullet & \textbullet & ?           & \textbullet & ?           & ?           \\
-    M & Open-source licentie          & \textbullet & \textbullet & \textbullet & ---         & ---         & \textbullet \\
-    M & Meertalig (IT/EN)             & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet \\
-    M & Context ($\geq$32K tokens)    & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
-    S & Answer Relevancy              & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
-    S & latency (snelle respons)     & \textbullet & ?           & ?           & \textbullet & ?           & ?           \\
-    S & Azure-compatibiliteit         & \textbullet & \textbullet & \textbullet & ---         & ---         & ---         \\
-    C & Lokale uitvoering             & \textbullet & \textbullet & \textbullet & ---         & ?           & \textbullet \\
-    C & GDPR / EU-soevereiniteit      & \textbullet & \textbullet & \textbullet & ?           & ?           & ---         \\
+    M & Source attr. (JSON-prompt)    & \textbullet & \textbullet & \textbullet & \textbullet & ?           & ?           & \textbullet & \textbullet \\
+    M & Faithfulness (lage hall.)     & \textbullet & \textbullet & ?           & \textbullet & ?           & ?           & \textbullet & \textbullet \\
+    M & Open-source licentie          & \textbullet & \textbullet & \textbullet & ---         & ---         & \textbullet & \textbullet & \textbullet \\
+    M & Meertalig (IT/EN)             & \textbullet & \textbullet & \textbullet & \textbullet & ?           & \textbullet & \textbullet & \textbullet \\
+    M & Context ($\geq$32K tokens)    & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+    M & Instruction-tuned             & \textbullet & \textbullet & ---         & \textbullet & \textbullet & ?           & \textbullet & \textbullet \\
+    M & \gls{gdpr} / EU-soevereiniteit & ---        & \textbullet & \textbullet & ?           & ?           & ---         & \textbullet & \textbullet \\
+    S & Answer Relevancy              & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet & \textbullet \\
+    S & Latency (snelle respons)      & \textbullet & ?           & ?           & \textbullet & ?           & ?           & \textbullet & ?           \\
+    S & Azure-compatibiliteit         & \textbullet & \textbullet & \textbullet & ---         & ---         & ---         & \textbullet & \textbullet \\
+    C & Lokale uitvoering             & \textbullet & \textbullet & \textbullet & ---         & ?           & \textbullet & \textbullet & \textbullet \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
 \end{table}
 
-Uit de tabel blijkt dat \textbf{Qwen 2.5 14B Instruct}, \textbf{Llama 3.3 70B Instruct} en \textbf{Mistral Large 2} het breedst scoren over de Must-Have-requirements. Claude 3.5 Sonnet voldoet niet aan de open-source licentievereiste. Command R+ heeft een niet-commerciële licentie. DeepSeek wordt uitdrukkelijk uitgesloten op \gls{gdpr}-gronden.
+Uit de tabel blijkt dat \textbf{Gemma 3 27B IT}, \textbf{Llama 3.3 70B Instruct} en \textbf{Mistral Small 4} het breedst scoren over alle Must-Have-requirements. Qwen 2.5 14B Instruct valt af op de \gls{gdpr}/EU-soevereiniteitseis: als product van Alibaba Cloud biedt het geen formele EU-datasoevereiniteitsgaranties voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl. Mistral Large 2 voldoet niet aan de instruction-tuning-requirement: als basismodel zonder post-training instructiefinetuning is het fundamenteel ongeschikt voor de chatbot-\gls{poc} van Turtle Srl. Claude 3.5 Sonnet voldoet niet aan de open-source licentievereiste. Command R+ heeft een niet-commerciële licentie. DeepSeek wordt uitdrukkelijk uitgesloten op \gls{gdpr}-gronden.

@@ -15,21 +15,21 @@ Functionele requirements beschrijven wat het systeem concreet moet kunnen doen. 
 
 \textbf{Multi-pillar \gls{esg}-ondersteuning.} De \gls{poc} moet informatie kunnen ontsluiten over de drie \gls{esg}-pijlers: Environmental, Social en Governance. Dit garandeert dat de vergelijkende studie representatief is voor de volledige breedte van de rapportage-eisen waarmee Turtle Srl geconfronteerd wordt.
 
-\textbf{Kennisretrieval via \gls{rag}.} Het systeem moet externe kennis ophalen uit een vectordatabase om de interne, statische kennis van het taalmodel aan te vullen. Dit is de architecturale kern die hallucinaties tegengaat en actualiteit waarborgt, zoals uiteengezet in de literatuurstudie \autocite{Lewis2020}.
+\textbf{Verifieerbare informatievoorziening.} Het systeem moet antwoorden genereren die uitsluitend gebaseerd zijn op verifieerbare, externe brondocumenten om de feitelijke juistheid te garanderen.
 
-\textbf{Documentverwerking en -cleaning.} Het systeem moet \gls{pdf}-bestanden kunnen inladen, opschonen en voorzien van metadata (zoals bestandsnaam, bedrijfsnaam en publicatiejaar). Deze metadata wordt per chunk meegestuurd naar de vectordatabase, zodat bronvermelding op documentniveau mogelijk is.
+\textbf{Documentverwerking en -cleaning.} Het systeem moet \gls{pdf}-bestanden kunnen inladen, opschonen en voorzien van metadata (zoals bestandsnaam, paginanummer of paginanaam).
 
-\textbf{Variabele configuratieondersteuning.} De pipeline moet dynamisch kunnen schakelen tussen drie chunking-strategieën, drie embedding-modellen en drie \gls{llm}-families zonder dat daarvoor een afzonderlijke pipeline per combinatie gebouwd moet worden. Dit resulteert technisch in $3^3 = 27$ unieke configuraties die systematisch doorlopen worden via het HyPSTER-configuratieframework.
+\textbf{Architecturale flexibiliteit.} De pipeline moet modulair zijn opgebouwd, zodat verschillende componenten (zoals chunking- en embedding-logica) uitwisselbaar zijn voor evaluatiedoeleinden.
 
 \section{Niet-functionele requirements}
 
 Niet-functionele requirements beschrijven de kwaliteitseisen en randvoorwaarden waaraan het systeem moet voldoen. Zij zijn bepalend voor de bruikbaarheid en wetenschappelijke geldigheid van het onderzoek.
 
-\textbf{Reproduceerbaarheid.} Voor de wetenschappelijke integriteit van de thesis moet elke experimentele run gebruikmaken van vooraf gedefinieerde pipelines, zodat resultaten verifieerbaar en herhaalbaar zijn. Mijn copromotor benadrukte dit expliciet: \textit{``For experiment reproducibility and your thesis, I recommend using predefined pipelines''}. Dit onderscheidt de experimentele opzet van een real-world productieomgeving, waar een dynamische orkestratilaag zoals PocketFlow de voorkeur verdient.
+\textbf{Reproduceerbaarheid.} Voor de wetenschappelijke integriteit van de thesis moet elke experimentele run gebruikmaken van vooraf gedefinieerde pipelines, zodat resultaten verifieerbaar en herhaalbaar zijn. Mijn copromotor benadrukte dit expliciet: \textit{``For experiment reproducibility and your thesis, I recommend using predefined pipelines''}. Dit onderscheidt de experimentele opzet van een real-world productieomgeving, waar een dynamisch orchestration framework zoals HyPSTER de voorkeur verdient.
 
-\textbf{Configureerbaarheid (white-box).} Kritieke logica, zoals de prompt-constructie en de metadata-verwerking, moet handmatig geïmplementeerd worden in plaats van te steunen op gesloten framework-functies. Mijn copromotor formuleerde dit als volgt: \textit{``be prepared to create the component ``by hand'' so that you have maximum control over the system''}. Dit sluit aan bij de keuze voor Haystack 2.x als \gls{rag}-framework, dat expliciete controle over de gegevensstroom tussen componenten mogelijk maakt \autocite{HaystackPipelines2026}.
+\textbf{Transparantie en Controleerbaarheid.} De logica van de pipeline moet transparant en handmatig aanpasbaar zijn (geen black-box) om de volledige controle te behouden over de gegevensverwerking.
 
-\textbf{Meertaligheid.} De gebruikte embedding-modellen moeten meertalig zijn om diverse internationale \gls{esg}-documenten te kunnen verwerken. Turtle Srl opereert in een meertalige context waarbij documenten in het Italiaans en Engels voorkomen. Dit sluit aan bij de selectiecriteria die mijn copromotor formuleerde: \textit{``try to identify 3 or 4 multilingual models''}.
+\textbf{Meertaligheid.} Embedding-modellen en \glspl{llm} moeten meertalig zijn om diverse \gls{esg}-documenten te kunnen verwerken en antwoorden te genereren.
 
 \textbf{Faithfulness (betrouwbaarheid).} Antwoorden moeten feitelijk consistent zijn met de opgehaalde brondocumenten om hallucinaties te voorkomen. In een audit-context is dit een absolute voorwaarde: \textit{``the generation component simply reports that information in the response''}. Dit vereiste wordt geëvalueerd via de faithfulness-metriek van het \gls{ragas}-framework \autocite{Es2024}.
 
@@ -53,10 +53,8 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     M & Bronvermelding (source attribution)          & Primaire functionele eis van Turtle Srl; vereist voor \gls{esg}-audits \\
     M & Context Recall                               & Als retrieval faalt, kan de \gls{llm} geen correct antwoord genereren \\
     M & Faithfulness                                 & Geen hallucinaties toegestaan in audit-context \autocite{Es2024} \\
-    M & Selectie van 3 embedding-modellen            & Sterk in retrieval \\
-    M & Selectie van 3 \glspl{llm}                   & Meertalig, instruction-tuned, open-source \\
-    M & Golden set van \gls{esg}-vragen              & Vereist voor alle \gls{ragas}-metrics (ground truth) \autocite{Es2024} \\
-    M & Haystack 2.x met custom componenten          & White-box controle over pipeline-logica \\
+    M & Gevalideerde test-set                        & Noodzakelijk voor de objectieve meting van systeemkwaliteit \autocite{Es2024} \\
+    M & Modulaire en transparante pipeline           & Maakt white-box controle mogelijk over pipeline-logica. \\
     M & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
     \midrule
     S & Answer Relevancy                             & Bepaalt de effectiviteit van de \gls{poc} \autocite{Es2024} \\
@@ -65,8 +63,9 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
     S & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
     \midrule
     C & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
+    C & Granulaire bronverwijzing (paginaniveau)     & De focus ligt op documentniveau; paginaniveau is gewenst maar niet essentieel voor de PoC. \\
     \midrule
-    W & Citation accuracy als kernmeting             & Specifieke paginavermelding is voor mijn copromotor geen belangrijke vereiste \\
+    W & Granulaire bronverwijzing op alineaniveau    & Hoewel het systeem verwijst naar de bron en het paginanummer, valt het identificeren van de exacte alinea-index binnen het PDF-document buiten de huidige technische scope.
     \bottomrule
   \end{tabular}
 \end{table}

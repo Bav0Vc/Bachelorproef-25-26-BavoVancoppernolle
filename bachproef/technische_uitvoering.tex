@@ -129,16 +129,16 @@ De Unstructured-converter wordt in de indexeringspipeline geconfigureerd via de 
 
 \begin{listing}[H]
 \begin{minted}{python}
-UnstructuredFileConverter(
-    api_url=unstructured_url,
-    document_creation_mode="one-doc-per-page",
-    unstructured_kwargs={
-      "strategy": "hi_res",
-      "languages": ["ita", "eng"],
-      "skip_infer_table_types": [],
-      "pdf_infer_table_structure": False,
-    },
-  )
+return UnstructuredFileConverter(
+  api_url=unstructured_url,
+  document_creation_mode="one-doc-per-page",
+  unstructured_kwargs={
+    "strategy": "hi_res",
+    "languages": ["ita", "eng"],
+    "skip_infer_table_types": [],
+    "pdf_infer_table_structure": False,
+  },
+)
 \end{minted}
 \caption[Unstructured converter-configuratie]{De Unstructured-converter is geconfigureerd om Italiaanse en Engelse documenten te ondersteunen en gebruikt de \texttt{hi\_res}-strategie om documenten met tabellen en afbeeldingen te kunnen verwerken.}
 \label{lst:unstructured-config}
@@ -241,8 +241,8 @@ De eerste chunker is een dunne wrapper rond de ingebouwde Haystack \texttt{Docum
 class FixedSizeWordSplitter:
   def __init__(self, split_length: int = 150, split_overlap: int = 20):
     self.internal_splitter = DocumentSplitter(
-      split_by="word",
-      split_length=split_length,
+      split_by="word", 
+      split_length=split_length, 
       split_overlap=split_overlap
     )
 
@@ -266,11 +266,11 @@ Het algoritme probeert tekstfragmenten eerst te scheiden op de meest structurele
 @component
 class RecursiveSplitter:
   def __init__(
-    self, 
-    separators: List[str] = ["\n\n", "\n", ".", " ", ""], 
-    split_length: int = 150, 
+    self,
+    separators: List[str] = ["\n\n", "\n", ".", " ", ""],
+    split_length: int = 150,
     split_overlap: int = 20
-  ):
+    ):
     self.internal_splitter = RecursiveDocumentSplitter(
       separators=separators,
       split_length=split_length,
@@ -308,7 +308,6 @@ class SemanticEmbeddingChunker:
     max_length: int = 1000,
     device: Optional[str] = None
   ):
-    hf_logging.set_verbosity_error()
 
     self.embedder = SentenceTransformersDocumentEmbedder(
       model=model_name, 
@@ -334,15 +333,13 @@ class SemanticEmbeddingChunker:
 \label{lst:semantic-chunker}
 \end{listing}
 
-Hoewel de kernlogica voor de tekstsplitsing gebruikmaakt van de robuuste implementaties binnen het Haystack-framework, zijn deze strategieën geëncapsuleerd in specifieke custom componenten. Deze architecturale beslissing is ingegeven door vier cruciale argumenten binnen de benchmark-methodologie:
+Hoewel de kernlogica voor de tekstsplitsing gebruikmaakt van de robuuste implementaties binnen het Haystack-framework, zijn deze strategieën geëncapsuleerd in specifieke custom componenten. Deze architecturale beslissing is ingegeven door drie cruciale argumenten binnen de benchmark-methodologie:
 
 Ten eerste garandeert deze abstractielaag een uniforme interface binnen de proefopstelling. Door elke strategie te wrappen in een gestandaardiseerd \texttt{@component}, kunnen de 27 unieke configuraties op een modulaire wijze door de pipeline worden gestroomlijnd zonder dat de orchestrator kennis hoeft te hebben van de onderliggende library-specifieke parameters.
 
-Ten tweede maakt deze aanpak het mogelijk om hyperparameters consistent af te dwingen. Door variabelen zoals de \mintinline{python}{split_length} en de modelonafhankelijke spliteenheid 'woorden' vast te leggen binnen de component-definitie, wordt gegarandeerd dat de vergelijking tussen de verschillende embedding-modellen valide blijft. Dit elimineert de kans op meetfouten die zouden ontstaan bij het gebruik van inconsistente, modelspecifieke tokenizers tijdens de chunking-fase.
+Ten tweede bevordert deze encapsulatie de reproduceerbaarheid van het experiment. De custom componenten fungeren als een 'contract' dat de exacte configuratie van de Haystack-splitters bevriest. Hierdoor is de proefopstelling onafhankelijk van eventuele wijzigingen in de standaardinstellingen van toekomstige framework-updates.
 
-Ten derde bevordert deze encapsulatie de reproduceerbaarheid van het experiment. De custom componenten fungeren als een 'contract' dat de exacte configuratie van de Haystack-splitters bevriest. Hierdoor is de proefopstelling onafhankelijk van eventuele wijzigingen in de standaardinstellingen van toekomstige framework-updates.
-
-Ten slotte biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde logica, zoals gedemonstreerd in de semantische chunker. Hierbij worden meerdere atomaire Haystack-componenten — een embedder en een splitter — gecombineerd tot één logische eenheid. Deze mate van granulariteit en controle is noodzakelijk om te voldoen aan de \emph{white-box} vereisten van dit onderzoek, waarbij elke stap in de gegevensstroom transparant en manipuleerbaar moet zijn.
+Ten derde biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde logica, zoals gedemonstreerd in de semantische chunker. Hierbij worden meerdere atomaire Haystack-componenten — een embedder en een splitter — gecombineerd tot één logische eenheid. Deze mate van granulariteit en controle is noodzakelijk om te voldoen aan de \emph{white-box} vereisten van dit onderzoek, waarbij elke stap in de gegevensstroom transparant en manipuleerbaar moet zijn.
 
 \section{Configuratiebeheer met HyPSTER}
 \label{sec:hypster-config}
@@ -364,7 +361,41 @@ def embedding_config(hp: HP):
     default="BAAI/bge-m3",
   )
 
-  return { "model": model, "api_model": model, "backend": "sentence-transformers", "dims": 1024 }
+  _prefixes = {
+    "intfloat/multilingual-e5-large-instruct": (
+        "Instruct: Given a question about ESG reporting and sustainability, retrieve the most relevant supporting passage\nQuery: ",
+        "",
+    ),
+    "Snowflake/snowflake-arctic-embed-l-v2.0": (
+        "Represent this sentence for searching relevant passages: ",
+        "",
+    ),
+    "BAAI/bge-m3": (
+        "Given a question about ESG reporting and sustainability, retrieve the most relevant supporting passage: ",
+        "",
+    ),
+  }
+  
+  query_prefix, doc_prefix = _prefixes.get(model, ("", ""))
+
+  _dims = {
+    "BAAI/bge-m3": 1024,
+    "Snowflake/snowflake-arctic-embed-l-v2.0": 256,
+    "intfloat/multilingual-e5-large-instruct": 1024,
+  }
+  _truncate_dim = {
+    "Snowflake/snowflake-arctic-embed-l-v2.0": 256,
+  }
+
+  return {
+    "model": model,
+    "api_model": model,
+    "backend": "sentence-transformers",
+    "dims": _dims[model],
+    "truncate_dim": _truncate_dim.get(model),
+    "query_prefix": query_prefix,
+    "doc_prefix": doc_prefix,
+  }
 \end{minted}
 \caption[HyPSTER embedding-configuratie: uniforme sentence-transformers backend]{Doordat alle embedding-modellen lokaal via \texttt{sentence-transformers} draaien, is de backend altijd identiek. Alle drie de modellen produceren 1.024-dimensionele vectoren.}
 \label{lst:hypster-embedding}
@@ -397,21 +428,23 @@ De \gls{llm}-configuratie koppelt elke modelnaam aan een \gls{api}-provider en e
 \begin{minted}{python}
 def llm_config(hp: HP):
   configs = {
-    "Qwen-2.5-14B-Instruct": {
+    "Gemma-3-27b-it": {
       "backend": "hf",
-      "api_model": "Qwen/Qwen2.5-14B-Instruct"
+      "api_model": "google/gemma-3-27b-it:scaleway",
+      "api_base_url": "https://router.huggingface.co/v1",
     },
     "Llama-3.3-70B-Instruct": {
       "backend": "hf",
-      "api_model": "meta-llama/Llama-3.3-70B-Instruct"
+      "api_model": "meta-llama/Llama-3.3-70B-Instruct:ovhcloud",
+      "api_base_url": "https://router.huggingface.co/v1",
     },
-    "Mistral-Large-2": {
+    "Mistral-Small-2603": {
       "backend": "mistral",
-      "api_model": "mistral-large-latest"
+      "api_model": "mistral-small-2603",
     },
   }
 
-  name = hp.select(list(configs.keys()), name="name", default="Qwen-2.5-14B-Instruct")
+  name = hp.select(list(configs.keys()), name="name", default="Gemma-3-27b-it")
     
   return { "name": name, **configs[name] }
 

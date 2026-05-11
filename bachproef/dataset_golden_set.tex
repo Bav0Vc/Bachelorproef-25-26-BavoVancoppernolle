@@ -1,2 +1,68 @@
-\chapter{\IfLanguageName{dutch}{Dataverzameling en opstellen van golden set}{Data collection and the creation of a golden set}}%
+\chapter{\IfLanguageName{dutch}{Dataverzameling en opstellen van golden dataset}{Data collection and the creation of a golden dataset}}%
 \label{ch:data-goldenset}
+
+In deze fase van het onderzoek wordt de basis gelegd voor de evaluatie van de verschillende \gls{rag}-configuraties. Om de nauwkeurigheid van een systeem te kunnen meten, zijn twee componenten essentieel: een representatieve bron-dataset en een golden dataset (een verzameling van vragen met de bijbehorende correcte antwoorden).
+
+\section{Beschrijving van de dataset}
+
+De dataset die voor dit onderzoek wordt gebruikt, is ter beschikking gesteld door Turtle S.r.l. Deze verzameling bevat een variëteit aan documenten die representatief zijn voor de informatiehuishouding van een productiebedrijf in het kader van \gls{esg}-rapportage.
+
+Om een realistische weerspiegeling van de bedrijfspraktijk te garanderen, bestaat de dataset uit diverse bestandsformaten: \textbf{.xlsx} voor gestructureerde data en berekeningen, \textbf{.docx} en \textbf{.doc} voor tekstuele beleidsstukken, en \textbf{.pdf} voor officiële rapportages en certificaten.
+
+De dataset bevat concreet de volgende type documenten:
+
+\begin{itemize}
+    \item \textbf{Beleidsdocumenten:} Documenten zoals de \textit{Politica Ambientale}, die de ambities op vlak van milieu en duurzaamheid beschrijven.
+    \item \textbf{Operationele rapporten:} Verslagen rond uitstoot, afval en duurzaamheid.
+    \item \textbf{Vragenlijsten en formulieren:} Documenten zoals een \textit{Supplier Self-Assessment Questionnaire} en de \textit{MVO zelfverklaring}.
+    \item \textbf{Kwaliteit en Certificering:} Documenten gerelateerd aan \gls{iso}-standaarden en technische fiches.
+\end{itemize}
+
+\section{De Golden Dataset}
+Om de prestaties van de \gls{rag}-pipeline objectief te kunnen kwantificeren, is er een 'golden dataset' opgesteld. Dit is een geannoteerde dataset die fungeert als de \textit{ground truth}. Voor elke vraag is handmatig vastgesteld wat het correcte antwoord is en in welk(e) brondocument(en) dit te vinden is.
+
+\subsection{Structuur van de Golden Dataset}
+
+De golden dataset is opgeslagen in een gestructureerd \gls{json}-formaat. De exacte structuur van een item uit de golden dataset wordt hieronder weergegeven:
+
+\begin{listing}[H]
+\begin{minted}{json}
+[
+  {
+    "question_id": "GS-01",
+    "question": "What is the company's total annual water withdrawal in cubic metres for 2024?",
+    "answer": {
+      "data_points": {
+        "Water withdrawal 2024 (m³)": 1.000
+      }
+    },
+    "ground_truth": "In 2024, the company's total water withdrawal was 1.000 m³.",
+    "expected_source": "water_bill.pdf",
+    "reference_contexts": {
+      "context_1": "Water consumption | m³ | 1.000 "
+    },
+    "source_page": 2,
+    "acceptable_sources": [
+      { "file": "year_report.pdf", "page": 25 }
+    ]
+  }
+]
+\end{minted}
+\caption{Exacte JSON-structuur van de golden dataset}
+\label{lst:goldenset-json}
+\end{listing}
+
+\subsection{Velddefinities}
+
+De verschillende velden in deze structuur hebben elk een specifieke functie binnen het evaluatieproces:
+
+\begin{itemize}
+    \item \textbf{question\_id:} Een unieke identificatiecode voor de vraag, wat toelaat om resultaten over verschillende testruns heen consistent te vergelijken.
+    \item \textbf{question:} De specifieke vraag gericht op het extraheren van \gls{esg}-data.
+    \item \textbf{answer (met data\_points):} Bevat de ruwe data en eenheden (zoals \gls{m3} of \gls{mwh}) die geëxtraheerd moeten worden.
+    \item \textbf{ground\_truth:} Het ideale antwoord, dat manueel geverifieerd is. Dit dient als referentie om de \textit{faithfulness} en \textit{answer correctness} van de \gls{llm} te meten.
+    \item \textbf{expected\_source:} De naam van het primaire bronbestand waar de informatie zich bevindt.
+    \item \textbf{reference\_contexts:} De exacte tekstfragmenten uit het brondocument die als bewijs dienen. Dit wordt gebruikt om de \textit{context recall} te berekenen.
+    \item \textbf{source\_page:} Het specifieke paginanummer in de bron, wat handmatige verificatie vergemakkelijkt en wordt gebruikt om \textit{source attribution} te evalueren.
+    \item \textbf{acceptable\_sources:} Alternatieve bronnen (en bijhorende paginanummers) waar dezelfde informatie gevonden kan worden, wat de robuustheid van de evaluatie verhoogt.
+\end{itemize}

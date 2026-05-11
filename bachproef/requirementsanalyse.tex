@@ -1,7 +1,7 @@
 \chapter{\IfLanguageName{dutch}{Requirements verzamelen}{Requirements gathering}}%
 \label{ch:requirementsanalyse}
 
-De voorgaande literatuurstudie legde de theoretische fundamenten van\\\gls{esg}-rapportage en \gls{rag} bloot. Dit hoofdstuk vertaalt die inzichten naar concrete eisen waaraan de te bouwen dynamische \gls{rag}-pipeline moet voldoen. De requirementsanalyse vormt de schakel tussen de probleemstelling en de technische implementatie: zij bepaalt welke criteria de optimale configuratie moet behalen en biedt de objectieve meetlat voor de vergelijkende studie in de latere fases.
+De voorgaande literatuurstudie legde de theoretische fundamenten van\\\gls{esg}-rapportage en \gls{rag} uit. Dit hoofdstuk vertaalt die inzichten naar concrete eisen waaraan de te bouwen dynamische \gls{rag}-pipeline moet voldoen. De requirementsanalyse vormt de schakel tussen de probleemstelling en de technische implementatie: zij bepaalt welke criteria de optimale configuratie moet behalen en biedt een objectief raamwerk voor de latere fases in de vergelijkende studie.
 
 De requirements werden verzameld via twee complementaire bronnen. Enerzijds werden semigestructureerde interviews en gesprekken via e-mail gevoerd met mijn copromotor en opdrachtgever, Gianluca Gueli van Turtle Srl, die als primaire belanghebbende de bedrijfsnoden vertolkt. Anderzijds werd de literatuurstudie aangewend om technische en wetenschappelijke eisen te concretiseren, in het bijzonder op het vlak van \gls{rag}-evaluatie \autocite{Es2024} en architecturale configureerbaarheid. De gecombineerde input werd gestructureerd via de MoSCoW-methode, een prioriteringstechniek die vereisten indeelt in vier categorieën: Must Have, Should Have, Could Have en Won't Have.
 
@@ -9,35 +9,29 @@ De requirements werden verzameld via twee complementaire bronnen. Enerzijds werd
 
 Functionele requirements beschrijven wat het systeem concreet moet kunnen doen. Zij zijn direct afgeleid van de bedrijfsnoden van Turtle Srl en de kerntaken van een \gls{rag}-pipeline.
 
-\textbf{Geautomatiseerde \gls{esg}-beantwoording.} Het systeem moet in staat zijn om automatisch antwoorden te genereren op vragen uit diverse \gls{esg}-vragenlijsten, zoals EcoVadis en \gls{vsme}. Dit is de kernfunctionaliteit van de te bouwen \gls{poc} en vloeit rechtstreeks voort uit de opdracht van mijn copromotor: \textit{``a chatbot capable of answering questions from various questionnaires''}.
+\textbf{Informatie-extractie uit complexe bronnen.} Het systeem moet in staat zijn om relevante data te extraheren uit diverse en ongestructureerde bestandsformaten. \gls{esg}-documenten bevatten informatie die wordt weergegeven in tabellen en tekstuele bijlagen binnen \gls{pdf}- en Excel-bestanden. De \gls{rag}-pipeline moet deze data effectief kunnen parsen en verwerken om inhoudelijk juiste antwoorden te garanderen.
 
-\textbf{Bronvermelding (source attribution).} Bij elk gegenereerd antwoord moet het systeem expliciet aangeven welke brondocumenten als basis dienden. Deze eis werd door mijn copromotor omschreven als essentieel: \textit{``It is essential for the system to clearly indicate which documents it used to generate each answer''}. Vanuit de literatuur wordt deze eis bevestigd door de juridische traceerbaarheidsvereisten van de \gls{csrd}, waarbij elke bewering in een \gls{esg}-rapport herleidbaar moet zijn naar brondocumentatie \autocite{Centre.2023}. In de technische implementatie wordt dit gerealiseerd via een aangepaste \textit{Metadata-Aware Prompt Builder} die chunks opmaakt met \gls{json} die bron- en paginametadata bevatten.
+\textbf{Meertalige ondersteuning (IT/EN).} Embedding-modellen en \glspl{llm} moeten meertalig zijn om diverse \gls{esg}-documenten te kunnen verwerken en antwoorden te genereren.
 
-\textbf{Multi-pillar \gls{esg}-ondersteuning.} De \gls{poc} moet informatie kunnen ontsluiten over de drie \gls{esg}-pijlers: Environmental, Social en Governance. Dit garandeert dat de vergelijkende studie representatief is voor de volledige breedte van de rapportage-eisen waarmee Turtle Srl geconfronteerd wordt.
+\textbf{Granulaire bronverwijzing (paginaniveau).} Naast het identificeren van het brondocument is het wenselijk dat het systeem de specifieke pagina vermeldt waar de informatie is gevonden. Dit verhoogt de efficiëntie voor de auditor aanzienlijk bij de handmatige verificatie van de gegenereerde output, aangezien het de zoektijd in omvangrijke rapporten reduceert.
 
-\textbf{Verifieerbare informatievoorziening.} Het systeem moet antwoorden genereren die uitsluitend gebaseerd zijn op verifieerbare, externe brondocumenten om de feitelijke juistheid te garanderen.
-
-\textbf{Documentverwerking en -cleaning.} Het systeem moet \gls{pdf}-bestanden kunnen inladen, opschonen en voorzien van metadata (zoals bestandsnaam, paginanummer of paginanaam).
-
-\textbf{Architecturale flexibiliteit.} De pipeline moet modulair zijn opgebouwd, zodat verschillende componenten (zoals chunking- en embedding-logica) uitwisselbaar zijn voor evaluatiedoeleinden.
+\textbf{Granulaire bronverwijzing op alineaniveau.} Hoewel een verwijzing op alineaniveau de hoogste precisie biedt, valt dit buiten de huidige scope van de \gls{poc}. De technische complexiteit bij het accuraat mappen van tekstfragmenten naar specifieke alinea's in ongestructureerde \gls{pdf}-documenten is hoog en de implementatie hiervan wordt in deze fase niet als kritiek beschouwd voor het aantonen van de basisfunctionaliteit.
 
 \section{Niet-functionele requirements}
 
 Niet-functionele requirements beschrijven de kwaliteitseisen en randvoorwaarden waaraan het systeem moet voldoen. Zij zijn bepalend voor de bruikbaarheid en wetenschappelijke geldigheid van het onderzoek.
 
-\textbf{Reproduceerbaarheid.} Voor de wetenschappelijke integriteit van de thesis moet elke experimentele run gebruikmaken van vooraf gedefinieerde pipelines, zodat resultaten verifieerbaar en herhaalbaar zijn. Mijn copromotor benadrukte dit expliciet: \textit{``For experiment reproducibility and your thesis, I recommend using predefined pipelines''}. Dit onderscheidt de experimentele opzet van een real-world productieomgeving, waar een dynamisch orchestration framework zoals HyPSTER de voorkeur verdient.
+\textbf{Juridische traceerbaarheid \& auditeerbaarheid.} Bij elk gegenereerd antwoord moet het systeem expliciet aangeven welk brondocument als basis dient. Deze eis werd door mijn copromotor omschreven als essentieel: \textit{``It is essential for the system to clearly indicate which documents it used to generate each answer''}. Vanuit de literatuur wordt deze eis bevestigd door de juridische traceerbaarheidsvereisten van de \gls{csrd}, waarbij elke bewering in een \gls{esg}-rapport herleidbaar moet zijn naar brondocumentatie \autocite{Centre.2023}.
 
-\textbf{Transparantie en Controleerbaarheid.} De logica van de pipeline moet transparant en handmatig aanpasbaar zijn (geen black-box) om de volledige controle te behouden over de gegevensverwerking.
+\textbf{Feitelijke betrouwbaarheid (faithfulness).} Antwoorden moeten feitelijk consistent zijn met de opgehaalde brondocumenten om hallucinaties te voorkomen. Deze vereiste wordt geëvalueerd via de faithfulness-metriek van het \gls{ragas}-framework \autocite{Es2024}.
 
-\textbf{Meertaligheid.} Embedding-modellen en \glspl{llm} moeten meertalig zijn om diverse \gls{esg}-documenten te kunnen verwerken en antwoorden te genereren.
+\textbf{Data soevereiniteit \& privacy.} Gezien de vertrouwelijkheid van de verwerkte bedrijfsgegevens is dataverwerking conform de Europese privacywetgeving een strikte vereiste. Om aan de \gls{gdpr}-richtlijnen te voldoen, moet worden gegarandeerd dat data uitsluitend binnen de \gls{eu} wordt opgeslagen en verwerkt. Deze eis stuurt de selectie naar in de \gls{eu} gevestigde providers en de inzet van modellen die lokaal of binnen een private cloudomgeving gehost kunnen worden.
 
-\textbf{Faithfulness (betrouwbaarheid).} Antwoorden moeten feitelijk consistent zijn met de opgehaalde brondocumenten om hallucinaties te voorkomen. In een audit-context is dit een absolute voorwaarde: \textit{``the generation component simply reports that information in the response''}. Dit vereiste wordt geëvalueerd via de faithfulness-metriek van het \gls{ragas}-framework \autocite{Es2024}.
+\textbf{Operationele efficiëntie (latency/performantie).} De responstijd en de scores op de \gls{ragas} metrics moeten per configuratie gemonitord worden. Een technisch optimale configuratie die in de praktijk te traag is of ondermaats scoort, heeft geen business value voor Turtle Srl.
 
-\textbf{Context recall (vindbaarheid).} De retrievalstap moet de relevante informatie daadwerkelijk uit de vectordatabase kunnen ophalen. mijn copromotor stelde dat dit de meest kritische stap is: \textit{``it's good enough if the retrieval component fetches it''}. Wanneer de retrieval faalt, kan de \gls{llm} per definitie geen correct antwoord genereren.
+\textbf{Azure-infrastructuur compatibiliteit \& integreerbaarheid.} De \gls{poc} van Turtle Srl wordt gehost op Azure. Dit stelt eisen aan de keuze van modellen en diensten: proprietaire modellen (OpenAI, Google) zijn beschikbaar via \glspl{api} die vanuit Azure aanroepbaar zijn, terwijl open-source modellen een Azure \gls{vm}- of containerdeployment vereisen.
 
-\textbf{Performantie (latency) en kostenefficiëntie.} De responstijd en de tokenkosten per configuratie moeten gemonitord worden. Een technisch optimale configuratie die in de praktijk te traag of te kostbaar is, heeft geen business value voor Turtle Srl. Dit sluit aan bij de operationele haalbaarheid van een schaalbare \gls{esg}-verwerkingspipeline.
-
-\textbf{Azure-compatibiliteit.} De \gls{poc} moet inzetbaar zijn op de Azure-infrastructuur van Turtle Srl. Dit stelt eisen aan de keuze van modellen en diensten: proprietaire modellen (OpenAI, Google) zijn beschikbaar via API's die vanuit Azure aanroepbaar zijn, terwijl open-source modellen een Azure VM- of containerdeployment vereisen.
+\textbf{Predefined pipelines (reproduceerbaarheid).} Voor de wetenschappelijke integriteit van de thesis moet elke experimentele run gebruikmaken van vooraf gedefinieerde pipelines, zodat resultaten verifieerbaar en herhaalbaar zijn. Dit onderscheidt de experimentele opzet van een real-world productieomgeving, waar een dynamisch configuratie framework zoals HyPSTER de voorkeur verdient.
 
 \section{Prioritering via MoSCoW}
 
@@ -45,29 +39,26 @@ Op basis van de bovenstaande requirements werd een geprioriteerde lijst opgestel
 
 \begin{table}[h]
   \centering
-  \caption[MoSCoW-prioritering van de requirements]{\label{tab:moscow}Geprioriteerde lijst van requirements voor de dynamische RAG-pipeline, ingedeeld volgens de MoSCoW-methode (M = Must Have, S = Should Have, C = Could Have, W = Won't Have).}
+  \caption[MoSCoW-prioritering van de requirements]{\label{tab:moscow}Geprioriteerde lijst van requirements voor de dynamische RAG-pipeline.}
   \begin{tabular}{p{0.04\textwidth} p{0.38\textwidth} p{0.50\textwidth}}
     \toprule
     \textbf{P} & \textbf{Requirement} & \textbf{Verantwoording} \\
     \midrule
-    M & Bronvermelding (source attribution)          & Primaire functionele eis van Turtle Srl; vereist voor \gls{esg}-audits \\
-    M & Context Recall                               & Als retrieval faalt, kan de \gls{llm} geen correct antwoord genereren \\
-    M & Faithfulness                                 & Geen hallucinaties toegestaan in audit-context \autocite{Es2024} \\
-    M & Gevalideerde test-set                        & Noodzakelijk voor de objectieve meting van systeemkwaliteit \autocite{Es2024} \\
-    M & Modulaire en transparante pipeline           & Maakt white-box controle mogelijk over pipeline-logica. \\
-    M & Variabele configuratieondersteuning          & Kern van de vergelijkende studie \\
+    M & Juridische traceerbaarheid                   & Elke bewering moet direct herleidbaar zijn naar brondocumentatie (essentieel voor \gls{csrd}-compliance). \\
+    M & Feitelijke betrouwbaarheid (faithfulness)    & Hallucinaties zijn onacceptabel in een audit-omgeving; de output moet 100\% steunen op de context. \\
+    M & Data soevereiniteit \& privacy               & Klantdata is strikt vertrouwelijk en moet binnen de \gls{eu}-jurisdictie verwerkt worden (\gls{gdpr}). \\
+    M & Informatie-extractie uit complexe bronnen    & Het vermogen om bruikbare antwoorden te destilleren uit heterogene \gls{pdf}- en Excel-bestanden. \\
     \midrule
-    S & Answer Relevancy                             & Bepaalt de effectiviteit van de \gls{poc} \autocite{Es2024} \\
-    S & Latency                                      & Operationele bruikbaarheid voor Turtle Srl \\
-    S & Azure-hosting compatibiliteit                & Productie-infrastructuur van Turtle Srl \\
-    S & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis \\
+    S & Meertalige ondersteuning (IT/EN)             & Directe verwerking van zowel Italiaanse als Engelse documenten zonder externe vertaalstap. \\
+    S & Operationele efficiëntie (latency/kosten)    & De balans tussen snelheid en token-kosten moet een rendabele businesscase mogelijk maken. \\
+    S & Azure-infrastructuur compatibiliteit         & De oplossing moet integreerbaar zijn in de bestaande cloud-omgeving van Turtle Srl. \\
+    S & Predefined pipelines (reproduceerbaarheid)   & Wetenschappelijke integriteit van de thesis waarborgen. \\
     \midrule
-    C & Context Precision                            & \gls{llm} kan ruis negeren zolang relevante info aanwezig is \\
-    C & Granulaire bronverwijzing (paginaniveau)     & De focus ligt op documentniveau; paginaniveau is gewenst maar niet essentieel voor de PoC. \\
+    C & Granulaire bronverwijzing (paginaniveau)     & Verhoogt het gebruiksgemak voor de auditor maar is geen harde blokkade voor de \gls{poc}. De focus ligt op documentniveau. \\
     \midrule
-    W & Granulaire bronverwijzing op alineaniveau    & Hoewel het systeem verwijst naar de bron en het paginanummer, valt het identificeren van de exacte alinea-index binnen het PDF-document buiten de huidige technische scope.
+    W & Granulaire bronverwijzing op alineaniveau    & De technische complexiteit van exacte alinea-mapping weegt in deze fase niet op tegen de meerwaarde. \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-De MoSCoW-prioritering maakt duidelijk dat de kern van dit onderzoek ligt bij het correct ophalen (context recall) en feitelijk rapporteren (faithfulness) van \gls{esg}-informatie, gecombineerd met aantoonbare bronvermelding. Deze drie Must-Have-requirements vormen samen de bepalende requirements waartegen alle 27 configuraties worden afgewogen in de experimentele fase.
+De MoSCoW-prioritering maakt duidelijk dat de kern van dit onderzoek rust op vier fundamentele pilaren: \textbf{juridische traceerbaarheid}, \textbf{feitelijke betrouwbaarheid} (\textit{faithfulness}), strikte \textbf{datasoevereiniteit} binnen de \gls{eu}-jurisdictie en de effectieve \textbf{informatie-extractie} uit complexe, heterogene bronnen. Deze vier Must-Have-requirements vormen samen het dwingende kader waartegen alle 27 configuraties in de experimentele fase worden geëvalueerd. Hierbij wordt bepaald welke technische invulling de optimale balans biedt tussen audit-waardigheid, privacy en performantie voor de specifieke casus van Turtle Srl.

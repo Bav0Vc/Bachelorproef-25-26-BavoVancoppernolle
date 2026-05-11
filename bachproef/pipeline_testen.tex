@@ -40,7 +40,7 @@ De negen indexeringen worden sequentieel uitgevoerd — niet parallel — omwill
 \subsection{Fase 2: Benchmark loop}
 \label{subsec:benchmarkloop}
 
-De benchmark loop doorloopt het volledige Cartesisch product van de 27 configuraties. Voor iedere configuratie worden alle vragen uit de golden set beantwoord. Dit \gls{json}-bestand bevat voor elke vraag naast de vraagtekst ook de ground truth, het verwachte brondocument, het verwachte paginanummer en de referentiecontexten — alle velden die later nodig zijn voor de \gls{ragas}-evaluatie.
+De benchmark loop doorloopt het volledige Cartesisch product van de 27 configuraties. Voor iedere configuratie worden alle vragen uit de golden dataset beantwoord. Dit \gls{json}-bestand bevat voor elke vraag naast de vraagtekst ook de ground truth, het verwachte brondocument, het verwachte paginanummer en de referentiecontexten — alle velden die later nodig zijn voor de \gls{ragas}-evaluatie.
 
 Voor elke configuratie wordt via HyPSTER een concreet configuratieobject aangemaakt en aan de querypipeline doorgegeven. De querypipeline embeddt elke vraag lokaal via het geconfigureerde \texttt{sentence-transformers}-model, zoekt in de corresponderende Qdrant-collectie naar de meest relevante chunks, maakt de prompt en roept de geconfigureerde \gls{llm} aan via de externe \gls{api}. Het resultaatobject voor elke vraag bevat naast het gegenereerde antwoord ook de opgehaalde contexten en de operationele metrieken omtrent latency en tokenverbruik.
 
@@ -57,7 +57,7 @@ Reproduceerbaarheid is een Must-Have-requirement van dit onderzoek (Hoofdstuk~\r
 
 \textbf{Vastgelegde modelversies.} Alle Python-afhankelijkheden zijn vastgelegd in \texttt{requirements.txt} met exacte versienummers. De embedding-modellen worden via hun HuggingFace-modelnaam en -revisie geladen; de gecachede versies in het Docker-volume blijven ongewijzigd gedurende het gehele experiment. De \gls{llm}-versies zijn vastgelegd via de \gls{api}-modelnaam in de HyPSTER-configuratie.
 
-\textbf{Identieke golden set over alle runs.} De golden set is een statisch \gls{json}-bestand dat niet wijzigt tussen runs. Elke configuratie wordt op exact dezelfde vragen in exact dezelfde volgorde geëvalueerd, waardoor de resultaten per configuratie direct vergelijkbaar zijn.
+\textbf{Identieke golden dataset over alle runs.} De golden dataset is een statisch \gls{json}-bestand dat niet wijzigt tussen runs. Elke configuratie wordt op exact dezelfde vragen in exact dezelfde volgorde geëvalueerd, waardoor de resultaten per configuratie direct vergelijkbaar zijn.
 
 \textbf{Logging van elke run.} Elk script dat via het hoofdscript wordt gestart, initialiseert een gestructureerde logger die alle uitvoer — inclusief timestamps, configuratielabels en foutmeldingen — naar een logbestand wegschrijft. De logbestandsnaam bevat de scriptnaam, datum en tijd, zodat de uitvoering en resultaten van elke run achteraf volledig herleidbaar zijn.
 
@@ -97,7 +97,7 @@ De testfase heeft twee vereiste invoerbestanden en produceert twee uitvoerbestan
 
 \textbf{Invoer:}
 \begin{itemize}
-    \item \texttt{questionnaire.json}: de golden set met alle vragen, grondwaarheden en referentiecontexten.
+    \item \texttt{questionnaire.json}: de golden dataset met alle vragen, grondwaarheden en referentiecontexten.
     \item De negen Qdrant-collecties die tijdens de indexeringsfase zijn aangemaakt.
 \end{itemize}
 

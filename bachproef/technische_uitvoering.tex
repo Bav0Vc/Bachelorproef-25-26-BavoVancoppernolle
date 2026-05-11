@@ -1,7 +1,7 @@
 \chapter{\IfLanguageName{dutch}{Technische uitvoering}{Technical implementation}}
 \label{ch:technische-uitvoering}
 
-De voorgaande fases resulteerden in concrete shortlists van drie variabele componenten die samen een testmatrix van $3^3 = 27$ unieke \gls{rag}-configuraties vormen (Sectie~\ref{ch:shortlist}), en de dataset en golden set die gebruikt wordt om de componenten op te testen (Hoofdstuk~\ref{ch:data-goldenset}). Dit hoofdstuk beschrijft hoe deze configuraties technisch zijn uitgewerkt tot een dynamische proefopstelling: welke technologieën werden gekozen en waarom, hoe de individuele componenten zijn geïmplementeerd en hoe de pipeline is opgebouwd. De uitvoering van de proefopstelling en de infrastructuur waarop ze draait, komen aan bod in Hoofdstuk~\ref{ch:pipeline-testen}.
+De voorgaande fases resulteerden in concrete shortlists van drie variabele componenten die samen een testmatrix van $3^3 = 27$ unieke \gls{rag}-configuraties vormen (Sectie~\ref{ch:shortlist}), en de dataset en golden dataset die gebruikt wordt om de componenten op te testen (Hoofdstuk~\ref{ch:data-goldenset}). Dit hoofdstuk beschrijft hoe deze configuraties technisch zijn uitgewerkt tot een dynamische proefopstelling: welke technologieën werden gekozen en waarom, hoe de individuele componenten zijn geïmplementeerd en hoe de pipeline is opgebouwd. De uitvoering van de proefopstelling en de infrastructuur waarop ze draait, komen aan bod in Hoofdstuk~\ref{ch:pipeline-testen}.
 
 \section{Haystack 2.x als orchestratieframework}
 \label{sec:haystack-keuze}
@@ -76,7 +76,7 @@ Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte acyclisc
     \draw[flow] (F) -- (W);
 
     % Query & Evaluation
-    \node[proc, below=70mm of A] (H) {Golden Set};
+    \node[proc, below=70mm of A] (H) {Golden Dataset};
     \node[proc, right=of H] (I) {Text Embedder};
     \node[proc, right=of I] (J) {Retriever};
     \node[proc, right=of J] (K) {Prompt Builder};
@@ -535,7 +535,7 @@ indexing_pipe.run({"converter": {"paths": all_file_paths}})
 \section{Querypipeline}
 \label{sec:query-pipeline}
 
-De querypipeline genereert voor elke van de 27 configuraties een antwoord op elke vraag uit de golden set. De pipeline is opgebouwd uit vier kerncomponenten: een tekstembedder, een Qdrant-retriever, een \texttt{PromptBuilder} en een \gls{llm}. De tekstembedder hanteert hierbij altijd hetzelfde embedding-model als gebruikt tijdens de indexeringsfase. Dit garandeert dat de queryvector en de documentvectoren zich in dezelfde vectorruimte bevinden, wat een betrouwbare semantische gelijkenisberekening mogelijk maakt. De \texttt{PromptBuilder} structureert vervolgens de opgehaalde contextfragmenten samen met de vraag tot een instructie voor de \gls{llm}, die op basis hiervan het finale antwoord formuleert.
+De querypipeline genereert voor elke van de 27 configuraties een antwoord op elke vraag uit de golden dataset. De pipeline is opgebouwd uit vier kerncomponenten: een tekstembedder, een Qdrant-retriever, een \texttt{PromptBuilder} en een \gls{llm}. De tekstembedder hanteert hierbij altijd hetzelfde embedding-model als gebruikt tijdens de indexeringsfase. Dit garandeert dat de queryvector en de documentvectoren zich in dezelfde vectorruimte bevinden, wat een betrouwbare semantische gelijkenisberekening mogelijk maakt. De \texttt{PromptBuilder} structureert vervolgens de opgehaalde contextfragmenten samen met de vraag tot een instructie voor de \gls{llm}, die op basis hiervan het finale antwoord formuleert.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -561,11 +561,11 @@ response = query_pipe.run(
 \section{Resultaatstructuur en vastgelegde metrieken}
 \label{sec:resultaat-structuur}
 
-Voor elke vraag in de golden set wordt een gedetailleerd resultaatwoordenboek samengesteld. Dit woordenboek bevat alle informatie die nodig is voor de latere evaluatie met \gls{ragas} en voor de vergelijkende statistische analyse:
+Voor elke vraag in de golden dataset wordt een gedetailleerd resultaatwoordenboek samengesteld. Dit woordenboek bevat alle informatie die nodig is voor de latere evaluatie met \gls{ragas} en voor de vergelijkende statistische analyse:
 
 \begin{itemize}
     \item \textbf{Identificatoren}: een uniek \texttt{question\_id}, de originele vraagstelling en de bijbehorende \gls{esg}-requirement waaraan de vraag gelinkt is.
-    \item \textbf{Grondwaarheid}: \texttt{ground\_truth}, \texttt{expected\_source}, \texttt{source\_page} en\\\texttt{reference\_contexts} uit de golden set, die als referentie dienen voor de \gls{ragas}-metrics.
+    \item \textbf{Grondwaarheid}: \texttt{ground\_truth}, \texttt{expected\_source}, \texttt{source\_page} en\\\texttt{reference\_contexts} uit de golden dataset, die als referentie dienen voor de \gls{ragas}-metrics.
     \item \textbf{Configuratie-informatie}: de namen van de gebruikte chunker, embedder en \gls{llm}, afzonderlijk en gecombineerd als \texttt{Configuration}-label.
     \item \textbf{Gegenereerd antwoord}: de volledige antwoordtekst zoals teruggegeven door de \gls{llm} na normalisatie via de hulpfunctie.
     \item \textbf{Opgehaalde contexten}: de tekstinhoud van de chunks die door de retriever werden geselecteerd, als lijst van tekenreeksen.

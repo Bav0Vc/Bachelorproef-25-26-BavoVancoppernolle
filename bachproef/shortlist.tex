@@ -3,20 +3,18 @@
 
 Op basis van de vergelijkingstabellen in de long list in Hoofdstuk~\ref{ch:longlist}, zijn per variabel component drie alternatieven geselecteerd. Deze shortlist vormt de inhoudelijke onderbouwing voor de experimentele fase, waarbij de selectie direct wordt getoetst aan de Must-Have requirements: juridische traceerbaarheid, feitelijke betrouwbaarheid (\textit{faithfulness}), strikte \gls{eu}-datasoevereiniteit en effectieve informatie-extractie uit complexe bronnen. De uiteindelijke selectie resulteert in een testmatrix van $3^3 = 27$ unieke configuraties.
 
-\section{Chunking-strategieën}
+\section{Chunkingstrategieën}
 \label{sec:shortlist-chunking}
 
 De geselecteerde strategieën dekken het spectrum tussen computationele efficiëntie en semantisch bewustzijn, wat cruciaal is voor de extractie uit heterogene \gls{esg}-documenten.
 
 \begin{itemize}
-    \item \textbf{Fixed-size chunking:} Deze strategie is onmisbaar als wetenschappelijke nulmeting. Het voldoet aan de requirement voor \textbf{reproduceerbaarheid} en biedt een referentiepunt om te bepalen of complexere methoden de extra computationele kosten rechtvaardigen~\autocite{BhatEtAl2025}.
-    \item \textbf{Recursive Character Splitting:} Geselecteerd omdat het de hiërarchische structuur van \gls{esg}-rapporten (paragrafen en lijsten) respecteert. Dit ondersteunt de requirement voor \textbf{operationele efficiëntie} door een optimale balans tussen contextbehoud en verwerkingssnelheid.
+    \item \textbf{Fixed-size chunking:} Deze strategie is onmisbaar als wetenschappelijke nulmeting. Deze voldoet aan het requirement betreffende \textbf{reproduceerbaarheid} en biedt een referentiepunt om te bepalen of complexere methoden de extra computationele kosten rechtvaardigen~\autocite{BhatEtAl2025}.
+    \item \textbf{Recursive Character Splitting:} Geselecteerd omdat het de hiërarchische structuur van \gls{esg}-rapporten (paragrafen en lijsten) respecteert. Dit ondersteunt het requirement betreffende \textbf{operationele efficiëntie} door een optimale balans tussen contextbehoud en verwerkingssnelheid.
     \item \textbf{Semantic Chunking:} Geselecteerd om de \textbf{context precision} te maximaliseren. Door te splitsen op basis van betekenisovergangen in de embeddings, blijven complexe \gls{esg}-concepten integraal bewaard in één chunk, wat de fragmentatie van kritieke audit-informatie voorkomt.
 \end{itemize}
 
 \subsection{Motivatie voor uitsluiting van alternatieven}
-
-\textit{Late Chunking} en \textit{Agentic Chunking} uitgesloten vanwege methodologische en infrastructurele barrières:
 
 \begin{itemize}
     \item \textbf{Document structure en sentence-based chunking:} Deze strategieën scoren over het algemeen te laag (laag tot gemiddeld) op de technische requirements in Tabel~\ref{tab:longlist-chunking-tabel}.
@@ -27,7 +25,7 @@ De geselecteerde strategieën dekken het spectrum tussen computationele efficië
 \section{Embeddingmodellen}
 \label{sec:shortlist-embedding}
 
-De selectie is gedreven door de noodzaak voor sterke \textbf{meertalige retrieval} (Italiaans/Engels) gecombineerd met \textbf{\gls{eu}-soevereiniteit} via open-source gewichten.
+De selectie is gedreven door de noodzaak van sterke \textbf{meertalige retrieval} (Italiaans/Engels) gecombineerd met \textbf{\gls{eu}-soevereiniteit} via open-weightmodellen.
 
 \begin{itemize}
     \item \textbf{BAAI BGE-M3:} Geselecteerd vanwege de sterke \textbf{retrievalkracht} door ondersteuning van hybride search (dense, sparse en multi-vector)~\autocite{Chen2024}. Dit is essentieel voor de extractie van zowel tekstuele nuances als numerieke data.
@@ -40,7 +38,7 @@ De selectie is gedreven door de noodzaak voor sterke \textbf{meertalige retrieva
 Bij de embeddingmodellen leidde de noodzaak voor een balans tussen meertaligheid en juridische veiligheid tot de uitsluiting van de volgende kandidaten:
 
 \begin{itemize}
-    \item \textbf{Cohere Embed-Multilingual-V3:} Dit model presteert uitstekend op talig vlak, maar is uitsluitend beschikbaar als gesloten cloud-service. Dit verhindert een volledig \textit{self-hosted} scenario, wat essentieel is voor de lange-termijnvisie op \textbf{datasoevereiniteit} bij Turtle Srl.
+    \item \textbf{Cohere Embed-Multilingual-V3:} Dit model presteert uitstekend op taalvlak, maar is uitsluitend beschikbaar als gesloten cloud-service. Dit verhindert een volledig \textit{self-hosted} scenario, wat essentieel is voor de lange-termijnvisie op \textbf{datasoevereiniteit} bij Turtle Srl.
     \item \textbf{Google Text-Embedding-004:} Bij dit model ontbreekt de \textit{instruction-tuning}. Zonder deze functionaliteit kan het model de zoekintentie niet verfijnen op basis van specifieke instructies, wat de nauwkeurigheid van de \textbf{informatie-extractie} bij complexe, meertalige vragen negatief beïnvloedt.
     \item \textbf{Alibaba GTE-Multilingual:} Hoewel de retrievalkracht hoog is, zorgt de jurisdictie van de aanbieder (China) voor een conflict met de vereiste van datasoevereiniteit voor Europese bedrijven.
     \item \textbf{Jina Embeddings-V2:} Ondanks de gewenste Europese herkomst, toonden vergelijkende studies aan dat dit model minder consistent scoort op \textbf{retrieval-nauwkeurigheid} bij technisch-juridische teksten. Voor een audit-tool is een "gemiddelde" score op dit punt onvoldoende om de vereiste \textit{faithfulness} te garanderen.
@@ -53,13 +51,7 @@ Hoewel de embeddingmodellen voor dit vergelijkend onderzoek lokaal worden gedraa
 \section{Large Language Models}
 \label{sec:shortlist-llm}
 
-Hoewel de modellen via de cloud worden aangeroepen (binnen de Azure \gls{eu}-regio), is de selectie strategisch gebaseerd op een vergelijking tussen een klein, middelgroot en groot model op basis van hun parameter-omvang. Dit laat toe om de correlatie tussen modelgrootte en de \textbf{faithfulness} van de antwoorden te kwantificeren.
-
-\begin{itemize}
-    \item \textbf{Google Gemma 3 27B IT (Middel / Efficiënt):} Met 27 miljard parameters dient dit model als de "middelgrote" uitdager. Het test of een compact, modern model voldoende redeneerkracht bezit voor complexe \gls{esg}-vragen tegen lagere kosten.
-    \item \textbf{Meta Llama 3.3 70B (Groot / High-end):} Geselecteerd als de huidige industriestandaard voor open-weights modellen. Met 70 miljard parameters fungeert dit model als het kwalitatieve ijkpunt voor \textbf{informatie-extractie uit complexe bronnen}.
-    \item \textbf{Mistral Small 4 (Groot / Native EU):} Met 119 miljard parameters (waarvan 6.5B actief tijdens inferentie via de MoE-architectuur) heeft dit model de grootste parametercount in de shortlist, gecombineerd met \textbf{EU-soevereiniteit} van de verwerkte data~\autocite{MistralAISmall42026}.
-\end{itemize}
+Hoewel de modellen via de cloud worden aangeroepen (binnen de Azure \gls{eu}-regio), is de selectie strategisch gebaseerd op een vergelijking tussen een klein, middelgroot en groot model op basis van hun parameter-omvang. Dit laat toe om de correlatie tussen modelgrootte en \textbf{faithfulness} van de antwoorden te kwantificeren.
 
 \begin{itemize}
     \item \textbf{Google Gemma 3 27B IT (Middel / Efficiënt):} Dit model test of een compact model voldoende redeneerkracht bezit voor \gls{esg}-vragen tegen lagere operationele kosten. De sterke \gls{json}-instructieopvolging is hierbij doorslaggevend~\autocite{GemmaTeam2025}.
@@ -77,6 +69,6 @@ Op basis van de longlist-evaluatie zijn zes modellen afgewezen voor de shortlist
     \item \textbf{DeepSeek-V3:} Vergelijkbaar met Qwen is dit model uitgesloten op grond van datasoevereiniteit. Het doorsturen van vertrouwelijke bedrijfsgegevens naar Chinese servers is onverenigbaar met de Europese wetgeving inzake gegevensbescherming~\autocite{HuangEtAl2024}.
     \item \textbf{Anthropic Claude 3.5 Sonnet:} Dit model is afgewezen omdat het geen native integratie biedt binnen Azure AI Foundry. Het vereist een externe \gls{api}-key, wat een ongewenste extra leveranciersafhankelijkheid introduceert en de \textbf{Azure-compatibiliteitseis} bemoeilijkt.
     \item \textbf{Cohere Command R+:} Hoewel ontworpen voor \gls{rag}, biedt dit model geen unieke testdimensie die niet reeds gedekt wordt door de geselecteerde modellen. Bovendien introduceert het een externe \gls{api}-provider die buiten het primaire Azure-ecosysteem van Turtle Srl valt.
-    \item \textbf{GPT-4o (Azure/OpenAI):} Hoewel beschikbaar via Azure, valt dit model onder de Amerikaanse \textbf{CLOUD Act}~\autocite{Rutherford2019}. Dit betekent dat Amerikaanse autoriteiten toegang kunnen eisen tot data beheerd door Amerikaanse bedrijven, ongeacht de serverlocatie. Dit botst met de requirement voor absolute \textbf{datasoevereiniteit} en de vereiste \textbf{white-box controle} over de modelarchitectuur.
+    \item \textbf{GPT-4o (Azure/OpenAI):} Hoewel beschikbaar via Azure, valt dit model onder de Amerikaanse \textbf{CLOUD Act}~\autocite{Rutherford2019}. Dit betekent dat Amerikaanse autoriteiten toegang kunnen eisen tot data beheerd door Amerikaanse bedrijven, ongeacht de serverlocatie. Dit botst met het requirement betreffende absolute \textbf{datasoevereiniteit} en de vereiste \textbf{white-box controle} over de modelarchitectuur.
 \end{itemize}
 

@@ -1,22 +1,14 @@
-%%=============================================================================
-%% Inleiding
-%%=============================================================================
-
 \chapter{\IfLanguageName{dutch}{Inleiding}{Introduction}}%
 \label{ch:inleiding}
 
-% De inleiding moet de lezer net genoeg informatie verschaffen om het onderwerp te begrijpen en in te zien waarom de onderzoeksvraag de moeite waard is om te onderzoeken. In de inleiding ga je literatuurverwijzingen beperken, zodat de tekst vlot leesbaar blijft. Je kan de inleiding verder onderverdelen in secties als dit de tekst verduidelijkt. Zaken die aan bod kunnen komen in de inleiding~\\autocite{Pollefliet2011}:
-
-De hedendaagse bedrijfswereld ondergaat een fundamentele overgang waarbij de focus verschuift van enkel financiële winstgevendheid naar een breder kader van duurzaamheid en maatschappelijke verantwoordelijkheid. Dit kader wordt aangeduid als \gls{esg}. Wat ooit begon als een vrijwillige deelname voor maatschappelijk verantwoord ondernemen, is vandaag de dag geëvolueerd naar een strikt juridisch gereguleerd landschap. Europese richtlijnen zoals de \gls{csrd} verplichten bedrijven tot een ongeëvenaarde mate van transparantie over hun impact op mens en milieu.
+De hedendaagse bedrijfswereld ondergaat een fundamentele overgang waarbij de focus verschuift van enkel financiële winstgevendheid naar een breder kader van duurzaamheid en maatschappelijke verantwoordelijkheid. Dit kader wordt aangeduid als \gls{esg}. Wat ooit begon als een vrijwillige deelname voor maatschappelijk verantwoord ondernemen, is vandaag de dag geëvolueerd naar een strikt juridisch gereguleerd landschap. Europese richtlijnen zoals de \gls{csrd} verplichten bedrijven zeer vergaande transparantie over hun impact op mens en milieu.
 
 Voor organisaties zoals Turtle Srl brengt deze evolutie een beduidende administratieve en technologische werklast met zich mee. Bedrijven worden geconfronteerd met gedetailleerde \gls{esg}-vragenlijsten en de daarbij horende standaarden zoals de \gls{esrs}. Het correct beantwoorden van deze vragen vereist het doorzoeken van grote hoeveelheden ongestructureerde data. Hoewel \glspl{llm} een mogelijkheid bieden om dit proces te automatiseren, kampen ze met fundamentele tekortkomingen zoals hallucinaties en een gebrek aan domeinspecifieke bedrijfskennis.
 
-Deze bachelorproef onderzoekt hoe \gls{rag} kan ingezet worden om een betrouwbaar, transparant en performant \gls{rag}-configuratie te bekomen dat Turtle Srl kan helpen bij het ontwikkelen van hun \gls{poc} rond interne \gls{esg}-rapportage.
+Deze bachelorproef onderzoekt hoe \gls{rag} kan ingezet worden om een betrouwbare, transparante en performante \gls{rag}-configuratie te bekomen dat Turtle Srl kan helpen bij het ontwikkelen van hun \gls{poc} rond interne \gls{esg}-rapportage.
 
 \section{\IfLanguageName{dutch}{Probleemstelling}{Problem Statement}}%
 \label{sec:probleemstelling}
-
-% Uit je probleemstelling moet duidelijk zijn dat je onderzoek een meerwaarde heeft voor een concrete doelgroep. De doelgroep moet goed gedefinieerd en afgelijnd zijn. Doelgroepen als ``bedrijven,'' ``KMO's'', systeembeheerders, enz.~zijn nog te vaag. Als je een lijstje kan maken van de personen/organisaties die een meerwaarde zullen vinden in deze bachelorproef (dit is eigenlijk je steekproefkader), dan is dat een indicatie dat de doelgroep goed gedefinieerd is. Dit kan een enkel bedrijf zijn of zelfs één persoon (je co-promotor/opdrachtgever).
 
 De kern van het probleem situeert bevindt zich op het snijvlak van juridische compliance omtrent \gls{esg} en de technologische beperkingen van ‘stand-alone’ \glspl{llm}. Turtle Srl moet voldoen aan steeds strengere rapportage-eisen, maar deze data handmatig verwerken, of met behulp van \glspl{llm} is een tijdrovende en foutgevoelige taak.
 
@@ -50,16 +42,14 @@ Om deze hoofdvraag te beantwoorden, worden de volgende deelvragen onderzocht:
 \section{\IfLanguageName{dutch}{Onderzoeksdoelstelling}{Research objective}}%
 \label{sec:onderzoeksdoelstelling}
 
-% Wat is het beoogde resultaat van je bachelorproef? Wat zijn de criteria voor succes? Beschrijf die zo concreet mogelijk. Gaat het bv.\ om een proof-of-concept, een prototype, een verslag met aanbevelingen, een vergelijkende studie, enz.
-
 Het beoogde resultaat van deze bachelorproef is een vergelijkende studie en een technisch adviesrapport voor de realisatie van een \gls{poc} voor Turtle Srl.
 
-De criteria voor succes zijn als volgt gedefinieerd:
+De kritische succesfactoren zijn als volgt gedefinieerd:
 
 \begin{itemize}
   \item Betrouwbaarheid: Het systeem moet een faithfulness-score (getrouwheid aan de bron) behalen die hallucinaties tot een minimum beperkt.
   \item Traceerbaarheid: Elk gegenereerd antwoord moet voorzien zijn van correcte source attribution, waarbij direct verwezen wordt naar de metadata (bestandsnaam en paginanummer) in de vector database.
-  \item Efficiëntie: De gekozen configuratie moet een optimaal evenwicht bieden tussen de rekenkosten (token-verbruik) en de snelheid van antwoorden (latency). Aangezien dat, naast het voldoen aan de technische requirements, de \gls{poc} van Turtle Srl die zal volgen uit dit onderzoek ook business value moet zal moeten hebben.
+  \item Efficiëntie: De gekozen configuratie moet een optimaal evenwicht bieden tussen de rekenkosten (token-verbruik) en de snelheid van antwoorden (latency). Aangezien dat, naast het voldoen aan de technische requirements, de \gls{poc} van Turtle Srl die zal volgen uit dit onderzoek ook business value zal moeten hebben.
   \item Modulariteit: De voorgestelde architectuur moet dynamisch zijn, wat betekent dat componenten (zoals een embedding model) vervangen kunnen worden zonder de gehele pipeline te herschrijven.
 \end{itemize}
 

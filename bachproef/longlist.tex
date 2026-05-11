@@ -1,12 +1,12 @@
 \chapter{\IfLanguageName{dutch}{Long list}{Long list}}%
 \label{ch:longlist}
 
-Op basis van de requirementsanalyse in Hoofdstuk~\ref{ch:requirementsanalyse} worden in dit hoofdstuk alle mogelijke alternatieven per variabel component van de \gls{rag}-pipeline in kaart gebracht. Het doel van de long list is om via een literatuuronderzoek zo veel mogelijk kandidaten te identificeren. Per component worden alle gevonden alternatieven besproken, inclusief de opties die uiteindelijk in de short list zullen terechtkomen. Vervolgens worden ze samengebracht in een vergelijkingstabel die toont in welke mate elk alternatief voldoet aan de gedefinieerde requirements. Op basis van die tabel wordt per component duidelijk welke drie alternatieven het sterkst scoren en bijgevolg worden overgenomen in de short list.
+Op basis van de requirementsanalyse in Hoofdstuk~\ref{ch:requirementsanalyse} worden in dit hoofdstuk alle mogelijke alternatieven per variabele component van de \gls{rag}-pipeline in kaart gebracht. Het doel van de long list is om via een literatuuronderzoek zo veel mogelijk kandidaten te identificeren. Per component worden alle gevonden alternatieven besproken, inclusief de opties die uiteindelijk in de short list zullen terechtkomen. Vervolgens worden ze samengebracht in een vergelijkingstabel die toont in welke mate elk alternatief voldoet aan de gedefinieerde requirements. Op basis van die tabel wordt per component duidelijk welke drie alternatieven het sterkst scoren en bijgevolg worden overgenomen in de short list.
 
-\section{Chunking-strategieën}
+\section{chunkingstrategieën}
 \label{sec:longlist-chunking}
 
-Chunking is de eerste en bepalende stap in de indexeringsfase van een \gls{rag}-pipeline. De keuze van chunkingstrategie heeft een directe impact op de kwaliteit van de retrieval: te kleine chunks verliezen de semantische samenhang van een passage, terwijl te grote chunks onnodig ruis introduceren in de context die aan het \gls{llm} wordt meegegeven~\autocite{Moro2025}. De literatuur identificeert de volgende families van chunking-strategieën als mogelijke kandidaten.
+Chunking is de eerste en bepalende stap in de indexeringsfase van een \gls{rag}-pipeline. De keuze van chunkingstrategie heeft een directe impact op de kwaliteit van de retrieval: te kleine chunks verliezen de semantische samenhang van een passage, terwijl te grote chunks onnodig ruis introduceren in de context die aan het \gls{llm} wordt meegegeven~\autocite{Moro2025}. De literatuur identificeert de volgende families van chunkingstrategieën als mogelijke kandidaten.
 
 \subsection{Fixed-size chunking}
 
@@ -36,19 +36,19 @@ Bij agentic chunking bepaalt een \gls{llm}-agent per passage waar een logische g
 
 Late chunking keert de volgorde van embedden en segmenteren om, waardoor globale documentcontext behouden blijft in elke chunk-embedding~\autocite{Guenther2024}. De zwakte van deze methode ligt in de infrastructuur: het vereist een context-window van minimaal 8k tokens en diepe integratie in de embedding-logica. Voor omvangrijke documenten binnen een Azure-omgeving leidt dit tot beperkingen in geheugenbeheer en een gebrek aan "white-box" controle over het proces.
 
-\subsection{Vergelijkingstabel chunking-strategieën}
+\subsection{Vergelijkingstabel chunkingstrategieën}
 
 Om de geschiktheid van elke strategie voor de casus van Turtle Srl te beoordelen, worden de volgende criteria gehanteerd in Tabel~\ref{tab:longlist-chunking-tabel}:
 
 \begin{itemize}
-  \item \textbf{Contextbehoud (RC-01):} De mate waarin de chunk de omliggende informatie behoudt die nodig is om de tekst te begrijpen. Een hoog contextbehoud voorkomt dat het \gls{llm} "gefragmenteerde" informatie ontvangt.
+  \item \textbf{Contextbehoud (RC-01):} De mate waarin de chunk de omliggende informatie behoudt die nodig is om de tekst te begrijpen. Een hoog contextbehoud voorkomt dat het \gls{llm} ``gefragmenteerde'' informatie ontvangt.
   \item \textbf{Logische samenhang (RC-02):} De logische eenheid van de chunk. Strategieën met een hoge samenhang zorgen ervoor dat één chunk over één specifiek onderwerp gaat, wat de antwoordkwaliteit verhoogt.
   \item \textbf{Context precision (RC-03):} De nauwkeurigheid van de retrieval. Dit geeft aan of de opgehaalde chunks daadwerkelijk de meest relevante informatie bevatten zonder overbodige ruis.
   \item \textbf{Consistentie (RC-04):} De voorspelbaarheid van de chunkgrootte. Zeer consistente groottes (zoals bij fixed-size) zorgen voor stabiele latency en tokenverbruik, terwijl inconsistente groottes de verwerking kunnen bemoeilijken.
   \item \textbf{Complexiteit (RC-05):} De technische inspanning en computationele middelen die nodig zijn voor de implementatie en uitvoering.
 \end{itemize}
 
-Tabel~\ref{tab:longlist-chunking-tabel} brengt alle besproken chunking-strategieën samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl. Om de objectiviteit te waarborgen, worden de strategieën gescoord op een ordinale schaal van 1 tot 5.
+Tabel~\ref{tab:longlist-chunking-tabel} brengt alle besproken chunkingstrategieën samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl. Om de objectiviteit te waarborgen, worden de strategieën gescoord op een ordinale schaal van 1 tot 5.
 
 \begin{table}[ht]
 \centering
@@ -66,8 +66,7 @@ Late chunking                & 5 & 5 & 4 & 3 & 1 \\
 Agentic chunking             & 5 & 5 & 5 & 1 & 1 \\
 \bottomrule
 \end{tabular}
-\caption{Vergelijking van chunking-strategieën op een ordinale schaal (1-5).}
-\label{tab:longlist-chunking-tabel}
+\caption[Longlist: vergelijkingstabel chunkingstrategieën]{\label{tab:longlist-chunking-tabel}Vergelijking van chunkingstrategieën op een ordinale schaal (1-5).}
 \vspace{2mm}
 \footnotesize{\textbf{Legenda (RC-01 t/m RC-04):} 1 = Zeer laag, 2 = Laag, 3 = Gemiddeld, 4 = Hoog, 5 = Zeer hoog. \\ \textbf{Legenda (RC-05 Complexiteit):} 1 = Zeer complex, 3 = Gemiddeld, 5 = Zeer eenvoudig/laag.}
 \end{table}
@@ -83,15 +82,15 @@ Snowflake arctic-embed-l-v2.0, beschreven door~\textcite{YuEtAl2024}, is een 303
 
 \subsection{BAAI BGE-M3}
 
-BGE-M3, gepubliceerd door het Beijing Academy of Artificial Intelligence, introduceert een unieke combinatie van drie retrievalfunctionaliteiten via één modelgewicht: dense retrieval (semantisch zoeken via cosine-gelijkenis), sparse retrieval (trefwoordzoeken via geleerde gewichten) en multi-vector retrieval (ColBERT-stijl token-niveau matching)~\autocite{Chen2024}. Het is het eerste embedding-model dat deze drie functionaliteiten combineert. Verdere specificaties zijn ondersteuning voor meer dan 100 talen en een maximale inputlengte van 8.192 tokens. De multi-vector uitvoer sluit naadloos aan bij Qdrant's native ondersteuning voor hybride zoekopdrachten via \gls{rrf}~\autocite{QdrantHybrid2025}. Dit is bijzonder relevant voor \gls{esg}-vragenlijsten waarbij zowel semantisch als op trefwoord gezocht moet kunnen worden. De beperking is de infrastructuurkost: als open-source model vereist BGE-M3 lokale inferentie of een containerized Azure-deployment.
+BGE-M3, gepubliceerd door het Beijing Academy of Artificial Intelligence, introduceert een unieke combinatie van drie retrievalfunctionaliteiten via één modelgewicht: dense retrieval (semantisch zoeken via cosine-gelijkenis), sparse retrieval (trefwoordzoeken via geleerde gewichten) en multi-vector retrieval (ColBERT-stijl token-niveau matching)~\autocite{Chen2024}. Het is het eerste embedding-model dat deze drie functionaliteiten combineert. Verdere specificaties zijn ondersteuning voor meer dan 100 talen en een maximale inputlengte van 8.192 tokens. De multi-vector uitvoer sluit naadloos aan bij Qdrant's native ondersteuning voor hybride zoekopdrachten via \gls{rrf}~\autocite{QdrantHybrid2025}. Dit is bijzonder relevant voor \gls{esg}-vragenlijsten waarbij zowel semantisch als op trefwoord gezocht moet kunnen worden. De beperking is de infrastructuurkost: als open-source model vereist BGE-M3 lokale hosting of een containerized Azure-deployment.
 
 \subsection{Microsoft multilingual-e5-large-instruct}
 
-De E5-modelfamilie van Microsoft Research introduceerde het concept van \textit{query-} en \textit{passage-}prefixen als instruction-tuning mechanisme~\autocite{WangEtAl2022}. Mijn variant multilingual-e5-large-instruct, beschreven door~\textcite{WangEtAl2024b}, initialiseert vanuit xlm-roberta-large, ondersteunt 100 talen en is getraind op 1 miljard meertalige tekstparen. Door simpelweg \texttt{query:} voor een vraag en \texttt{passage:} voor een documentchunk te plaatsen, dwingt men het model de asymmetrische relatie tussen vraag en antwoord te modelleren~\autocite{Wang2024a}. Vergeleken met BGE-M3 is dit model lichter in gewicht, wat snellere lokale inferentie op een Azure-server mogelijk maakt. De beperking is de afwezigheid van hybride zoekfunctionaliteit.
+De E5-modelfamilie van Microsoft Research introduceerde het concept van \textit{query-} en \textit{passage-}prefixen als instruction-tuning mechanisme~\autocite{WangEtAl2022}. Multilingual-e5-large-instruct, beschreven door~\textcite{WangEtAl2024b}, initialiseert vanuit xlm-roberta-large, ondersteunt 100 talen en is getraind op 1 miljard meertalige tekstparen. Door simpelweg \texttt{query:} voor een vraag en \texttt{passage:} voor een documentchunk te plaatsen, dwingt men het model de asymmetrische relatie tussen vraag en antwoord te modelleren~\autocite{Wang2024a}. Vergeleken met BGE-M3 is dit model lichter in gewicht, wat snellere lokale hosting op een Azure-server mogelijk maakt. De beperking is de afwezigheid van hybride zoekfunctionaliteit.
 
 \subsection{Cohere embed-multilingual-v3.0}
 
-Cohere's embed-multilingual-v3.0 is een sterk commercieel model dat specifiek getraind is voor search- en retrieval-taken en uitstekend presteert op de \gls{mteb}-leaderboard voor meertalige taken~\autocite{MuennighoffEtAl2023}. Echter, de \gls{poc} maakt reeds gebruik van de Azure-infrastructuur met OpenAI-integratie. Het toevoegen van Cohere als derde externe \gls{api}-provider verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen ten opzichte van text-embedding-3-large, dat de proprietaire categorie reeds afdekt.
+Cohere's embed-multilingual-v3.0 is een sterk commercieel model dat specifiek getraind is voor search- en retrieval-taken en uitstekend presteert op het \gls{mteb}-leaderboard voor meertalige taken~\autocite{MuennighoffEtAl2023}. Echter, de \gls{poc} maakt reeds gebruik van de Azure-infrastructuur met OpenAI-integratie. Het toevoegen van Cohere als derde externe \gls{api}-provider verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen ten opzichte van text-embedding-3-large, dat de proprietaire categorie reeds afdekt.
 
 \subsection{Google text-embedding-004}
 
@@ -137,11 +136,10 @@ Google Text-Embedding-004    & 5 & 1 & 4 & 1 \\
 Jina Embeddings-V2 (Base)    & 5 & 1 & 3 & 5 \\
 Alibaba GTE-Multilingual     & 5 & 5 & 4 & 1 \\
 Nomic Embed-Text-V1.5        & 2 & 5 & 3 & 5 \\
-Engelstalige modellen (alg.) & 1 & 3 & 3 & 3 \\
+Engelstalige modellen (alg.) & 1 & n.v.t. & n.v.t. & n.v.t. \\
 \bottomrule
 \end{tabular}
-\caption{Vergelijking van embedding-modellen op een ordinale schaal (1-5).}
-\label{tab:embedding-models}
+\caption[Longlist: vergelijkingstabel embeddingmodellen]{\label{tab:embedding-models}Vergelijking van embedding-modellen op een ordinale schaal (1-5).}
 \vspace{2mm}
 \footnotesize{\textbf{Legenda:} 1 = Voldoet niet/Zwak, 2 = Matig, 3 = Gemiddeld, 4 = Goed, 5 = Voldoet volledig/Uitstekend. \\ \textbf{RE-04:} 5 = Native EU/Open Source, 1 = US/CN Cloud.}
 \end{table}
@@ -154,7 +152,7 @@ Het \gls{llm} vormt de generatieve kern van de \gls{rag}-pipeline. Het ontvangt 
 
 \subsection{Qwen 2.5 14B Instruct}
 
-Qwen 2.5 14B Instruct, beschreven in het technisch rapport van het Qwen Team~\autocite{QwenTeam2025}, is een 14 miljard parameter instruc\-tie\-geoptimaliseerd model dat uitgebracht is onder de Apache 2.0-licentie. Het model behaalt een \gls{mmlu}-score van 79,7\% en beschikt over een context window van 128.000 tokens. Een specifiek sterkte\-punt voor de \gls{rag}-pipeline van dit onderzoek is de expliciete post-trainingsoptimalisatie voor gestructureerde output en \gls{json}-instructieopvolging~\autocite{QwenTeam2025}, wat cruciaal is voor de Metadata-Aware Prompt Builder die bronvermeldingen via gestructureerde tags verwacht. Op de Vectara Hallucination Leaderboard haalt de Qwen 2.5-familie 4,8 tot 5,9\% hallucinatiescores — beduidend beter dan de meeste alternatieve open-source modellen in dezelfde parameterklasse~\autocite{TamberEtAl2025}. Het model ondersteunt 29 talen, waaronder Italiaans en Engels, en kan op een enkele Azure VM worden gehost via vLLM.
+Qwen 2.5 14B Instruct, beschreven in het technisch rapport van het Qwen Team~\autocite{QwenTeam2025}, is een 14 miljard parameter instruc\-tie\-geoptimaliseerd model dat uitgebracht is onder de Apache 2.0-licentie. Het model behaalt een \gls{mmlu}-score van 79,7\% en beschikt over een context window van 128.000 tokens. Een specifiek sterkte\-punt voor de \gls{rag}-pipeline van dit onderzoek is de expliciete post-trainingsoptimalisatie voor gestructureerde output en \gls{json}-instructieopvolging~\autocite{QwenTeam2025}, wat cruciaal is voor de Metadata-Aware Prompt Builder die bronvermeldingen via gestructureerde tags verwacht. Op het Vectara Hallucination Leaderboard haalt de Qwen 2.5-familie 4,8 tot 5,9\% hallucinatiescores — beduidend beter dan de meeste alternatieve open-source modellen in dezelfde parameterklasse~\autocite{TamberEtAl2025}. Het model ondersteunt 29 talen, waaronder Italiaans en Engels, en kan op een enkele Azure VM worden gehost via vLLM.
 
 Een significante beperking vanuit het perspectief van data governance is echter de herkomst van het model: Qwen 2.5 is ontwikkeld door Alibaba Cloud, een Chinese aanbieder~\autocite{QwenTeam2025}. Cloud-gebaseerde deployment via officiële \gls{api}-endpoints valt buiten de \gls{eu}-jurisdictie en impliceert gegevensoverdracht naar servers buiten de Europese Unie, wat onverenigbaar is met \gls{gdpr}-naleving voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl. Hoewel lokale deployment op een Azure VM technisch mogelijk is, biedt Alibaba geen formele \gls{eu}-soevereiniteitsgaranties, waardoor dit model op de \gls{gdpr}/\gls{eu}-soevereiniteitseis fundamenteel tekortschiet ten opzichte van \gls{eu}-gevestigde aanbieders in deze evaluatie.
 
@@ -164,7 +162,7 @@ Llama 3.3 70B Instruct, gepubliceerd door Meta~\autocite{GrattafioriEtAl2024}, i
 
 \subsection{Mistral AI Mistral Large 2}
 
-Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit.~\textcite{MistralAIBlog2024} documenteren 123 miljard parameters, een context window van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt.~\textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder \gls{gqa} die de latency bij inferentie verlaagt.
+Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit.~\textcite{MistralAIBlog2024} documenteert 123 miljard parameters, een context window van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt.~\textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder \gls{gqa} die de latency bij self-hosting verlaagt.
 
 Een fundamentele beperking voor de specifieke use case van dit onderzoek is echter dat Mistral Large 2 \textit{geen} instruction-tuned variant is: het model mist de post-training fine-tuning die essentieel is voor betrouwbare instructieopvolging in een interactieve chatbot-context. De \gls{poc} van Turtle Srl is een \gls{rag}-gebaseerde chatbot waarbij het \gls{llm} complexe systeemprompts, gestructureerde \gls{json}-output-instructies en bronvermeldingsconventies moet naleven. Instruction-tuning is een expliciete Must-Have-requirement uit de requirementsanalyse: een basismodel dat niet expliciet post-training gefinetuned is voor instructieopvolging, is fundamenteel ongeschikt voor deze toepassing, ongeacht zijn sterke benchmarkprestaties op algemene taken.
 
@@ -219,8 +217,7 @@ DeepSeek-V3              & 5 & 3 & 5 & 1 \\
 Qwen 2.5 14B Instruct    & 1 & 5 & 5 & 1 \\
 \bottomrule
 \end{tabular}
-\caption{Vergelijking van Large Language Models op een ordinale schaal (1-5).}
-\label{tab:llm-comparison}
+\caption[Longlist: vergelijkingstabel \glspl{llm}]{\label{tab:llm-comparison}Vergelijking van Large Language Models op een ordinale schaal (1-5).}
 \vspace{2mm}
 \footnotesize{\textbf{Legenda:} 1 = Zeer ongunstig/Gesloten, 3 = Gemiddeld, 5 = Zeer gunstig/Open/Native EU. \\ \textbf{RL-01 (Modelomvang):} 1 = Klein, 5 = Zeer groot.}
 \end{table}

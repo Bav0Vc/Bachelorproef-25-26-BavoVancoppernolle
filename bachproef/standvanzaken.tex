@@ -70,12 +70,14 @@ Dit proces wordt ook beschreven als een model dat twee componenten combineert. D
 Voor het vergelijken van verschillende variabele componenten in een \gls{rag}-systeem, is een dynamische architectuur nodig die de variabiliteit van componenten ondersteunt.
 
 \subsubsection{Component-gebaseerde architectuur}
+\label{subsubsec:componentgebaseerde-architectuu}
 
 Pipeline-orchestration binnen \gls{rag} verwijst naar het beheer van de gegevensstroom tussen de retriever, de generator en de tussenliggende verwerkingsstappen~\autocite{Zhang2025GenAI}. In moderne \gls{rag}-architecturen is een verschuiving merkbaar van rigide, lineaire ketens (chains) naar flexibele, graafgebaseerde workflows (\glspl{dag}).
 
 Voor dit onderzoek wordt Haystack 2.x ingezet. Waar eerdere versies van dergelijke frameworks vaak rigide waren, introduceert Haystack 2.x een architectuur gebaseerd op een gerichte graaf~\autocite{HaystackPipelines2026}. Elke stap in de pipeline dient als een onafhankelijk component met strikt gedefinieerde in- en uitgangen (sockets). Deze dynamiek is cruciaal voor de \gls{esg}-casus van Turtle Srl, aangezien het toelaat om metadata (zoals paginanummers uit Qdrant) op een transparante manier door te geven aan de generation laag zonder de integriteit van de tekstfragmenten te verstoren~\autocite{HaystackMetadataRouter2026}.
 
 \subsubsection{Chunking}
+\label{subsubsec:chunking}
 
 De eerste variabele component in de \gls{rag}-pipeline voor dit onderzoek is de chunking strategie. Chunking is de techniek waarbij documenten worden opgesplitst in kleinere tekstdelen, die chunks worden genoemd. De manier waarop documenten worden opgedeeld, bepaalt welke informatie kan worden opgehaald en hoe efficiënt de \gls{llm} relevante antwoorden kan genereren met deze informatie~\autocite{Moro2025}.
 
@@ -144,6 +146,7 @@ Voor de \gls{poc} van Turtle Srl zijn klassieke benchmarks (\gls{blue}, \gls{rou
 Hoewel geautomatiseerde frameworks de noodzaak voor grootschalige handmatige controle beperken, blijft het principe van de \textit{human-in-the-loop} essentieel binnen de audit-context van Turtle Srl. De geautomatiseerde evaluatie fungeert hierbij als een geavanceerd kwaliteitsfilter, waarna de menselijke auditor — ondersteund door de gerealiseerde bronvermelding (\textit{source attribution}) — de uiteindelijke verificatie uitvoert. Dit waarborgt dat de technologische efficiëntie van \gls{rag} de juridische eindverantwoordelijkheid van de expert niet vervangt, maar juist versterkt.
 
 \subsection{Het \gls{ragas} framework}
+
 
 De academische standaard voor het kwantificeren van \gls{rag}-prestaties is het \gls{ragas}-framework. \gls{ragas}, ontwikkeld door~\textcite{Es2024}, introduceert metrieken die de ``RAG Triad'' (Query, Context, Answer) evalueren. De interactie tussen de query, de opgehaalde context en het gegenereerde antwoord wordt geëvalueerd aan de hand van vier kernmetrieken. Het framework hanteert het principe van \textit{LLM-as-a-judge}: een krachtig \gls{llm} fungeert als evaluator voor de output van een ander model, waardoor grootschalige evaluatie zonder menselijke tussenkomst mogelijk wordt.
 

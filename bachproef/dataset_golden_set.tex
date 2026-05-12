@@ -4,6 +4,7 @@
 In deze fase van het onderzoek wordt de basis gelegd voor de evaluatie van de verschillende \gls{rag}-configuraties. Om de nauwkeurigheid van een systeem te kunnen meten, zijn twee componenten essentieel: een representatieve bron-dataset en een golden dataset (een verzameling van vragen met de bijbehorende correcte antwoorden).
 
 \section{Beschrijving van de dataset}
+\label{sec:dataset-beschrijving}
 
 De dataset die voor dit onderzoek wordt gebruikt, is ter beschikking gesteld door Turtle S.r.l. Deze verzameling bevat een variëteit aan documenten die representatief zijn voor de informatiehuishouding van een productiebedrijf in het kader van \gls{esg}-rapportage.
 
@@ -19,9 +20,11 @@ De dataset bevat concreet de volgende type documenten:
 \end{itemize}
 
 \section{De Golden Dataset}
+
 Om de prestaties van de \gls{rag}-pipeline objectief te kunnen kwantificeren, is er een 'golden dataset' opgesteld. Dit is een geannoteerde dataset die fungeert als de \textit{ground truth}. Voor elke vraag is handmatig vastgesteld wat het correcte antwoord is en in welk(e) brondocument(en) dit te vinden is.
 
 \subsection{Structuur van de Golden Dataset}
+\label{sec:golden-dataset-structuur}
 
 De golden dataset is opgeslagen in een gestructureerd \gls{json}-formaat. De exacte structuur van een item uit de golden dataset wordt hieronder weergegeven:
 

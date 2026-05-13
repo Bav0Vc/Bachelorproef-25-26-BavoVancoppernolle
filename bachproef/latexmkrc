@@ -1,0 +1,15 @@
+# Run makeglossaries whenever .glo (main glossary) or .acn (acronym) files change.
+# $_[0] is the full stem including output directory, e.g. ../output/VancoppernolleBavo
+add_cus_dep('glo', 'gls', 0, 'run_makeglossaries');
+add_cus_dep('acn', 'acr', 0, 'run_makeglossaries');
+
+sub run_makeglossaries {
+    # On a clean build, LaTeX hasn't run yet so source files don't exist — skip safely.
+    return 0 unless -f "$_[0].acn" || -f "$_[0].glo";
+    my $flags = $silent ? '-q' : '';
+    # Split path and basename so makeglossaries receives them via -d,
+    # avoiding a bug in v4.45 that mangles paths containing '..'.
+    use File::Basename;
+    my ($base, $dir) = fileparse($_[0]);
+    return system("makeglossaries $flags -d '$dir' '$base'");
+}

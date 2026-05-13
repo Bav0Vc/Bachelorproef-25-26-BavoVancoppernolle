@@ -29,22 +29,22 @@ Om deze hoofdvraag systematisch te beantwoorden, is het onderzoek onderverdeeld 
 
 \begin{description}
   \item[\IfLanguageName{dutch}{Het probleemdomein}{The problem domain}]
-  Hierbij ligt de focus op de context en de huidige beperkingen:
+  \item Hierbij ligt de focus op de context en de huidige beperkingen:
   \begin{itemize}
-    \item \dvlabel{dv:nood-esg} Waar komt de nood aan \gls{esg}-rapportage vandaan?
-    \item \dvlabel{dv:esg-uitdagingen} Welke structurele en juridische uitdagingen zijn er bij het beantwoorden van \gls{esg}-vragenlijsten (zoals EcoVadis en \gls{vsme})?
-    \item \dvlabel{dv:llm-tekortkomingen} Welke tekortkomingen en uitdagingen hebben standaard \glspl{llm} bij het beantwoorden van \gls{esg} questionnaires?
+    \item \label{dv:nood-esg} Waar komt de nood aan \gls{esg}-rapportage vandaan?
+    \item \label{dv:esg-uitdagingen} Welke structurele en juridische uitdagingen zijn er bij het beantwoorden van \gls{esg}-vragenlijsten (zoals EcoVadis en \gls{vsme})?
+    \item \label{dv:llm-tekortkomingen} Welke tekortkomingen en uitdagingen hebben standaard \glspl{llm} bij het beantwoorden van \gls{esg} questionnaires?
   \end{itemize}
 
   \item[\IfLanguageName{dutch}{Het oplossingsdomein}{The solution domain}]
-  Hierbij ligt de focus op de technische realisatie en evaluatie van de \gls{rag}-pipeline:
+  \item Hierbij ligt de focus op de technische realisatie en evaluatie van de \gls{rag}-pipeline:
   \begin{itemize}
-    \item \dvlabel{dv:chunking-retrieval} Hoe beïnvloeden verschillende chunking strategieën de retrieval-kwaliteit van interne \gls{esg}-documenten?
-    \item \dvlabel{dv:embedding-functie} Welke functie heeft een embedding model binnen een \gls{rag}-pipeline?
-    \item \dvlabel{dv:llm-taak} Wat is de taak van een \gls{llm} binnen de \gls{rag}-architectuur?
-    \item \dvlabel{dv:rag-framework} Welk \gls{rag}-framework is geschikt voor het aanmaken van aangepaste modules met behulp van open source-oplossingen?
-    \item \dvlabel{dv:dynamische-pipeline} Hoe wordt een dynamische \gls{rag}-pipeline gemaakt om combinaties van componenten systematisch te vergelijken?
-    \item \dvlabel{dv:meetwaarden} Welke meetwaarden worden gebruikt om de variabele \gls{rag}-componenten te evalueren?
+    \item \label{dv:chunking-retrieval} Hoe beïnvloeden verschillende chunking strategieën de retrieval-kwaliteit van interne \gls{esg}-documenten?
+    \item \label{dv:embedding-functie} Welke functie heeft een embedding model binnen een \gls{rag}-pipeline?
+    \item \label{dv:llm-taak} Wat is de taak van een \gls{llm} binnen de \gls{rag}-architectuur?
+    \item \label{dv:rag-framework} Welk \gls{rag}-framework is geschikt voor het aanmaken van aangepaste modules met behulp van open source-oplossingen?
+    \item \label{dv:dynamische-pipeline} Hoe wordt een dynamische \gls{rag}-pipeline gemaakt om combinaties van componenten systematisch te vergelijken?
+    \item \label{dv:meetwaarden} Welke meetwaarden worden gebruikt om de variabele \gls{rag}-componenten te evalueren?
   \end{itemize}
 \end{description}
 
@@ -69,7 +69,7 @@ Uiteindelijk zal dit leiden tot een technisch ontwerp van een dynamische \gls{ra
 
 Na deze inleiding volgt de literatuurstudie in Hoofdstuk~\ref{ch:stand-van-zaken} waarin de theoretische fundamenten van \gls{esg} en \gls{rag} uiteen worden gezet.
 
-Daarna volgt de methodologie in Hoofdstuk~\ref{ch:methodologie}. Hier wordt de experimentele opzet en evaluatie van de \gls{rag}-pipeline toegelicht, gebaseerd op het evaluatieframework van ~\autocite{Es2024}.
+Daarna volgt de methodologie in Hoofdstuk~\ref{ch:methodologie}. Hier wordt de experimentele opzet en evaluatie van de \gls{rag}-pipeline toegelicht, gebaseerd op het evaluatieframework van~\autocite{Es2024}.
 
 In Hoofdstuk~\ref{ch:requirementsanalyse} worden de bedrijfsnoden van Turtle Srl en wetenschappelijke criteria vertaald naar concrete technische vereisten met behulp van de MoSCoW-methode.
 

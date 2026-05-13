@@ -3,23 +3,33 @@
 
 De methodologie van dit onderzoek is zodanig opgesteld om zowel wetenschappelijke geldigheid als praktische toepasbaarheid voor Turtle Srl te waarborgen. Het centrale doel is het systematisch ontwerpen, opzetten en evalueren van een dynamische \gls{rag} pipeline die het mogelijk maakt om de  variabele componenten (chunking strategieën, embedding modellen en \glspl{llm}) te testen op één vaste \gls{esg} vragenlijst, zonder voor elke mogelijke combinatie een aparte pipeline te moeten bouwen. De gekozen aanpak volgt een sequentieel maar iteratief framework in zes fases, waarbij elke fase deliverables oplevert aan de hand van de doelstellingen en gekozen onderzoeksmethoden. Om de reproduceerbaarheid, repliceerbaarheid en herbruikbaarheid van dit onderzoek te waarborgen, wordt per fase gedocumenteerd welke beslissingen genomen worden en hoe data en configuraties vastgelegd worden.
 
-\section{Fase 1: Requirements verzamelen}
+\section{Fase 1: literatuuronderzoek}
 
-In de eerste fase staat het verzamelen en verduidelijken van requirements centraal. Het doel is om een beeld te krijgen van de noden en eisen van Turtle Srl omtrent \gls{esg} rapportage en de criteria waaraan de beoogde optimale configuratie moet voldoen. Daarvoor worden semigestructureerde interviews afgenomen met belanghebbenden van het bedrijf (bijvoorbeeld \gls{esg} analisten, data engineers en management) om zowel functionele als niet functionele vereisten in kaart te brengen. Functionele vereisten omvatten onder meer de nood aan bronvermelding, de dekking van specifieke \gls{esrs} standaarden en de gewenste vraagtypes in de golden dataset. Niet functionele vereisten hebben betrekking op criteria die relevant zijn voor de business waarde, zoals latency, kosten per query en dataprivacy.
+In de eerste fase wordt een uitgebreid literatuuronderzoek uitgevoerd om de theoretische fundamenten van de bachelorproef vast te leggen. Om de centrale onderzoeksvraag te kunnen beantwoorden, wordt er voor de verschillende deelvragen diepgaand onderzoek verricht naar diverse domeinen.
+
+Om te achterhalen waar de nood aan \gls{esg}-rapportage vandaan komt (\ref{dv:nood-esg}), wordt gekeken naar de evolutie van duurzaamheidscriteria en de toenemende juridische druk onder de \gls{csrd} en \gls{esrs}. In het verlengde hiervan worden de structurele en juridische uitdagingen geanalyseerd die gepaard gaan met het beantwoorden van specifieke vragenlijsten zoals EcoVadis en de \gls{vsme} (\ref{dv:esg-uitdagingen}). Vervolgens wordt onderzocht welke fundamentele tekortkomingen en uitdagingen standaard \glspl{llm} ondervinden bij deze taken (\ref{dv:llm-tekortkomingen}), met een specifieke focus op hallucinaties en de afwezigheid van actuele bedrijfskennis.
+
+In het oplossingsdomein van \gls{rag} wordt de technische werking en de functie van de variabele componenten bestudeerd. Hierbij wordt geanalyseerd hoe verschillende chunkingstrategieën de retrieval-kwaliteit beïnvloeden (\ref{dv:chunking-retrieval}), welke rol het embedding-model speelt bij de semantische zoekfase (\ref{dv:embedding-functie}), en hoe het \gls{llm} fungeert als redeneersysteem binnen de architectuur (\ref{dv:llm-taak}). Verder wordt onderzocht welk \gls{rag} framework geschikt is voor het bouwen van modulaire, open-source oplossingen (\ref{dv:rag-framework}) en hoe een dynamische pipeline kan worden ontworpen om diverse technologische combinaties van componenten systematisch te kunnen vergelijken (\ref{dv:dynamische-pipeline}).
+
+Tot slot worden wetenschappelijke evaluatiekaders en meetwaarden, zoals \gls{ragas}, bestudeerd om de performantie van de resulterende configuraties objectief te kunnen kwantificeren (\ref{dv:meetwaarden}). Deze fase mondt uit in een eerste ``long list'' van technologische kandidaten die als basis dient voor de verdere selectie en het technisch ontwerp.
+
+\section{Fase 2: Requirements verzamelen}
+
+In de tweede fase staat het verzamelen en verduidelijken van requirements centraal. Het doel is om een beeld te krijgen van de noden en eisen van Turtle Srl omtrent \gls{esg} rapportage en de criteria waaraan de beoogde optimale configuratie moet voldoen. Daarvoor worden semigestructureerde interviews afgenomen met belanghebbenden van het bedrijf (bijvoorbeeld \gls{esg} analisten, data engineers en management) om zowel functionele als niet functionele vereisten in kaart te brengen. Functionele vereisten omvatten onder meer de nood aan bronvermelding, de dekking van specifieke \gls{esrs} standaarden en de gewenste vraagtypes in de golden dataset. Niet functionele vereisten hebben betrekking op criteria die relevant zijn voor de business waarde, zoals latency, kosten per query en dataprivacy.
 
 Parallel aan deze interviews wordt een literatuuronderzoek uitgevoerd naar \gls{rag} architecturen, chunking strategieën, embedding modellen, evaluatie frameworks (zoals \gls{ragas}, \gls{ares}) en domeinspecifieke toepassingen in \gls{esg}  en duurzaamheidsrapportage. Op basis van deze twee informatiestromen wordt een geprioriteerde lijst van requirements opgesteld met behulp van de MoSCoW-methode , aangevuld met een eerste “long list” van mogelijke interessante alternatieven voor de variabele componenten in de \gls{rag} pipeline. Deze artefacten vormen de basis voor de daaropvolgende selectie  en ontwerpfases.
 
-\section{Fase 2: Opstellen short list}
+\section{Fase 3: Opstellen short list}
 
-In de tweede fase wordt de long list van mogelijke alternatieven herwerkt tot een concrete short list van de meest veelbelovende opties per variabele component.
+Daarna wordt de long list van mogelijke alternatieven herwerkt tot een concrete short list van de meest veelbelovende opties per variabele component.
 
 Gedurende deze systematische vergelijking worden de belangrijkste eigenschappen en prestaties per alternatief samengebracht in een samenvattende tabel. Voor embedding modellen kan dit onder meer \gls{mteb} scores, meertalige recall, vector dimensionaliteit en inference kosten omvatten; voor \glspl{llm} bijvoorbeeld contextlengte, faithfulness scores uit de literatuur en kosten per token. Elk alternatief wordt gescoord tegen de vastgestelde requirements uit fase 1 en reeds bestaande literatuur, wat resulteert in een shortlist per component.
 
 Deze aanpak levert een short list op van de mogelijke technologieën voor de variabele componenten (embedding modellen, chunking strategieën en \glspl{llm}) voor verdere experimentele evaluatie, aangevuld met een vergelijkende tabel. Op basis van deze informatie kan bepaald worden welke modellen of strategieën wel of niet toepasbaar zijn voor de experimentele opzet.
 
-\section{Fase 3: Dataverzameling en opstellen van golden dataset}
+\section{Fase 4: Dataverzameling en opstellen van golden dataset}
 
-Fase 3 richt zich op de voorbereiding van de domeinspecifieke inputdata en het samenstellen van een “golden dataset” van vragen voor de latere evaluatie. Het doel is om enerzijds een representatieve dataset aan bedrijfsdocumenten te verzamelen die de interne \gls{esg} informatie van Turtle Srl weergeeft, en anderzijds een gestandaardiseerde vragenlijst op te stellen waarmee de \gls{rag} configuraties in fase 5 worden getest.
+Fase 4 richt zich op de voorbereiding van de domeinspecifieke inputdata en het samenstellen van een “golden dataset” van vragen voor de latere evaluatie. Het doel is om enerzijds een representatieve dataset aan bedrijfsdocumenten te verzamelen die de interne \gls{esg} informatie van Turtle Srl weergeeft, en anderzijds een gestandaardiseerde vragenlijst op te stellen waarmee de \gls{rag} configuraties in fase 5 worden getest.
 
 Via bijkomende interviews met belanghebbenden wordt bepaald welke documenten nodig zijn om een dataset te verkrijgen die bruikbaar is voor \gls{esg} rapportage. Deze data kan bestaan uit jaarverslagen, duurzaamheidsrapporten, (energie)facturen, beleidsdocumenten of interne richtlijnen. Indien nodig worden documenten geanonimiseerd voordat ze in de experimentele omgeving worden opgenomen om de veiligheid van de data te verzekeren.
 
@@ -27,23 +37,23 @@ Daarnaast wordt een golden dataset van vragen opgesteld, die \gls{esg}-gerelatee
 
 Deze fase resulteert in een gestructureerde verzameling van contextdata die in de vector database zal worden geïndexeerd, en een vragenlijst die als vaste benchmark dient voor alle \gls{rag} configuraties.
 
-\section{Fase 4: Ontwikkeling van dynamische RAG-pipeline}
+\section{Fase 5: Ontwikkeling van dynamische RAG-pipeline}
 
-In de vierde fase wordt de \gls{rag} pipeline ontworpen en geïmplementeerd. De centrale doelstelling is een dynamische proefopstelling te bouwen die toelaat om de variabele componenten (zoals bepaald in fase 2) op een efficiënte manier te combineren en te testen. Zonder een nieuwe pipeline te moeten maken voor iedere combinatie van de componenten.
+In de vijfde fase wordt de \gls{rag} pipeline ontworpen en geïmplementeerd. De centrale doelstelling is een dynamische proefopstelling te bouwen die toelaat om de variabele componenten (zoals bepaald in fase 2) op een efficiënte manier te combineren en te testen. Zonder een nieuwe pipeline te moeten maken voor iedere combinatie van de componenten.
 
 Technisch wordt gekozen voor een component gebaseerde architectuur waarin modules voor documentconversie, chunking, embedding, vectoropslag, retrieval en generatie als afzonderlijke bouwstenen worden gedefinieerd. De configuratielaag, in \gls{json}, bepaalt per experimentele run welke chunking strategie, welk embedding model en welk \gls{llm} worden gebruikt. Dit maakt het mogelijk om alle combinaties van de short list systematisch te doorlopen.
 
 Belangrijke aandachtspunten bij de implementatie zijn: meertalige ondersteuning (om zowel Italiaanse als Engelstalige \gls{esg} documenten te kunnen verwerken), bronvermelding via metadata payloads in de vector database, en logging voorzien van alle relevante runtime informatie (latency, tokenverbruik, gebruikte configuratie, \gls{ragas} metrics). Op het einde van deze fase wordt een werkende, dynamische \gls{rag} pipeline opgeleverd die conform is met de technische vereisten van het bedrijf.
 
-\section{Fase 5: Pipeline testen}
+\section{Fase 6: Pipeline testen}
 
-In fase 5 wordt de pipeline getest, met als doel om voor alle geselecteerde configuraties resultaten te verzamelen op basis van de metrics die in fase 1 als requirements zijn gedefinieerd.
+In fase zes wordt de pipeline getest, met als doel om voor alle geselecteerde configuraties resultaten te verzamelen op basis van de metrics die in fase 1 als requirements zijn gedefinieerd.
 
 De onderzoeksmethode bestaat uit gecontroleerde runs van de pipeline. De golden dataset vragenlijst uit fase 3 wordt meerdere keren door de pipeline geleid, telkens met een andere configuratie van chunking strategie, embedding model en \gls{llm}. Voor elke combinatie worden zowel inhoudelijke metrics (bijvoorbeeld \gls{ragas} scores voor faithfulness, answer relevancy, context precision en context recall) als operationele metrics (latency per vraag, kosten per query, geheugenverbruik) geregistreerd. Daarnaast kunnen steekproeven van antwoorden door \gls{esg} experten worden beoordeeld om de automatische evaluatie te valideren.
 
 De resultaten worden opgeslagen in een Jupyter Notebook zodat ze in de volgende fase op een gestructureerde manier kunnen worden geanalyseerd. Uit deze fase komt een volledige set aan experimentele resultaten die toelaat om de verschillende \gls{rag} configuraties onderling te vergelijken op basis van dezelfde vragen en evaluatiemetrics.
 
-\section{Fase 6: Resultaten verzamelen en interpreteren}
+\section{Fase 7: Resultaten verzamelen en interpreteren}
 
 De laatste fase richt zich op het verwerken, analyseren en interpreteren van de verzamelde resultaten en deze om te zetten in duidelijke inzichten voor de \gls{poc} van Turtle Srl.
 

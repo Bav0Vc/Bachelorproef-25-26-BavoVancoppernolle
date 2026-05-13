@@ -159,7 +159,7 @@ De parameter \mintinline{python}{pdf_infer_table_structure: True} is specifiek g
 
 Na de conversie passeert elk document een zelfgeschreven\\\texttt{DocumentCleaner}-component dat het \texttt{@component}-protocol van Haystack implementeert. Dit component vervult twee rollen: tekstnormalisatie en het samenvoegen van pagina's per brondocument met expliciete pagina-markers.
 
-\textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Dit is een cruciale ontwerpbeslissing voor de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}).
+\textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Deze ontwerpbeslissing heeft een directe invloed op de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}).
 
 \textbf{Pagina-markers.} Om de paginatraceerbaarheid na het samenvoegen te bewaren, injecteert de cleaner vóór elke alinea een marker in de vorm \texttt{<<<PAGE X>>>}. Na het chunken extraheert de \texttt{ChunkMetaCleaner} de eerste marker die in een chunk voorkomt en koppelt die als \texttt{page}-metadata aan het fragment. Dit mechanisme implementeert de Could-Have-requirement voor \textbf{granulaire bronverwijzing op paginaniveau} (Tabel~\ref{tab:moscow}) zonder afhankelijk te zijn van de manier waarop de chunker de grenzen trekt.
 
@@ -198,7 +198,7 @@ Ten eerste garandeert de uniforme interface de \textbf{reproduceerbaarheid} (Tab
 
 De eerste chunker is een wrapper rond Haystack's \texttt{RecursiveDocumentSplitter}, geconfigureerd met uitsluitend \texttt{[" ", ""]} als scheidingstekens. Dit dwingt het algoritme om uitsluitend op woordgrenzen te splitsen — nooit op alinea- of zinsgrenzen — wat resulteert in een strikt vaste tokenvenstergrootte van 400 tokens met een overlap van 50 tokens. Als deterministisch referentiepunt zonder semantisch bewustzijn is deze strategie de baseline waartegen de meerwaarde van de twee complexere strategieën wordt aangetoond, conform de benchmarkmethodologie beschreven in Sectie~\ref{sec:shortlist-chunking}.
 
-De keuze voor \textbf{tokens} als spliteenheid — in tegenstelling tot woorden in de oorspronkelijke opzet — is een bewuste aanpassing. De maximale inputlengte van de drie embedding-modellen is gedefinieerd in tokens. Door tokens als gemeenschappelijke maat te hanteren, worden chunks gegarandeerd binnen de modellimieten gehouden ongeacht de gemiddelde woordlengte van de ingevoerde taal (Italiaans versus Engels). Bovendien meten beide andere chunkers ook in tokens, wat de chunkgrootte als experimentele variabele isoleert van de spliteenheid.
+De keuze voor \textbf{tokens} als spliteenheid — in tegenstelling tot woorden in de oorspronkelijke opzet — is een bewuste aanpassing. De maximale inputlengte van de drie embeddingmodellen is gedefinieerd in tokens. Door tokens als gemeenschappelijke maat te hanteren, worden chunks gegarandeerd binnen de modellimieten gehouden ongeacht de gemiddelde woordlengte van de ingevoerde taal (Italiaans versus Engels). Bovendien meten beide andere chunkers ook in tokens, wat de chunkgrootte als experimentele variabele isoleert van de spliteenheid.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -260,7 +260,7 @@ De derde strategie is de semantische chunker, gebaseerd op de \emph{semantic chu
 
 Voor de berekening van de zin-embeddings wordt het \texttt{paraphrase-multilingual-mpnet-base-v2}-model ingezet. Dit meertalige model is bewust gekozen boven lichtgewichtere Engelstalige alternatieven, conform de Should-Have-requirement voor \textbf{meertalige ondersteuning} (Tabel~\ref{tab:moscow}): de dataset bevat Italiaanse en Engelse documenten, waardoor een meertalig model noodzakelijk is om semantische grenzen correct te detecteren in beide talen. Per groep van drie zinnen (\texttt{sentences\_per\_group=3}) wordt een gecombineerde embedding berekend om ruis door korte zinnen te reduceren.
 
-Cruciaal in de experimentele opzet is dat er expliciet voor gekozen is om de semantische chunking \textbf{niet} uit te voeren met de embedding-modellen die deel uitmaken van de evaluatiematrix. Indien het model onder test ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunking-strategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
+Een bewuste keuze in de experimentele opzet is dat de semantische chunking \textbf{niet} wordt uitgevoerd met de embeddingmodellen die deel uitmaken van de evaluatiematrix Indien het model onder test ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunking-strategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -301,7 +301,7 @@ class SemanticEmbeddingChunker:
 \label{lst:semantic-chunker}
 \end{listing}
 
-Hoewel de kernlogica voor de tekstsplitsing gebruikmaakt van de robuuste implementaties binnen het Haystack-framework, zijn deze strategieën geëncapsuleerd in specifieke custom componenten. Deze architecturale beslissing is ingegeven door drie cruciale argumenten binnen de benchmark-methodologie:
+Hoewel de kernlogica voor de tekstsplitsing gebruikmaakt van de robuuste implementaties binnen het Haystack-framework, zijn deze strategieën geëncapsuleerd in specifieke custom componenten. Deze architecturale beslissing is ingegeven door drie concrete argumenten binnen de benchmark-methodologie:
 
 Ten eerste garandeert deze abstractielaag een uniforme interface binnen de proefopstelling. Door elke strategie te wrappen in een gestandaardiseerd \texttt{@component}, kunnen de 27 unieke configuraties op een modulaire wijze door de pipeline worden gestroomlijnd zonder dat de orchestrator kennis hoeft te hebben van de onderliggende library-specifieke parameters.
 
@@ -310,7 +310,7 @@ Ten tweede bevordert deze encapsulatie de reproduceerbaarheid van het experiment
 Ten derde biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde logica, zoals gedemonstreerd in de semantische chunker. Hierbij worden meerdere atomaire Haystack-componenten — een embedder en een splitter — gecombineerd tot één logische eenheid. Deze mate van granulariteit en controle is noodzakelijk om te voldoen aan de \emph{white-box} vereisten van dit onderzoek, waarbij elke stap in de gegevensstroom transparant en manipuleerbaar moet zijn.
 
 %%----------------------------------------------------------------------
-\section{Lokale embedding-modellen}
+\section{Lokale embeddingmodellen}
 \label{sec:lokale-embedding}
 
 In de initiële opzet van het onderzoek werden de embeddingmodellen aangestuurd via externe \gls{api}-diensten, zoals de \gls{nvidia} NIM \gls{api} en de Hugging Face Serverless Inference \gls{api}. Gedurende de implementatiefase is hiervan afgestapt om drie redenen die een directe link hebben met de requirements.
@@ -550,14 +550,14 @@ def pipeline_config(hp: HP):
 \section{Indexeringspipeline}
 \label{sec:indexering}
 
-De indexeringspipeline verwerkt alle brondocumenten voor alle $3 \times 3 = 9$ combinaties van chunkingstrategie en embedding-model. Voor elke combinatie wordt een aparte Qdrant-collectie aangemaakt, deterministisch benoemd als \texttt{<ChunkerNaam>\_<ModelId>}.
+De indexeringspipeline verwerkt alle brondocumenten voor alle $3 \times 3 = 9$ combinaties van chunkingstrategie en embeddingmodel. Voor elke combinatie wordt een aparte Qdrant-collectie aangemaakt, deterministisch benoemd als \texttt{<ChunkerNaam>\_<ModelId>}.
 
 De scheiding per collectie is noodzakelijk binnen de pipeline. Hoewel BGE-M3 en E5-instruct 1.024-dimensionele vectoren produceren en arctic-embed met MRL-truncatie 256-dimensionele (Sectie~\ref{subsubsec:matryoshka}), zijn de vectorruimten zelfs bij gelijke dimensionaliteit fundamenteel incompatibel: elke encoder is getraind met een ander leerprobleem en andere databronnen. Een cosine-gelijkenis tussen een BGE-M3-queryvector en een arctic-embed-documentvector levert een semantisch zinloos getal op. Voor BGE-M3 wordt de collectie aangemaakt met \texttt{use\_sparse\_embeddings=True} om naast de dense vector ook de sparse lexicale gewichten op te slaan die het hybride zoeken mogelijk maken (Sectie~\ref{subsubsec:hybride-zoeken}).
 
 %%----------------------------------------------------------------------
 \subsection{Geheugenbeheer bij Semantische Chunking}
 
-De \texttt{SemanticEmbeddingChunker} laadt \texttt{paraphrase-multilingual-mpnet-base-v2} op de \gls{gpu} voor de segmentatiefase. Als het primaire embedding-model daarna wordt geladen, zijn beide modellen tegelijkertijd in \gls{vram}, wat op \gls{gpu}'s met 8 GB tot een \gls{oom}-fout leidt. De oplossing bestaat uit een tweetraps-uitvoering: na de segmentatiefase wordt het chunkermodel expliciet naar de \gls{cpu} verplaatst en het \gls{cuda}-geheugen gewist:
+De \texttt{SemanticEmbeddingChunker} laadt \texttt{paraphrase-multilingual-mpnet-base-v2} op de \gls{gpu} voor de segmentatiefase. Als het primaire embeddingmodel daarna wordt geladen, zijn beide modellen tegelijkertijd in \gls{vram}, wat op \gls{gpu}'s met 8 GB tot een \gls{oom}-fout leidt. De oplossing bestaat uit een tweetraps-uitvoering: na de segmentatiefase wordt het chunkermodel expliciet naar de \gls{cpu} verplaatst en het \gls{cuda}-geheugen gewist:
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -574,7 +574,7 @@ def _free_semantic_chunker_gpu(chunker: SemanticEmbeddingChunker) -> None:
   except Exception:
     pass
 \end{minted}
-\caption[\_free\_semantic\_chunker\_gpu: VRAM vrijmaken na segmentatie]{Na de segmentatiefase wordt het interne chunkermodel naar de \gls{cpu} verplaatst. Dit voorkomt \gls{oom}-fouten bij het vervolgens laden van het primaire embedding-model, waardoor de semantische chunker-configuraties dezelfde infrastructuur kunnen gebruiken als de deterministische strategieën.}
+\caption[\_free\_semantic\_chunker\_gpu: VRAM vrijmaken na segmentatie]{Na de segmentatiefase wordt het interne chunkermodel naar de \gls{cpu} verplaatst. Dit voorkomt \gls{oom}-fouten bij het vervolgens laden van het primaire embeddingmodel, waardoor de semantische chunker-configuraties dezelfde infrastructuur kunnen gebruiken als de deterministische strategieën.}
 \end{listing}
 
 %%----------------------------------------------------------------------
@@ -629,7 +629,7 @@ else:
 \section{Querypipeline}
 \label{sec:query-pipeline}
 
-De querypipeline genereert voor elke van de 27 configuraties een antwoord op elke vraag uit de golden dataset. De pipeline is opgebouwd uit vier kerncomponenten: een tekstembedder, een Qdrant-retriever, een \texttt{PromptBuilder} en een \gls{llm}. De tekstembedder hanteert hierbij altijd hetzelfde embedding-model als gebruikt tijdens de indexeringsfase. Dit garandeert dat de queryvector en de documentvectoren zich in dezelfde vectorruimte bevinden, wat een betrouwbare semantische gelijkenisberekening mogelijk maakt. De \texttt{PromptBuilder} structureert vervolgens de opgehaalde contextfragmenten samen met de vraag tot een instructie voor de \gls{llm}, die op basis hiervan het finale antwoord formuleert.
+De querypipeline genereert voor elke van de 27 configuraties een antwoord op elke vraag uit de golden dataset. De pipeline is opgebouwd uit vier kerncomponenten: een tekstembedder, een Qdrant-retriever, een \texttt{PromptBuilder} en een \gls{llm}. De tekstembedder hanteert hierbij altijd hetzelfde embeddingmodel als gebruikt tijdens de indexeringsfase. Dit garandeert dat de queryvector en de documentvectoren zich in dezelfde vectorruimte bevinden, wat een betrouwbare semantische gelijkenisberekening mogelijk maakt. De \texttt{PromptBuilder} structureert vervolgens de opgehaalde contextfragmenten samen met de vraag tot een instructie voor de \gls{llm}, die op basis hiervan het finale antwoord formuleert.
 
 \begin{listing}[H]
 \begin{minted}{python}

@@ -53,7 +53,7 @@ Vóór elke volledige run worden alle bestaande Qdrant-collecties verwijderd. Di
 
 \subsection{Stap 2: Indexering}
 
-De indexeringsfase verwerkt alle documenten voor alle $3 \times 3 = 9$ combinaties. De negen indexeringen worden sequentieel uitgevoerd: elke indexering verbruikt het volledige \gls{gpu}-geheugen voor het embedding-model, waardoor parallelle uitvoering op één \gls{gpu} niet mogelijk is. Sequentiële uitvoering maakt ook logging en foutopsporing eenvoudiger: problemen met een specifieke combinatie zijn direct isoleerbaar.
+De indexeringsfase verwerkt alle documenten voor alle $3 \times 3 = 9$ combinaties. De negen indexeringen worden sequentieel uitgevoerd: elke indexering verbruikt het volledige \gls{gpu}-geheugen voor het embeddingmodel, waardoor parallelle uitvoering op één \gls{gpu} niet mogelijk is. Sequentiële uitvoering maakt ook logging en foutopsporing eenvoudiger: problemen met een specifieke combinatie zijn direct isoleerbaar.
 
 \subsection{Stap 3: Benchmark loop}
 \label{subsec:benchmarkloop}
@@ -100,7 +100,7 @@ Reproduceerbaarheid is een Should-Have-requirement (Tabel~\ref{tab:moscow}) en i
 
 \textbf{Deterministisch gedrag van chunking.} Fixed-size en recursive chunking zijn volledig deterministisch: dezelfde invoerdocumenten met dezelfde parameters produceren altijd exact dezelfde chunks. Voor semantische chunking geldt een nuance: de cosine-drempelwaarde wordt bepaald op het 95ste percentiel van de afstandsverdeling binnen het document, wat per document licht kan variëren afhankelijk van de volgorde van de afstandsberekeningen. De parameters van het interne \texttt{all-MiniLM-L6-v2}-model zijn echter vastgelegd en deterministisch, waardoor de variatie in de praktijk verwaarloosbaar is.
 
-\textbf{Vastgelegde modelversies.} Alle Python-afhankelijkheden zijn vastgelegd in \texttt{requirements.txt} met exacte versienummers. De embedding-modellen worden via hun HuggingFace-modelnaam en -revisie geladen; de gecachede versies in het Docker-volume blijven ongewijzigd gedurende het gehele experiment. De \gls{llm}-versies zijn vastgelegd via de \gls{api}-modelnaam in de HyPSTER-configuratie.
+\textbf{Vastgelegde modelversies.} Alle Python-afhankelijkheden zijn vastgelegd in \texttt{requirements.txt} met exacte versienummers. De embeddingmodellen worden via hun HuggingFace-modelnaam en -revisie geladen; de gecachede versies in het Docker-volume blijven ongewijzigd gedurende het gehele experiment. De \gls{llm}-versies zijn vastgelegd via de \gls{api}-modelnaam in de HyPSTER-configuratie.
 
 \textbf{Identieke golden dataset over alle runs.} De golden dataset is een statisch \gls{json}-bestand dat niet wijzigt tussen runs. Elke configuratie wordt op exact dezelfde vragen in exact dezelfde volgorde geëvalueerd, waardoor de resultaten per configuratie direct vergelijkbaar zijn.
 

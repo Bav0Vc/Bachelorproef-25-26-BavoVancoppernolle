@@ -28,48 +28,31 @@ Semantic chunking, geformaliseerd door~\textcite{Kamradt2023}, berekent de cosin
 
 Deze aanpak gebruikt de opmaakstructuur — zoals koppen en paginagrenzen — als natuurlijke splitspunten. Hoewel dit theoretisch leidt tot zeer coherente segmenten, is de methode in de praktijk extreem fragiel. Bij de conversie van complexe \gls{esg}-rapporten naar platte tekst gaat opmaakinformatie vaak verloren, waardoor deze strategie te sterk afhankelijk is van een perfecte en foutgevoelige \gls{pdf}-parsing~\autocite{Amiri2025}.
 
-\subsection{Agentic chunking}
-
-Bij agentic chunking bepaalt een \gls{llm}-agent per passage waar een logische grens ligt~\autocite{Comanici2025}. Hoewel dit de meest contextbewuste segmentatie oplevert, is de methode ongeschikt voor dit onderzoek vanwege het niet-deterministische karakter, wat de reproduceerbaarheid van de experimentele opzet verder bemoeilijkt, en de bijkomende kosten van een extra \gls{llm}. Bovendien introduceert het een extra variabele — de intelligentie van de agent — die de resultaten ruisgevoelig maakt en de zuivere isolatie van variabelen in de experimentele fase belemmert.
-
-\subsection{Late chunking}
-
-Late chunking keert de volgorde van embedden en segmenteren om, waardoor globale documentcontext behouden blijft in elke chunk-embedding~\autocite{Guenther2024}. De zwakte van deze methode ligt in de infrastructuur: het vereist een context-window van minimaal 8k tokens en diepe integratie in de embedding-logica. Voor omvangrijke documenten binnen een Azure-omgeving leidt dit tot beperkingen in geheugenbeheer en een gebrek aan "white-box" controle over het proces.
-
 \subsection{Vergelijkingstabel chunkingstrategieën}
 
-Om de geschiktheid van elke strategie voor de casus van Turtle Srl te beoordelen, worden de volgende criteria gehanteerd in Tabel~\ref{tab:longlist-chunking-tabel}:
-
-\begin{itemize}
-  \item \textbf{Contextbehoud (RC-01):} De mate waarin de chunk de omliggende informatie behoudt die nodig is om de tekst te begrijpen. Een hoog contextbehoud voorkomt dat het \gls{llm} ``gefragmenteerde'' informatie ontvangt.
-  \item \textbf{Logische samenhang (RC-02):} De logische eenheid van de chunk. Strategieën met een hoge samenhang zorgen ervoor dat één chunk over één specifiek onderwerp gaat, wat de antwoordkwaliteit verhoogt.
-  \item \textbf{Context precision (RC-03):} De nauwkeurigheid van de retrieval. Dit geeft aan of de opgehaalde chunks daadwerkelijk de meest relevante informatie bevatten zonder overbodige ruis.
-  \item \textbf{Consistentie (RC-04):} De voorspelbaarheid van de chunkgrootte. Zeer consistente groottes (zoals bij fixed-size) zorgen voor stabiele latency en tokenverbruik, terwijl inconsistente groottes de verwerking kunnen bemoeilijken.
-  \item \textbf{Complexiteit (RC-05):} De technische inspanning en computationele middelen die nodig zijn voor de implementatie en uitvoering.
-\end{itemize}
-
-Tabel~\ref{tab:longlist-chunking-tabel} brengt alle besproken chunkingstrategieën samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl. Om de objectiviteit te waarborgen, worden de strategieën gescoord op een ordinale schaal van 1 tot 5.
+Tabel~\ref{tab:longlist-chunking-tabel} brengt alle besproken chunkingstrategieën samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl. De evaluatie van chunkingstrategieën focust op de balans tussen het behoud van context en de verwerkingssnelheid.
 
 \begin{table}[ht]
 \centering
 \small
-\begin{tabular}{lccccc}
+\begin{tabular}{lcc}
 \toprule
-\textbf{Strategie} & \textbf{RC-01} & \textbf{RC-02} & \textbf{RC-03} & \textbf{RC-04} & \textbf{RC-05} \\
+\textbf{Strategie} & \textbf{CO (0-2)} & \textbf{SI (0-2)} \\
 \midrule
-Fixed-size chunking          & 3 & 2 & 3 & 5 & 5 \\
-Recursive character chunking & 4 & 4 & 4 & 4 & 4 \\
-Sentence-based chunking      & 3 & 3 & 2 & 3 & 4 \\
-Document structure chunking  & 3 & 3 & 3 & 2 & 1 \\
-Semantic chunking            & 5 & 4 & 5 & 2 & 3 \\
-Late chunking                & 5 & 5 & 4 & 3 & 1 \\
-Agentic chunking             & 5 & 5 & 5 & 1 & 1 \\
+Fixed-size chunking     & 0 & 0 \\
+Recursive character     & 0 & 1 \\
+Semantic chunking       & 1 & 2 \\
+Sentence-based chunking & 0 & 1 \\
+Document structure      & 0 & 1 \\
 \bottomrule
 \end{tabular}
-\caption[Longlist: vergelijkingstabel chunkingstrategieën]{\label{tab:longlist-chunking-tabel}Vergelijking van chunkingstrategieën op een ordinale schaal (1-5).}
+\caption[Evaluatie van chunkingstrategieën op basis van overhead en semantiek.]{\label{tab:longlist-chunking-tabel}Vergelijking van chunkingstrategieën op een ordinale schaal (0-2).}
 \vspace{2mm}
-\footnotesize{\textbf{Legenda (RC-01 t/m RC-04):} 1 = Zeer laag, 2 = Laag, 3 = Gemiddeld, 4 = Hoog, 5 = Zeer hoog. \\ \textbf{Legenda (RC-05 Complexiteit):} 1 = Zeer complex, 3 = Gemiddeld, 5 = Zeer eenvoudig/laag.}
+\footnotesize{\textbf{Legenda (CO):} 0 = Lineaire tekstverwerking zonder model-inferentie (\gls{cpu}-gebonden), 1 = Vereist inferentie van een embedding-model (GPU-acceleratie vereist), 2 = Vereist volledige \gls{llm}-inferentie per verwerkingseenheid (hoge latency en kosten). \\ \textbf{Legenda (SI):} 0 = Contextblinde splitsing op basis van vaste tekstlengtes, 1 = Behoud van syntactische of structurele grenzen (zinnen, paragrafen), 2 = Splitsing op basis van semantische coherentie of intentie-analyse.}
 \end{table}
+
+\textbf{Onderbouwing:}
+\textit{Semantic chunking} wordt verkozen als het optimale evenwicht tussen intelligentie (SI=2) en schaalbaarheid (CO=1).
 
 \section{Embeddingmodellen}
 \label{sec:longlist-embedding}
@@ -92,31 +75,33 @@ De E5-modelfamilie van Microsoft Research introduceerde het concept van \textit{
 
 Cohere's embed-multilingual-v3.0 is een sterk commercieel model dat specifiek getraind is voor search- en retrieval-taken en uitstekend presteert op het \gls{mteb}-leaderboard voor meertalige taken~\autocite{MuennighoffEtAl2023}. Echter, de \gls{poc} maakt reeds gebruik van de Azure-infrastructuur met OpenAI-integratie. Het toevoegen van Cohere als derde externe \gls{api}-provider verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen ten opzichte van text-embedding-3-large, dat de proprietaire categorie reeds afdekt.
 
-\subsection{Google text-embedding-004}
-
-Google's text-embedding-004 is beschikbaar via Vertex AI en presteert competitief op meertalige \gls{mteb}-taken. Dit model vormt een extra externe \gls{api}-provider en introduceert geen unieke dimensie ten opzichte van de andere kandidaten. Bovendien is de Google-categorie in de \gls{llm}-component al vertegenwoordigd via Gemini 2.5 Flash, waardoor een dubbele afhankelijkheid van Google-diensten ontstaat.
-
-\subsection{Jina jina-embeddings-v2-base-multilingual}
+\subsection{Jina jina-embeddings-v2-base-multilingual} % TODO (v3 model !!!)
 
 Het Jina-model ondersteunt contexten tot 8.192 tokens~\autocite{JinaAI2024}, wat interessant is voor lange \gls{esg}-documenten. BGE-M3 biedt echter dezelfde lange context én bovendien hybride zoeken, waardoor het Jina-model technologisch inferieur is voor de specifieke eisen van dit onderzoek, zonder compenserende voordelen.
 
-\subsection{Alibaba GTE-multilingual-base}
-
-Het GTE-multilingual-base model van Alibaba scoort sterk op algemene\\\gls{mteb}-benchmarks~\autocite{MuennighoffEtAl2023}. Naast het ontbreken van hybride zoekfunctionaliteit roept hosting bij een Chinese aanbieder \gls{gdpr}-vragen op over gegevenssoevereiniteit voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl, wat een bijkomende uitsluitingsgrond vormt.
-
-\subsection{Nomic embed-text-v1.5 en overige Engelstalige modellen}
+\subsection{Nomic embed-text-v1.5}
 
 Nomic embed-text-v1.5, mxbai-embed-large-v1 en GTE-large-en-v1.5 zijn Apache 2.0-modellen die sterk scoren op de Engelstalige \gls{mteb} Retrieval-benchmark. Zij worden echter uitgesloten omdat zij uitsluitend op Engelse documenten zijn getraind en dus niet voldoen aan de meertaligheidseis voor de Italiaans-Engelse documentbasis van Turtle Srl.
 
 \subsection{Vergelijkingstabel embeddingmodellen}
 
-De volgende criteria zijn gebruikt om de geselecteerde modellen te beoordelen op hun inzetbaarheid op vlak van de technische requirements voor de PoC van Turtle Srl:
+De embeddingcomponent is verantwoordelijk voor de vectorisatie van de tekstfragmenten en bepaalt de effectiviteit van de zoekoperaties (retrieval) binnen de \gls{rag}-pipeline. Voor de evaluatie van deze modellen ligt de focus op de kwaliteit van de informatie-ophaling, de ondersteuning voor meertalige \gls{esg}-documentatie (Italiaans en Engels) en de infrastructurele conformiteit binnen de \gls{eu}-jurisdictie.
+
+De kandidaten worden getoetst aan de volgende criteria:
 
 \begin{itemize}
-  \item \textbf{Meertaligheid (RE-01):} Dit criterium evalueert hoe effectief het model semantische relaties begrijpt over verschillende talen heen. Voor dit onderzoek is een hoge score essentieel om Italiaanse en Engelstalige bronteksten accuraat te kunnen gebruiken als context.
-  \item \textbf{Instruction Tuned (RE-02):} Geeft aan of het model specifiek is getraind om instructies op te volgen. Modellen met \textit{instruction tuning} presteren doorgaans beter bij complexe zoekopdrachten omdat ze de intentie van de gebruiker beter begrijpen.
-  \item \textbf{Retrievalkracht (RE-03):} De kerncompetentie van het model om de meest relevante informatie uit een grote dataset te identificeren. Modellen die hybride zoekstrategieën ondersteunen (zoals BGE-M3) scoren hier vaak hoger, omdat ze zowel op trefwoord als op betekenis kunnen zoeken.
-  \item \textbf{EU-Soevereiniteit (RE-04):} Dit criterium is belangrijk betreffende \gls{gdpr}-compliance en databeveiliging. Er wordt gekeken of het model lokaal gehost kan worden of beheerd wordt door een Europese entiteit, waardoor gevoelige bedrijfsgegevens de \gls{eu} niet verlaten.
+  \item \textbf{MTEB-Retrieval (nDCG@10):} De primaire metriek die meet hoe accuraat het model de meest relevante fragmenten bovenaan de resultaten plaatst.
+  \item \textbf{Soevereiniteit Tier (ST):} Een numerieke schaal (0-3) voor juridische veiligheid:
+    \begin{itemize}
+      \item \textbf{0 (EU-Native):} Bedrijf en hosting volledig binnen de \gls{eu}.
+      \item \textbf{1 (EU-Hosted):} US-origin model, maar door \textit{Open Weights} volledig te hosten op eigen \gls{eu}-servers.
+      \item \textbf{2 (US-Cloud):} Propriëtaire \gls{api} (SaaS) onderhevig aan de Amerikaanse CLOUD Act.
+      \item \textbf{3 (Niet-Westers):} Jurisdicties zonder \gls{gdpr}-adequaatheidsbesluit.
+    \end{itemize}
+  \item \textbf{Meertaligheid (ML):} Native ondersteuning voor zowel Italiaanse als Engelse tekstbronnen, essentieel voor de cross-linguale retrieval binnen de \gls{esg}-dataset.
+  \item \textbf{Open-source (OS):} Beschikbaarheid van de modelparameters (\textit{Open Weights}) voor lokale implementatie, wat volledige controle over de dataverwerking mogelijk maakt.
+  \item \textbf{Hybride Retrieval:} De mate waarin het model zowel semantische (dense) als lexicale (sparse) zoekopdrachten ondersteunt.
+  \item \textbf{Context Window:} De maximale invoerlengte per tekstfragment in tokens.
 \end{itemize}
 
 Tabel~\ref{tab:embeddingmodels} brengt alle besproken embeddingmodellen samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl.
@@ -124,55 +109,34 @@ Tabel~\ref{tab:embeddingmodels} brengt alle besproken embeddingmodellen samen en
 \begin{table}[ht]
 \centering
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Model} & \textbf{RE-01} & \textbf{RE-02} & \textbf{RE-03} & \textbf{RE-04} \\
+\textbf{Model} & \textbf{MTEB-R} & \textbf{ST (0-3)} & \textbf{ML (IT)} & \textbf{OS} & \textbf{Hybride} & \textbf{Context} \\
 \midrule
-Snowflake Arctic-L-V2.0      & 4 & 5 & 4 & 5 \\
-BAAI BGE-M3                  & 5 & 5 & 5 & 5 \\
-MS Multilingual-E5-Instruct  & 4 & 5 & 4 & 5 \\
-Cohere Embed-Multilingual-V3 & 5 & 5 & 5 & 1 \\
-Google Text-Embedding-004    & 5 & 1 & 4 & 1 \\
-Jina Embeddings-V2 (Base)    & 5 & 1 & 3 & 5 \\
-Alibaba GTE-Multilingual     & 5 & 5 & 4 & 1 \\
-Nomic Embed-Text-V1.5        & 2 & 5 & 3 & 5 \\
-Engelstalige modellen (alg.) & 1 & n.v.t. & n.v.t. & n.v.t. \\
+BAAI BGE-M3                        & 54.60\% & 1 & Ja  & Ja  & Ja  & 8192 \\ % keuze over Jina -> hybrid verbeterd MTEB-R score (https://www.mdpi.com/2504-4990/8/4/91 | p15)
+Snowflake Arctic-L-V2.0            & 58.36\% & 2 & Ja  & Ja  & Nee & 8192 \\ % keuse
+MS Multilingual-E5-Large-Instruct  & 57.12\% & 2 & Ja  & Ja  & Nee & 512  \\ % keuze
+Jina Embeddings-V3                 & 55.76\% & 0 & Ja  & Ja  & Nee & 8192 \\ % Anders geen hybrid
+Nomic Embed-Text-V1.5              & 59.45\% & 2 & Nee & Ja  & Nee & 8192 \\ % Niet meertalig
+Cohere Embed-Multi-V3              & 59.22\% & 2 & Ja  & Nee & Ja  & 512  \\ % niet open source
 \bottomrule
 \end{tabular}
-\caption[Longlist: vergelijkingstabel embeddingmodellen]{\label{tab:embeddingmodels}Vergelijking van embeddingmodellen op een ordinale schaal (1-5).}
-\vspace{2mm}
-\footnotesize{\textbf{Legenda:} 1 = Voldoet niet/Zwak, 2 = Matig, 3 = Gemiddeld, 4 = Goed, 5 = Voldoet volledig/Uitstekend. \\ \textbf{RE-04:} 5 = Native EU/Open Source, 1 = US/CN Cloud.}
+\caption{Vergelijking van embeddingmodellen op basis van retrieval-nauwkeurigheid, meertaligheid en soevereiniteit.}
+\label{tab:embeddingmodels}
 \end{table}
 
 \section{Large Language Models}
 \label{sec:longlist-llm}
 
-
 Het \gls{llm} vormt de generatieve kern van de \gls{rag}-pipeline. Het ontvangt de opgehaalde chunks als context en formuleert op basis daarvan een coherent antwoord. Binnen de \gls{rag}-architectuur fungeert het als een actieve verwerker van niet-parametrische data: in plaats van te vertrouwen op kennis die tijdens pre-training is opgeslagen, redeneert het model over de aangeleverde documentfragmenten~\autocite{Lewis2020}. De volgende kandidaten werden onderzocht.
 
-\subsection{Qwen 2.5 14B Instruct}
+\subsection{OpenAI GPT-4o}
 
-Qwen 2.5 14B Instruct, beschreven in het technisch rapport van het Qwen Team~\autocite{QwenTeam2025}, is een 14 miljard parameter instruc\-tie\-geoptimaliseerd model dat uitgebracht is onder de Apache 2.0-licentie. Het model behaalt een \gls{mmlu}-score van 79,7\% en beschikt over een context window van 128.000 tokens. Een specifiek sterkte\-punt voor de \gls{rag}-pipeline van dit onderzoek is de expliciete post-trainingsoptimalisatie voor gestructureerde output en \gls{json}-instructieopvolging~\autocite{QwenTeam2025}, wat een functionele vereiste vormt voor de Metadata-Aware Prompt Builder die bronvermeldingen via gestructureerde tags verwacht. Op het Vectara Hallucination Leaderboard haalt de Qwen 2.5-familie 4,8 tot 5,9\% hallucinatiescores — beduidend beter dan de meeste alternatieve open-source modellen in dezelfde parameterklasse~\autocite{TamberEtAl2025}. Het model ondersteunt 29 talen, waaronder Italiaans en Engels, en kan op een enkele Azure VM worden gehost via vLLM.
-
-Een significante beperking vanuit het perspectief van data governance is echter de herkomst van het model: Qwen 2.5 is ontwikkeld door Alibaba Cloud, een Chinese aanbieder~\autocite{QwenTeam2025}. Cloud-gebaseerde deployment via officiële \gls{api}-endpoints valt buiten de \gls{eu}-jurisdictie en impliceert gegevensoverdracht naar servers buiten de Europese Unie, wat onverenigbaar is met \gls{gdpr}-naleving voor de vertrouwelijke \gls{esg}-documenten van Turtle Srl. Hoewel lokale deployment op een Azure VM technisch mogelijk is, biedt Alibaba geen formele \gls{eu}-soevereiniteitsgaranties, waardoor dit model op de \gls{gdpr}/\gls{eu}-soevereiniteitseis fundamenteel tekortschiet ten opzichte van \gls{eu}-gevestigde aanbieders in deze evaluatie.
+% TODO
 
 \subsection{Meta Llama 3.3 70B Instruct}
 
 Llama 3.3 70B Instruct, gepubliceerd door Meta~\autocite{GrattafioriEtAl2024}, is een 70 miljard parameter model uitgebracht onder de Llama 3.3 Community License. Het behaalt een \gls{mmlu}-score van 86,0\%, MMLU-Pro van 68,9\% en een IFEval-score van 92,1\% — de hoogste instructieopvolgingsscore van alle onderzochte kandidaten, wat de betrouwbaarheid van prompt-instructies in de Haystack-pipeline maximaliseert. Op de Vectara Hallucination Leaderboard scoort het model 4,1\% hallucinaties~\autocite{TamberEtAl2025}, wat het tot het meest faithfulness-betrouwbare open-source model in de short list maakt. Het model ondersteunt officieel acht talen waaronder Italiaans en heeft een context window van 128.000 tokens. Llama 3.3 70B is beschikbaar op Microsoft Azure Foundry met EU-dataresidentie, wat Azure-compatibiliteit en \gls{gdpr}-naleving maximaliseert.
-
-\subsection{Mistral AI Mistral Large 2}
-
-Mistral Large 2 combineert sterke prestaties met het strategische voordeel van Europese datasoevereiniteit.~\textcite{MistralAIBlog2024} documenteert 123 miljard parameters, een context window van 128.000 tokens en een \gls{mmlu}-score van 84,0\%, vergelijkbaar met GPT-4o en Claude 3 Opus. Het model is beschikbaar via de Azure AI Foundry Model Catalog en ondersteunt volledig self-hosted deployment op een Azure VM, wat maximale architecturale flexibiliteit biedt.~\textcite{JiangEtAl2023} beschrijven de architecturale innovaties in de Mistral-modelfamilie, waaronder \gls{gqa} die de latency bij self-hosting verlaagt.
-
-Een fundamentele beperking voor de specifieke use case van dit onderzoek is echter dat Mistral Large 2 \textit{geen} instruction-tuned variant is: het model mist de post-training fine-tuning die essentieel is voor betrouwbare instructieopvolging in een interactieve chatbot-context. De \gls{poc} van Turtle Srl is een \gls{rag}-gebaseerde chatbot waarbij het \gls{llm} complexe systeemprompts, gestructureerde \gls{json}-output-instructies en bronvermeldingsconventies moet naleven. Instruction-tuning is een expliciete Must-Have-requirement uit de requirementsanalyse: een basismodel dat niet expliciet post-training gefinetuned is voor instructieopvolging, is fundamenteel ongeschikt voor deze toepassing, ongeacht zijn sterke benchmarkprestaties op algemene taken.
-
-\subsection{Anthropic Claude 3.5 Sonnet}
-
-Claude 3.5 Sonnet is momenteel een van de sterkste modellen voor\\instructie-opvolging en redeneren over lange documenten. Het beschikt echter niet over native integratie met Azure OpenAI Service of Azure AI Foundry en vereist een aparte Anthropic \gls{api}-key buiten het Azure-ecosysteem, wat een extra leveranciersafhankelijkheid introduceert. De Gemini-categorie dekt de niet-OpenAI proprietaire klasse reeds af.
-
-\subsection{Cohere Command R+}
-
-Command R+ is door Cohere specifiek ontworpen voor \gls{rag}-toepassingen en beschikt over ingebouwde grounding- en retrieval-augmentation features. Het introduceert echter een extra externe \gls{api}-provider naast OpenAI en Google, zonder een unieke testdimensie toe te voegen die niet reeds door GPT, Gemini of Mistral wordt gedekt.
 
 \subsection{DeepSeek DeepSeek-V3}
 
@@ -188,36 +152,32 @@ Mistral Small 4, uitgebracht in maart 2026 door Mistral AI~\autocite{MistralAISm
 
 \subsection{Vergelijkingstabel LLMs}
 
-Om de geschiktheid van de \glspl{llm} te beoordelen, worden de volgende criteria in Tabel~\ref{tab:llm-comparison} gehanteerd:
+De selectie van de generatieve component is gebaseerd op de balans tussen taalkundige intelligentie, het vermogen om strikte instructies op te volgen en de juridische datasoevereiniteit voor de verwerking van gevoelige bedrijfsinformatie van Turtle Srl.
 
+De modellen worden beoordeeld op de volgende criteria:
 \begin{itemize}
-  \item \textbf{Parameters/Modelomvang (RL-01):} De grootte van het model beïnvloedt de redeneerkracht. Grotere modellen (zoals 70B+) kunnen complexere \gls{esg}-vragen beantwoorden, maar vereisen meer geheugen en genereren antwoorden vaak trager.
-  \item \textbf{Instructie-tuned (RL-02):} Geeft aan of het model specifiek is getraind om opdrachten uit te voeren. Zonder deze eigenschap vult een model tekst aan in plaats van een vraag te beantwoorden, wat de \gls{rag}-architectuur ondermijnt.
-  \item \textbf{Open Source/weights (RL-03):} Definieert de mate van controle. Modellen met open gewichten kunnen volledig op eigen infrastructuur (bijv. Azure VM via vLLM) worden gedraaid, wat maximale compatibiliteit garandeert.
-  \item \textbf{\gls{eu} / \gls{gdpr} compliant (RL-04):} De mate waarin het modelgebruik voldoet aan de Europese privacywetgeving. Hierbij wordt gekeken naar zowel de herkomst van het model als de hostingmogelijkheden binnen de \gls{eu}.
+    \item \textbf{MMLU (Massive Multitask Language Understanding):} Een benchmark voor de algemene redeneervaardigheid en kennis van het model.
+    \item \textbf{IFEval (Instruction Following Evaluation):} Een geverifieerde score die meet hoe accuraat een model strikte formele instructies opvolgt (essentieel voor JSON-outputs).
+    \item \textbf{Soevereiniteit Tier (ST):} Dezelfde classificatie (0-3) als gehanteerd bij de embeddingmodellen, gericht op het voorkomen van ongeautoriseerde data-export.
+    \item \textbf{Modeltype:} Het onderscheid tussen \textit{Open Weights} (lokaal hostbaar) en \textit{Proprietary} (SaaS-modellen).
 \end{itemize}
 
-Tabel~\ref{tab:llm-comparison} brengt alle besproken \glspl{llm} samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl.
+Tabel~\ref{tab:llm-longlist} brengt alle besproken \glspl{llm} samen en toont in welke mate ze voldoen aan de technische requirements voor de PoC van Turtle Srl.
 
 \begin{table}[ht]
 \centering
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Model} & \textbf{RL-01} & \textbf{RL-02} & \textbf{RL-03} & \textbf{RL-04} \\
+\textbf{Model} & \textbf{MMLU} & \textbf{IFEval} & \textbf{Context} & \textbf{Type} & \textbf{ST} \\
 \midrule
-Mistral Small 4 (2603)   & 5 & 5 & 5 & 5 \\
-Meta Llama 3.3 70B       & 4 & 5 & 4 & 4 \\
-Google Gemma 3 27B IT    & 2 & 5 & 4 & 4 \\
-Mistral AI Large 2       & 5 & 1 & 4 & 5 \\
-GPT-4o (OpenAI)          & 5 & 5 & 1 & 4 \\
-Claude 3.5 Sonnet        & 5 & 5 & 1 & 3 \\
-Command R+ (Cohere)      & 4 & 5 & 2 & 3 \\
-DeepSeek-V3              & 5 & 3 & 5 & 1 \\
-Qwen 2.5 14B Instruct    & 1 & 5 & 5 & 1 \\
+Mistral Small 4 (2603)  & 73.5\% & ?      & 32k  & Open Weights & 0 \\
+Meta Llama 3.3 70B      & 86.0\% & 92.1\% & 128k & Open Weights & 1 \\
+Google Gemma 3 27B IT   & 78.6\% & 90.4\% & 128k & Open Weights & 1 \\
+GPT-4o (OpenAI)         & 85.7\% & 81.0\% & 128k & Proprietary  & 2 \\
+DeepSeek-V3             & 88.5\% & 88.5\% & 128k & Open Weights & 3 \\
 \bottomrule
 \end{tabular}
-\caption[Longlist: vergelijkingstabel \glspl{llm}]{\label{tab:llm-comparison}Vergelijking van Large Language Models op een ordinale schaal (1-5).}
-\vspace{2mm}
-\footnotesize{\textbf{Legenda:} 1 = Zeer ongunstig/Gesloten, 3 = Gemiddeld, 5 = Zeer gunstig/Open/Native EU. \\ \textbf{RL-01 (Modelomvang):} 1 = Klein, 5 = Zeer groot.}
+\caption{Objectieve vergelijking van LLM-kandidaten op basis van intelligentie, stuurbaarheid en soevereiniteit.}
+\label{tab:llm-longlist}
 \end{table}

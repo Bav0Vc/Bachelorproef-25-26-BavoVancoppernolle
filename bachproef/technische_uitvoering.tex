@@ -157,9 +157,9 @@ De parameter \mintinline{python}{pdf_infer_table_structure: True} is specifiek g
 \subsection{Documentreiniging en paginamarkering}
 \label{subsec:documentcleaner}
 
-Na de conversie passeert elk document een zelfgeschreven\\\texttt{DocumentCleaner}-component dat het \texttt{@component}-protocol van Haystack implementeert. Dit component vervult twee rollen: tekstnormalisatie en het samenvoegen van pagina's per brondocument met expliciete pagina-markers.
+Na de conversie passeert elk document een zelfgeschreven\\\texttt{DocumentCleaner}-component die het \texttt{@component}-protocol van Haystack implementeert. Deze component vervult twee rollen: tekstnormalisatie en het samenvoegen van pagina's per brondocument met expliciete pagina-markers.
 
-\textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Deze ontwerpbeslissing heeft een directe invloed op de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}).
+\textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Deze ontwerpbeslissing heeft een directe invloed op de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door deze samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}).
 
 \textbf{Pagina-markers.} Om de paginatraceerbaarheid na het samenvoegen te bewaren, injecteert de cleaner vóór elke alinea een marker in de vorm \texttt{<<<PAGE X>>>}. Na het chunken extraheert de \texttt{ChunkMetaCleaner} de eerste marker die in een chunk voorkomt en koppelt die als \texttt{page}-metadata aan het fragment. Dit mechanisme implementeert de Could-Have-requirement voor \textbf{granulaire bronverwijzing op paginaniveau} (Tabel~\ref{tab:moscow}) zonder afhankelijk te zijn van de manier waarop de chunker de grenzen trekt.
 
@@ -177,13 +177,13 @@ def _mark_paragraphs(self, text: str, page: str) -> str:
 \label{lst:page-marker}
 \end{listing}
 
-\textbf{Tekstnormalisatie} elimineert overbodige witruimte en lege regels. De metadata-sleutels \texttt{source} (bestandsnaam) en \texttt{page} worden genormaliseerd en consistent doorgegeven aan alle volgende componenten. Voor Excel-bestanden wordt het bladnaam als pagina-identifier gebruikt.
+\textbf{Tekstnormalisatie} elimineert overbodige witruimte en lege regels. De metadata-sleutels \texttt{source} (bestandsnaam) en \texttt{page} worden genormaliseerd en consistent doorgegeven aan alle volgende componenten. Voor Excel-bestanden wordt de bladnaam als pagina-identifier gebruikt.
 
 %%----------------------------------------------------------------------
 \subsection{ChunkMetaCleaner}
 \label{subsec:chunkmetacleaner}
 
-Na het chunken passeert elke chunk de \texttt{ChunkMetaCleaner}. Dit component vervult drie taken. Ten eerste extraheert het de eerste \texttt{<<<PAGE X>>>}-marker uit de chunkinhoud en slaat de bijbehorende paginawaarde op als \texttt{page}-metadata. Ten tweede verwijdert het alle markers zodat de embeddingmodellen schone tekst krijgen zonder ruis. Ten derde dedupliceert het chunks op inhoud: bij korte pagina's kan overlap tot identieke chunks leiden, wat dubbele vectoren in Qdrant zou introduceren en de retrieval-kwaliteit verlaagt.
+Na het chunken passeert elke chunk de \texttt{ChunkMetaCleaner}. Deze component vervult drie taken. Ten eerste extraheert hij de eerste \texttt{<<<PAGE X>>>}-marker uit de chunkinhoud en slaat de bijbehorende paginawaarde op als \texttt{page}-metadata. Ten tweede verwijdert hij alle markers zodat de embeddingmodellen schone tekst krijgen zonder ruis. Ten derde dedupliceert hij chunks op inhoud: bij korte pagina's kan overlap tot identieke chunks leiden, wat dubbele vectoren in Qdrant zou introduceren en de retrieval-kwaliteit verlaagt.
 
 %%----------------------------------------------------------------------
 \section{Custom chunking-componenten}
@@ -191,7 +191,7 @@ Na het chunken passeert elke chunk de \texttt{ChunkMetaCleaner}. Dit component v
 
 Zoals vastgesteld in de shortlist (Sectie~\ref{sec:shortlist-chunking}) worden drie chunkingstrategieën geëvalueerd. Elk is geïmplementeerd als een zelfstandig Haystack \texttt{@component} met een uniforme interface, waardoor de drie chunkers volledig verwisselbaar zijn. De ontwerpkeuze om de strategieën te encapsuleren in custom componenten heeft drie concrete argumenten:
 
-Ten eerste garandeert de uniforme interface de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}): de exacte configuratieparameters van elke chunker zijn bevroren in de broncode, onafhankelijk van toekomstige framework-updates. Ten tweede maakt de modulaire opbouw de \textbf{variabele configuratieondersteuning} mogelijk die de kern van dit onderzoek vormt: het Cartesisch product van alle componenten is alleen haalbaar als elke component dezelfde interface exposeert. Ten derde biedt deze structuur de transparantie en uitbreidbaarheid die Turtle Srl heeft gevraagd in het kader van de white-box-vereiste.
+Ten eerste garandeert de uniforme interface de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}): de exacte configuratieparameters van elke chunker zijn bevroren in de broncode, onafhankelijk van toekomstige framework-updates. Ten tweede maakt de modulaire opbouw de \textbf{variabele configuratieondersteuning} mogelijk die de kern van dit onderzoek vormt: het Cartesisch product van alle componenten is alleen haalbaar als elke component dezelfde interface hanteert. Ten derde biedt deze structuur de transparantie en uitbreidbaarheid die Turtle Srl heeft gevraagd in het kader van de white-box-vereiste.
 %%----------------------------------------------------------------------
 \subsection{Fixed-size word splitting}
 \label{subsec:fixed-chunker}
@@ -256,9 +256,9 @@ class RecursiveCharacterSplitter:
 \subsection{Semantic chunking}
 \label{subsec:semantic-chunker}
 
-De derde strategie is de semantische chunker, gebaseerd op de \emph{semantic chunking}-methodiek van \textcite{Kamradt2023} zoals beschreven in de literatuurstudie (Sectie~\ref{subsubsec:chunking}). In tegenstelling tot structurele of tekstuele splitsing hanteert dit component betekenisgrenzen als primair criterium. Een segmentatiegrens wordt geplaatst wanneer de cosine-gelijkenis tussen opeenvolgende zingroepen onder een kritische drempelwaarde daalt — het 95e percentiel van de afstandsverdeling binnen het document \autocite{Kamradt2023}.
+De derde strategie is de semantische chunker, gebaseerd op de \emph{semantic chunking}-methodiek van \textcite{Kamradt2023} zoals beschreven in de literatuurstudie (Sectie~\ref{subsubsec:chunking}). In tegenstelling tot structurele of tekstuele splitsing hanteert deze component betekenisgrenzen als primair criterium. Een segmentatiegrens wordt geplaatst wanneer de cosine-gelijkenis tussen opeenvolgende zingroepen onder een kritische drempelwaarde daalt — het 95e percentiel van de afstandsverdeling binnen het document \autocite{Kamradt2023}.
 
-Voor de berekening van de zin-embeddings wordt het \texttt{paraphrase-multilingual-mpnet-base-v2}-model ingezet. Dit meertalige model is bewust gekozen boven lichtgewichtere Engelstalige alternatieven, conform de Should-Have-requirement voor \textbf{meertalige ondersteuning} (Tabel~\ref{tab:moscow}): de dataset bevat Italiaanse en Engelse documenten, waardoor een meertalig model noodzakelijk is om semantische grenzen correct te detecteren in beide talen. Per groep van drie zinnen (\texttt{sentences\_per\_group=3}) wordt een gecombineerde embedding berekend om ruis door korte zinnen te reduceren.
+Voor de berekening van de zin-embeddings wordt het \texttt{paraphrase-multilingual-mpnet-base-v2}-model ingezet. Dit meertalige model is bewust gekozen boven meer lichtgewicht Engelstalige alternatieven, conform de Should-Have-requirement voor \textbf{meertalige ondersteuning} (Tabel~\ref{tab:moscow}): de dataset bevat Italiaanse en Engelse documenten, waardoor een meertalig model noodzakelijk is om semantische grenzen correct te detecteren in beide talen. Per groep van drie zinnen (\texttt{sentences\_per\_group=3}) wordt een gecombineerde embedding berekend om ruis door korte zinnen te reduceren.
 
 Een bewuste keuze in de experimentele opzet is dat de semantische chunking \textbf{niet} wordt uitgevoerd met de embeddingmodellen die deel uitmaken van de evaluatiematrix Indien het model onder test ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunking-strategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
 
@@ -315,11 +315,11 @@ Ten derde biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde
 
 In de initiële opzet van het onderzoek werden de embeddingmodellen aangestuurd via externe \gls{api}-diensten, zoals de \gls{nvidia} NIM \gls{api} en de Hugging Face Serverless Inference \gls{api}. Gedurende de implementatiefase is hiervan afgestapt om drie redenen die een directe link hebben met de requirements.
 
-Ten eerste introduceerden externe \gls{api}-aanroepen een afhankelijkheid van de beschikbaarheid van externe diensten tijdens de indexeringsfase. Storingen of rate limits konden de volledige benchmarkrun onderbreken, wat de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}) ondermijnt. Ten deprecieerden providers tijdens het onderzoek diverse modellen binnen hun catalogus, waardoor onvoorziene aanpassingen in de pipeline-architectuur noodzakelijk werden.
+Ten eerste introduceerden externe \gls{api}-aanroepen een afhankelijkheid van de beschikbaarheid van externe diensten tijdens de indexeringsfase. Storingen of rate limits konden de volledige benchmarkrun onderbreken, wat de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}) ondermijnt. Ten tweede deprecieerden providers tijdens het onderzoek diverse modellen binnen hun catalogus, waardoor onvoorziene aanpassingen in de pipeline-architectuur noodzakelijk werden.
 
 Ten derde had de Hugging Face Serverless Inference \gls{api} beperkingen op gelijktijdige aanroepen, wat de indexeringstijd verlengt en de \textbf{operationele efficiëntie} (Tabel~\ref{tab:moscow}) schaadt.
 
-De definitieve keuze is om alle drie de embeddingmodellen volledig lokaal te draaien in de Docker-container met \gls{gpu}-ondersteuning. Dit draagt ook bij aan de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} (Tabel~\ref{tab:moscow}): documentinhoud verlaat de lokale machine niet voor de embedding-berekeningen, wat \gls{gdpr}-compliant dataverwerking garandeert.
+De definitieve keuze is om alle drie de embeddingmodellen volledig lokaal te draaien in de Docker-container met \gls{gpu}-ondersteuning. Dit draagt ook bij aan het Must-Have-requirement betreffende \textbf{data soevereiniteit \& privacy} (Tabel~\ref{tab:moscow}): documentinhoud verlaat de lokale machine niet voor de embedding-berekeningen, wat \gls{gdpr}-compliant dataverwerking garandeert.
 
 De implementatie verschilt echter per model, wat zichtbaar is in de \texttt{\_make\_doc\_embedder()}-hulpfunctie in de indexeringspipeline:
 
@@ -343,7 +343,7 @@ def _make_doc_embedder(emb_cfg: dict):
 %%----------------------------------------------------------------------
 \subsection{Arctic-embed en E5-instruct via sentence-transformers}
 
-Arctic-embed-l-v2.0 en multilingual-e5-large-instruct worden geïntegreerd via Haystack's \texttt{SentenceTransformersDocumentEmbedder}-component \autocite{HaystackPipelines2026}. Dit component laadt het model lokaal via de \texttt{sentence-transformers}-bibliotheek als inferentiebackend \autocite{ReimersGurevych2019}, waarna PyTorch de berekeningen uitvoert op de \gls{gpu} via \gls{cuda}-kernels. De modelgewichten worden bij de eerste run gedownload van de Hugging Face Hub naar de persistente Docker-volume cache en blijven daarna lokaal beschikbaar.
+Arctic-embed-l-v2.0 en multilingual-e5-large-instruct worden geïntegreerd via Haystack's \texttt{SentenceTransformersDocumentEmbedder}-component \autocite{HaystackPipelines2026}. Deze component laadt het model lokaal via de \texttt{sentence-transformers}-bibliotheek als inferentiebackend \autocite{ReimersGurevych2019}, waarna PyTorch de berekeningen uitvoert op de \gls{gpu} via \gls{cuda}-kernels. De modelgewichten worden bij de eerste run gedownload van de Hugging Face Hub naar de persistente Docker-volume cache en blijven daarna lokaal beschikbaar.
 
 De inferentie verloopt via PyTorch: de modelspecifieke tokenizer zet de invoertekst om in tokenreeksen die als tensoren door de transformer-encoder worden geleid. Via mean pooling over alle tokenposities ontstaat één embeddingsvector van vaste lengte per invoertekst. PyTorch voert deze berekeningen uit via \gls{cuda}-kernels, wat een versnelling van factor tien tot vijftig oplevert ten opzichte van \gls{cpu}-inferentie.
 
@@ -360,7 +360,7 @@ Om dit op te lossen zijn twee custom Haystack-componenten geïmplementeerd via d
 %%----------------------------------------------------------------------
 \subsubsection{Indexeringsfase: \texttt{BGEM3HybridDocumentEmbedder}.} 
 
-De \texttt{BGEM3HybridDocumentEmbedder} wordt in de indexeringspipeline ingezet om elk document te encoderen. Via één \texttt{encode\_corpus()}-aanroep produceert het component zowel een dense inbeddingsvector als een \texttt{SparseEmbedding}-object met lexicale gewichten:
+De \texttt{BGEM3HybridDocumentEmbedder} wordt in de indexeringspipeline ingezet om elk document te encoderen. Via één \texttt{encode\_corpus()}-aanroep produceert de component zowel een dense inbeddingsvector als een \texttt{SparseEmbedding}-object met lexicale gewichten:
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -622,7 +622,7 @@ else:
   indexing_pipe.connect("embedder.documents",     "writer.documents")
   indexing_pipe.run({"converter": {"paths": all_file_paths}})
 \end{minted}
-\caption[Indexeringslogica: tweetraps voor semantische chunking, lineair voor de rest]{De tweetraps-uitvoering vrijwaart de \gls{gpu} van gelijktijdige belasting. In beide paden is de \texttt{ChunkMetaCleaner} aanwezig die de pagina-markers verwerkt en chunks dedupliceert (Sectie~\ref{subsec:chunkmetacleaner}).}
+\caption[Indexeringslogica: tweeledige uitvoering voor semantische chunking, lineair voor de rest]{De tweeledige uitvoering vrijwaart de \gls{gpu} van gelijktijdige belasting. In beide paden is de \texttt{ChunkMetaCleaner} aanwezig die de pagina-markers verwerkt en chunks dedupliceert (Sectie~\ref{subsec:chunkmetacleaner}).}
 \end{listing}
 
 %%----------------------------------------------------------------------

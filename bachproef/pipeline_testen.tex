@@ -6,13 +6,13 @@ De vorige fase leverde een volledig geïmplementeerde, dynamische \gls{rag}-pipe
 \section{Uitvoeringsomgeving}
 \label{sec:uitvoeringsomgeving}
 
-De volledige experimentele opzet draait binnen een Docker-containeromgeving die bestaat uit twee diensten die via een intern Docker-netwerk met elkaar communiceren: de \gls{rag}-applicatiecontainer en de Unstructured document-\gls{api}. Deze containerisatie heeft twee doelstellingen. Ten eerste wordt de uitvoeringsomgeving volledig van het hostsysteem geïsoleerd, zodat afhankelijkheden, libraries en bepaalde omgevingsvariabelen niet per machine verschillen. Ten tweede draagt het bij aan reproduceerbaarheid van de proefopstelling: iedereen met toegang tot de broncode en een NVIDIA-\gls{gpu} kan de exacte experimentele omgeving reconstrueren via één commando.
+De volledige experimentele opzet draait binnen een Docker-containeromgeving die bestaat uit twee services die via een intern Docker-netwerk met elkaar communiceren: de \gls{rag}-applicatiecontainer en de Unstructured document-\gls{api}. Deze containerisatie heeft twee doelstellingen. Ten eerste wordt de uitvoeringsomgeving volledig van het hostsysteem geïsoleerd, zodat afhankelijkheden, libraries en bepaalde omgevingsvariabelen niet per machine verschillen. Ten tweede draagt het bij aan reproduceerbaarheid van de proefopstelling: iedereen met toegang tot de broncode en een NVIDIA-\gls{gpu} kan de exacte experimentele omgeving reconstrueren via één commando.
 
-\subsection{Diensten en hun rol}
+\subsection{Services en hun rol}
 
 \textbf{De applicatiecontainer} bevat de volledige Python-codebase: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas}-evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde \gls{nltk}-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker (Sectie~\ref{subsec:semantic-chunker}).
 
-\textbf{De Unstructured-dienst} draait de officiële Unstructured lokale \gls{api} op poort 8000. Unstructured draait lokaal om rate limits van de cloud-variant te vermijden en om de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} te waarborgen (Tabel~\ref{tab:moscow}) tijdens de indexeringsfase: documentinhoud verlaat de lokale omgeving niet via externe API-aanroepen.
+\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. Unstructured draait lokaal om rate limits van de cloud-variant te vermijden en om de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} te waarborgen (Tabel~\ref{tab:moscow}) tijdens de indexeringsfase: documentinhoud verlaat de lokale omgeving niet via externe API-aanroepen.
 
 \subsection{GPU-toegang en modelcaching}
 
@@ -43,7 +43,7 @@ run_benchmark()
 # Stap 4: evalueer met RAGAS
 asyncio.run(evaluate_results())
 \end{minted}
-\caption[run\_pipeline.py: volledig geautomatiseerde sequentiële uitvoering]{Het hoofdscript voert alle vier stappen automatisch achter elkaar uit. Elke run begint met een schone Qdrant-database om de reproduceerbaarheid-requirement (Tabel~\ref{tab:moscow}) te garanderen.}
+\caption[run\_pipeline.py: volledig geautomatiseerde sequentiële uitvoering]{Het hoofdscript voert alle vier stappen automatisch achter elkaar uit. Elke run begint met een schone Qdrant-database om het reproduceerbaarheid-requirement (Tabel~\ref{tab:moscow}) te garanderen.}
 \label{lst:run-pipeline}
 \end{listing}
 
@@ -91,7 +91,7 @@ def _build_llm(llm_cfg: dict):
 \label{lst:build-llm}
 \end{listing}
 
-\textbf{Limitatie:} Externe \gls{api}-diensten introduceren netwerk-latency die onafhankelijk is van de modelarchitectuur. Bij de interpretatie van de responstijden — een component van de Should-Have-requirement voor \textbf{operationele efficiëntie} (Tabel~\ref{tab:moscow}) — moet rekening worden gehouden met deze infrastructuurfactor: Gemma en Llama draaien op HuggingFace-partnerinfrastructuur, terwijl Mistral via een eigen eindpunt wordt aangestuurd.
+\textbf{Limitatie:} Externe \gls{api}-diensten introduceren netwerk-latency die onafhankelijk is van de modelarchitectuur. Bij de interpretatie van de responstijden — een component van de Should-Have-requirement voor \textbf{operationele efficiëntie} (Tabel~\ref{tab:moscow}) — moet rekening worden gehouden met deze infrastructuurfactor: Gemma en Llama draaien op HuggingFace-partnerinfrastructuur, terwijl Mistral via een eigen endpoint wordt aangestuurd.
 
 \section{Reproduceerbaarheid van de experimentele opzet}
 \label{sec:reproduceerbaarheid}
@@ -106,7 +106,6 @@ Reproduceerbaarheid is een Should-Have-requirement (Tabel~\ref{tab:moscow}) en i
 
 \textbf{Logging van elke run.} Elk script dat via het hoofdscript wordt gestart, initialiseert een gestructureerde logger die alle uitvoer — inclusief timestamps, configuratielabels en foutmeldingen — naar een logbestand wegschrijft. De logbestandsnaam bevat de scriptnaam, datum en tijd, zodat de uitvoering en resultaten van elke run achteraf volledig herleidbaar zijn.
 
-
 \section{Invoer en uitvoer van de testfase}
 \label{sec:invoer-uitvoer}
 
@@ -114,14 +113,14 @@ De testfase heeft twee vereiste invoerbestanden en produceert twee uitvoerbestan
 
 \textbf{Invoer:}
 \begin{itemize}
-    \item \texttt{questionnaire.json}: de golden dataset met alle vragen, grondwaarheden en referentiecontexten en aanvaardbare brondocumenten (Sectie~\ref{sec:golden-dataset-structuur}).
-    \item De negen Qdrant-collecties die tijdens de indexeringsfase zijn aangemaakt.
+  \item \texttt{questionnaire.json}: de golden dataset met alle vragen, grondwaarheden en referentiecontexten en aanvaardbare brondocumenten (Sectie~\ref{sec:golden-dataset-structuur}).
+  \item De negen Qdrant-collecties die tijdens de indexeringsfase zijn aangemaakt.
 \end{itemize}
 
 \textbf{Uitvoer:}
 \begin{itemize}
-    \item \texttt{evaluation\_dataset.json}: voor elke vraag-configuratiecombinatie een volledig resultaatwoordenboek (Sectie~\ref{sec:resultaat-structuur}). Dit bestand dient als directe invoer voor de \gls{ragas}-evaluatie in Hoofdstuk~\ref{ch:resultaten}.
-    \item \texttt{rag\_benchmark\_results.csv}: dezelfde data in tabelvorm als \gls{csv}-bestand met puntkomma als scheidingsteken voor verdere analyse in een Jupyter Notebook.
+  \item \texttt{evaluation\_dataset.json}: voor elke vraag-configuratiecombinatie een volledig resultaatwoordenboek (Sectie~\ref{sec:resultaat-structuur}). Dit bestand dient als directe invoer voor de \gls{ragas}-evaluatie in Hoofdstuk~\ref{ch:resultaten}.
+  \item \texttt{rag\_benchmark\_results.csv}: dezelfde data in tabelvorm als \gls{csv}-bestand met puntkomma als scheidingsteken voor verdere analyse in een Jupyter Notebook.
 \end{itemize}
 
 Bij een volledige run van 27 configuraties op $n$ vragen bevat het \gls{json}-bestand $27 \times n$ rijen.

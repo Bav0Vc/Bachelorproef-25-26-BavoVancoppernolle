@@ -71,10 +71,6 @@ BGE-M3, gepubliceerd door het Beijing Academy of Artificial Intelligence, introd
 
 De E5-modelfamilie van Microsoft Research introduceerde het concept van \textit{query-} en \textit{passage-}prefixen als instruction-tuning mechanisme~\autocite{WangEtAl2022}. Multilingual-e5-large-instruct, beschreven door~\textcite{WangEtAl2024b}, initialiseert vanuit xlm-roberta-large, ondersteunt 100 talen en is getraind op 1 miljard meertalige tekstparen. Door simpelweg \texttt{query:} voor een vraag en \texttt{passage:} voor een documentchunk te plaatsen, dwingt men het model de asymmetrische relatie tussen vraag en antwoord te modelleren~\autocite{Wang2024a}. Vergeleken met BGE-M3 is dit model lichter in gewicht, wat snellere lokale hosting op een Azure-server mogelijk maakt. De beperking is de afwezigheid van hybride zoekfunctionaliteit.
 
-\subsection{Cohere embed-multilingual-v3.0}
-
-Cohere's embed-multilingual-v3.0 is een sterk commercieel model dat specifiek getraind is voor search- en retrieval-taken en uitstekend presteert op het \gls{mteb}-leaderboard voor meertalige taken~\autocite{MuennighoffEtAl2023}. Echter, de \gls{poc} maakt reeds gebruik van de Azure-infrastructuur met OpenAI-integratie. Het toevoegen van Cohere als derde externe \gls{api}-provider verhoogt de architectuurcomplexiteit zonder een unieke testdimensie toe te voegen ten opzichte van text-embedding-3-large, dat de proprietaire categorie reeds afdekt.
-
 \subsection{Jina jina-embeddings-v2-base-multilingual} % TODO (v3 model !!!)
 
 Het Jina-model ondersteunt contexten tot 8.192 tokens~\autocite{JinaAI2024}, wat interessant is voor lange \gls{esg}-documenten. BGE-M3 biedt echter dezelfde lange context én bovendien hybride zoeken, waardoor het Jina-model technologisch inferieur is voor de specifieke eisen van dit onderzoek, zonder compenserende voordelen.
@@ -85,9 +81,7 @@ Nomic embed-text-v1.5, mxbai-embed-large-v1 en GTE-large-en-v1.5 zijn Apache 2.0
 
 \subsection{Vergelijkingstabel embeddingmodellen}
 
-De embeddingcomponent is verantwoordelijk voor de vectorisatie van de tekstfragmenten en bepaalt de effectiviteit van de zoekoperaties (retrieval) binnen de \gls{rag}-pipeline. Voor de evaluatie van deze modellen ligt de focus op de kwaliteit van de informatie-ophaling, de ondersteuning voor meertalige \gls{esg}-documentatie (Italiaans en Engels) en de infrastructurele conformiteit binnen de \gls{eu}-jurisdictie.
-
-De kandidaten worden getoetst aan de volgende criteria:
+De embeddingcomponent is verantwoordelijk voor de vectorisatie van de tekstfragmenten en bepaalt de effectiviteit van de zoekoperaties (retrieval) binnen de \gls{rag}-pipeline. Voor de evaluatie van deze modellen ligt de focus op de kwaliteit van de informatie-ophaling, de ondersteuning voor meertalige \gls{esg}-documentatie (Italiaans en Engels) en de infrastructurele conformiteit binnen de \gls{eu}-jurisdictie. De kandidaten worden getoetst aan de volgende criteria:
 
 \begin{itemize}
   \item \textbf{MTEB-Retrieval (nDCG@10):} De primaire metriek die meet hoe accuraat het model de meest relevante fragmenten bovenaan de resultaten plaatst.
@@ -99,8 +93,8 @@ De kandidaten worden getoetst aan de volgende criteria:
       \item \textbf{3 (Niet-Westers):} Jurisdicties zonder \gls{gdpr}-adequaatheidsbesluit.
     \end{itemize}
   \item \textbf{Meertaligheid (ML):} Native ondersteuning voor zowel Italiaanse als Engelse tekstbronnen, essentieel voor de cross-linguale retrieval binnen de \gls{esg}-dataset.
-  \item \textbf{Open-source (OS):} Beschikbaarheid van de modelparameters (\textit{Open Weights}) voor lokale implementatie, wat volledige controle over de dataverwerking mogelijk maakt.
-  \item \textbf{Hybride Retrieval:} De mate waarin het model zowel semantische (dense) als lexicale (sparse) zoekopdrachten ondersteunt.
+  \item \textbf{Open-source (OS):} Beschikbaarheid van de modelparameters (\textit{OW}) open weight voor lokale implementatie, wat volledige controle over de dataverwerking mogelijk maakt.
+  \item \textbf{Native hybride (embedding \& retrieval):} Het model ondersteunt zowel semantische (dense) als lexicale (sparse) embedding en zoekopdrachten.
   \item \textbf{Context Window:} De maximale invoerlengte per tekstfragment in tokens.
 \end{itemize}
 
@@ -117,8 +111,7 @@ BAAI BGE-M3                        & 54.60\% & 1 & Ja  & Ja  & Ja  & 8192 \\ % k
 Snowflake Arctic-L-V2.0            & 58.36\% & 2 & Ja  & Ja  & Nee & 8192 \\ % keuse
 MS Multilingual-E5-Large-Instruct  & 57.12\% & 2 & Ja  & Ja  & Nee & 512  \\ % keuze
 Jina Embeddings-V3                 & 55.76\% & 0 & Ja  & Ja  & Nee & 8192 \\ % Anders geen hybrid
-Nomic Embed-Text-V1.5              & 59.45\% & 2 & Nee & Ja  & Nee & 8192 \\ % Niet meertalig
-Cohere Embed-Multi-V3              & 59.22\% & 2 & Ja  & Nee & Ja  & 512  \\ % niet open source
+Nomic Embed-Text-V1.5              & 34.09\% & 2 & Nee & Ja  & Nee & 8192 \\ % Niet meertalig
 \bottomrule
 \end{tabular}
 \caption{Vergelijking van embeddingmodellen op basis van retrieval-nauwkeurigheid, meertaligheid en soevereiniteit.}
@@ -152,9 +145,8 @@ Mistral Small 4, uitgebracht in maart 2026 door Mistral AI~\autocite{MistralAISm
 
 \subsection{Vergelijkingstabel LLMs}
 
-De selectie van de generatieve component is gebaseerd op de balans tussen taalkundige intelligentie, het vermogen om strikte instructies op te volgen en de juridische datasoevereiniteit voor de verwerking van gevoelige bedrijfsinformatie van Turtle Srl.
+De selectie van de generatieve component is gebaseerd op de balans tussen taalkundige intelligentie, het vermogen om strikte instructies op te volgen en de juridische datasoevereiniteit voor de verwerking van gevoelige bedrijfsinformatie van Turtle Srl. De modellen worden beoordeeld op de volgende criteria:
 
-De modellen worden beoordeeld op de volgende criteria:
 \begin{itemize}
     \item \textbf{MMLU (Massive Multitask Language Understanding):} Een benchmark voor de algemene redeneervaardigheid en kennis van het model.
     \item \textbf{IFEval (Instruction Following Evaluation):} Een geverifieerde score die meet hoe accuraat een model strikte formele instructies opvolgt (essentieel voor JSON-outputs).
@@ -171,11 +163,11 @@ Tabel~\ref{tab:llm-longlist} brengt alle besproken \glspl{llm} samen en toont in
 \toprule
 \textbf{Model} & \textbf{MMLU} & \textbf{IFEval} & \textbf{Context} & \textbf{Type} & \textbf{ST} \\
 \midrule
-Mistral Small 4 (2603)  & 73.5\% & ?      & 32k  & Open Weights & 0 \\
+Mistral Small 4 (2603)  & 73.5\% & ?      & 256  & Open Weights & 0 \\
 Meta Llama 3.3 70B      & 86.0\% & 92.1\% & 128k & Open Weights & 1 \\
-Google Gemma 3 27B IT   & 78.6\% & 90.4\% & 128k & Open Weights & 1 \\
-GPT-4o (OpenAI)         & 85.7\% & 81.0\% & 128k & Proprietary  & 2 \\
-DeepSeek-V3             & 88.5\% & 88.5\% & 128k & Open Weights & 3 \\
+Google Gemma 3 27B IT   & 76.9\% & 90.4\% & 128k & Open Weights & 1 \\
+GPT-4o (OpenAI)         & 81.4\% & 81.0\% & 128k & Proprietary  & 2 \\
+DeepSeek-V3             & 88.5\% & 86.1\% & 128k & Open Weights & 3 \\
 \bottomrule
 \end{tabular}
 \caption{Objectieve vergelijking van LLM-kandidaten op basis van intelligentie, stuurbaarheid en soevereiniteit.}

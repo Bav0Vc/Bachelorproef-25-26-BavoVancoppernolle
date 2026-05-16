@@ -309,6 +309,45 @@ Ten tweede bevordert deze encapsulatie de reproduceerbaarheid van het experiment
 
 Ten derde biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde logica, zoals gedemonstreerd in de semantische chunker. Hierbij worden meerdere atomaire Haystack-componenten — een embedder en een splitter — gecombineerd tot één logische eenheid. Deze mate van granulariteit en controle is noodzakelijk om te voldoen aan de \emph{white-box} vereisten van dit onderzoek, waarbij elke stap in de gegevensstroom transparant en manipuleerbaar moet zijn.
 
+\subsection{Chunk-optimalisatie}
+\label{sec:technische-uitvoering-chunking}
+
+In het kader van deze vergelijkende studie tussen de geselecteerde \textit{embedding}-modellen is een uniforme testomgeving essentieel. Gegeven de uiteenlopende tokenizers van de gekozen \glspl{llm}, is een statisch karakterlimiet voor chunks onvoldoende om een gelijke semantische dichtheid te garanderen.
+
+\subsubsection{Mathematische Conversie naar Karakter-limieten}
+
+Om een consistente maximale chunk grootte van 400 tokens te waarborgen, is voor elk model een specifieke karakterdoelstelling ($C_{target}$) berekend. Hierbij is uitgegaan van een gemiddelde Italiaanse woordlengte ($\text{AVG}_{cpw}$) van 7,2 karakters en de model-specifieke fertility-scores voor Italiaanse corpora \autocite{Eurotrad2022,SwfGit}.
+
+De berekening van de \textit{Characters Per Token} (CPT) en de uiteindelijke $C_{target}$ volgt de formule:
+
+\begin{equation}
+    C_{target} = T_{target} \times \left( \frac{\text{AVG}_{cpw}}{F} \right)
+\end{equation}
+
+De resultaten van deze berekeningen zijn samengevat in Tabel\ref{tab:chunk-specs}.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Model-specifieke chunk-configuraties voor Italiaanse tekstverwerking.}
+\label{tab:chunk-specs}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model Familie} & \textbf{Fertility ($F$)} & \textbf{CPT} & \textbf{Token Target} & \textbf{Chunk Size ($C_{target}$)} \\
+\midrule
+Llama-3.3-70B-Instruct    & 1,811955 & 3,9736 & 400 & 1589 karakters \\
+Gemma-3-27B-it            & 1,696459 & 4,2441 & 400 & 1698 karakters \\
+Mistral-Small-4-119B      & 1,816314 & 3,9641 & 400 & 1586 karakters \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Noodzaak voor dynamische karakter-limieten}
+
+De noodzaak voor deze karakter-limieten vloeit voort uit de technische limitaties binnen het \textit{Haystack}-framework. Terwijl de \texttt{RecursiveDocumentSplitter} (gebruikt voor \textit{Fixed-size} en \textit{Recursive Character} splitting) native ondersteuning biedt voor het definiëren van de \texttt{split\_length} in tokens, hanteert de \texttt{EmbeddingBasedDocumentSplitter} (gebruikt voor \textit{Semantic Chunking}) uitsluitend karakters als eenheid voor de \texttt{max\_chunk\_length}~\autocite{HsRds,HsEbds}.
+
+Door de berekende $C_{target}$ waarden uit Tabel \ref{tab:chunk-specs} toe te passen op de \texttt{EmbeddingBasedDocumentSplitter}, wordt gewaarborgd dat de semantische segmentatie binnen dezelfde numerieke kaders opereert als de token-gebaseerde splitters. Dit neutraliseert de variabele 'informatie-omvang' en stelt het onderzoek in staat om de puur structurele impact van de chunking-strategieën te evalueren.
+
 %%----------------------------------------------------------------------
 \section{Lokale embeddingmodellen}
 \label{sec:lokale-embedding}

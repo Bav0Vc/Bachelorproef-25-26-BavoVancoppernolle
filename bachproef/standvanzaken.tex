@@ -147,7 +147,6 @@ Hoewel geautomatiseerde frameworks de noodzaak voor grootschalige handmatige con
 
 \subsection{Het \gls{ragas} framework}
 
-
 De academische standaard voor het kwantificeren van \gls{rag}-prestaties is het \gls{ragas}-framework. \gls{ragas}, ontwikkeld door~\textcite{Es2024}, introduceert metrieken die de ``RAG Triad'' (Query, Context, Answer) evalueren. De interactie tussen de query, de opgehaalde context en het gegenereerde antwoord wordt geëvalueerd aan de hand van vier kernmetrieken. Het framework hanteert het principe van \textit{LLM-as-a-judge}: een krachtig \gls{llm} fungeert als evaluator voor de output van een ander model, waardoor grootschalige evaluatie zonder menselijke tussenkomst mogelijk wordt.
 
 De metrieken zijn onderverdeeld in twee categorieën op basis van de component die zij evalueren. De generator wordt beoordeeld op faithfulness en answer relevancy; de retriever op context precision en context recall.
@@ -166,3 +165,14 @@ Een fundamenteel risico van deze aanpak is echter \textit{self-preference bias}:
   \includegraphics[width=0.8\textwidth]{ragas.png}
   \caption[RAGAS metrics per component.]{\label{fig:grail}Overzicht van de implementatie en interpretatie van \gls{ragas}-metrieken binnen het \gls{ragas} framework. Bron:~\autocite{Kaarthick2024Ragas}}
 \end{figure}
+
+\subsection{Tokenisatie in meertalige context}
+\label{lit:tokenisatie}
+
+Bij de vergelijking van verschillende \glspl{llm} moet er rekening worden gehouden met de heterogeniteit van de gehanteerde tokenizers. Elke \gls{llm} maakt gebruik van een specifieke vocabulair en algoritme (zoals \textit{Byte Pair Encoding} of \textit{WordPiece}) om ruwe tekst om te zetten naar numerieke tokens~\autocite{Wu2016,Kudo2018}. Dit proces heeft een directe impact op de semantische dichtheid per token, wat gekwantificeerd kan worden met de \textit{subword fertility}~\autocite{Liu2024}.
+
+\subsubsection{Subword fertility}
+
+\textit{Subword fertility} ($F$) wordt gedefinieerd als het gemiddeld aantal tokens dat een tokenizer produceert per woord in een specifieke corpus~\autocite{Brown1993}. Een tokenizer die specifiek is getraind op een breed scala aan talen zal voor een taal zoals het Italiaans een lagere fertility-rate vertonen (dichter bij 1), wat duidt op een efficiëntere verwerking waarbij woorden minder vaak in betekenisloze fragmenten worden gesplitst~\autocite{Liu2024}.
+
+Het verschil in vocabulair-omvang en training-data tussen modellen zoals Llama, Gemma en Mistral resulteert in uiteenlopende karakter-naar-token ratio's. Aangezien embedding-modellen gebruik maken van rigide tokenlimieten, fungeert de tokenizer als een variabele filter die de maximale hoeveelheid verwerkbare informatie per segment bepaalt. Een model met een hoge fertility-rate zal bij een gelijke tekstlengte sneller de limiet van het context-venster bereiken dan een model met een efficiëntere tokenizer.

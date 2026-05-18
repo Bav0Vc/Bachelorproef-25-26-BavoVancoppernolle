@@ -223,7 +223,7 @@ class FixedSizeWordSplitter:
 \subsection{Recursive character splitting}
 \label{subsec:recursive-chunker}
 
-De tweede chunker maakt gebruik van dezelfde \texttt{RecursiveDocumentSplitter}als de fixed-size chunker, maar met een volledige hiërarchie van scheidingstekens: \texttt{["\textbackslash n\textbackslash n", "\textbackslash n", ". ", " ", ""]}. Het algoritme splitst eerst op alinea-grenzen en grijpt pas recursief terug op fijnmazigere grenzen wanneer een fragment de limiet van 400 tokens overschrijdt \autocite{LangChainDocs2024}. Dezelfde overlap van 50 tokens als de fixed-size chunker is geconfigureerd, zodat de splitsingstrategie de enige variabele is.
+De tweede chunker maakt gebruik van dezelfde \texttt{RecursiveDocumentSplitter}als de fixed-size chunker, maar met een volledige hiërarchie van scheidingstekens: \texttt{["\textbackslash n\textbackslash n", "\textbackslash n", ". ", " ", ""]}. Het algoritme splitst eerst op alinea-grenzen en grijpt pas recursief terug op fijnmazigere grenzen wanneer een fragment de limiet van 400 tokens overschrijdt \autocite{LangChain2024}. Dezelfde overlap van 50 tokens als de fixed-size chunker is geconfigureerd, zodat de splitsingstrategie de enige variabele is.
 
 Deze strategie scoort in de longlist (Sectie~\ref{sec:longlist-chunking}) het sterkst op de Must-Have-requirement voor context recall: door alinea-integriteit te bewaren, maximaliseert het de kans dat semantisch bij elkaar horende informatie — zoals de cijfers en de bijbehorende meetéénheid in een \gls{esg}-tabel — in één chunk terechtkomen en samen opgehaald worden. Dit is direct relevant voor de faithfulness-evaluatie: een \gls{llm} kan enkel correct rapporteren wat volledig in de opgehaalde context aanwezig is \autocite{Es2024}.
 
@@ -316,7 +316,7 @@ In het kader van deze vergelijkende studie tussen de geselecteerde \textit{embed
 
 \subsubsection{Mathematische Conversie naar Karakter-limieten}
 
-Om een consistente maximale chunk grootte van 400 tokens te waarborgen, is voor elk model een specifieke karakterdoelstelling ($C_{target}$) berekend. Hierbij is uitgegaan van een gemiddelde Italiaanse woordlengte ($\text{AVG}_{cpw}$) van 7,2 karakters en de model-specifieke fertility-scores voor Italiaanse corpora \autocite{Eurotrad2022,SwfGit}.
+Om een consistente maximale chunk grootte van 400 tokens te waarborgen, is voor elk model een specifieke karakterdoelstelling ($C_{target}$) berekend. Hierbij is uitgegaan van een gemiddelde Italiaanse woordlengte ($\text{AVG}_{cpw}$) van 7,2 karakters en de model-specifieke fertility-scores voor Italiaanse corpora \autocite{Eurotrad2022,Allal2025}.
 
 De berekening van de \textit{Characters Per Token} (CPT) en de uiteindelijke $C_{target}$ volgt de formule:
 
@@ -344,7 +344,7 @@ Mistral-Small-4-119B      & 1,816314 & 3,9641 & 400 & 1586 karakters \\
 
 \subsubsection{Noodzaak voor dynamische karakter-limieten}
 
-De noodzaak voor deze karakter-limieten vloeit voort uit de technische limitaties binnen het \textit{Haystack}-framework. Terwijl de \texttt{RecursiveDocumentSplitter} (gebruikt voor \textit{Fixed-size} en \textit{Recursive Character} splitting) native ondersteuning biedt voor het definiëren van de \texttt{split\_length} in tokens, hanteert de \texttt{EmbeddingBasedDocumentSplitter} (gebruikt voor \textit{Semantic Chunking}) uitsluitend karakters als eenheid voor de \texttt{max\_chunk\_length}~\autocite{HsRds,HsEbds}.
+De noodzaak voor deze karakter-limieten vloeit voort uit de technische limitaties binnen het \textit{Haystack}-framework. Terwijl de \texttt{RecursiveDocumentSplitter} (gebruikt voor \textit{Fixed-size} en \textit{Recursive Character} splitting) native ondersteuning biedt voor het definiëren van de \texttt{split\_length} in tokens, hanteert de \texttt{EmbeddingBasedDocumentSplitter} (gebruikt voor \textit{Semantic Chunking}) uitsluitend karakters als eenheid voor de \texttt{max\_chunk\_length}~\autocite{HaystackRecusriveSplitter2026,HaystackEbds2026}.
 
 Door de berekende $C_{target}$ waarden uit Tabel \ref{tab:chunk-specs} toe te passen op de \texttt{EmbeddingBasedDocumentSplitter}, wordt gewaarborgd dat de semantische segmentatie binnen dezelfde numerieke kaders opereert als de token-gebaseerde splitters. Dit neutraliseert de variabele 'informatie-omvang' en stelt het onderzoek in staat om de puur structurele impact van de chunking-strategieën te evalueren.
 

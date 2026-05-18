@@ -102,7 +102,7 @@ Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte acyclisc
     % Background group boxes
     \begin{scope}[on background layer]
         \node[groupbox, draw=idxstroke, fill=idxfill, fit=(A)(B)(C)(D)(E)(F)(W),
-            label={[font=\bfseries\sffamily, text=idxstroke]north:Indexing Pipeline $\cdot$ 9 collections}] {};
+            label={[font=\bfseries\sffamily, text=idxstroke]north:Indexing Pipeline $\cdot$ 15 collections}] {};
         \node[groupbox, draw=qestroke, fill=qefill, fit=(H)(I)(J)(K)(L)(M)(N)(O),
             label={[font=\bfseries\sffamily, text=qestroke]north:Query \& Evaluation $\cdot$ 27 configs}] {};
     \end{scope}
@@ -149,9 +149,7 @@ return UnstructuredFileConverter(
 
 De parameter \mintinline{python}{document_creation_mode="one-doc-per-page"} zorgt ervoor dat de converter één Haystack \texttt{Document}-object per pagina van een \gls{pdf}-document maakt \autocite{UnstructuredDocs2024}. Dit is een bewuste keuze die direct bijdraagt aan de Could-Have-requirement voor \textbf{granulaire bronverwijzing op paginaniveau} (Tabel~\ref{tab:moscow}): door pagina's als afzonderlijke documenten te behandelen, blijft het paginanummer als metadata gegarandeerd beschikbaar voor elk tekstfragment dat later de pipeline doorloopt. Er werd niet gekozen voor de \mintinline{python}{"one-doc-per-element"} document creation mode, omdat deze resulteert in een versnipperde tekst die bestaat uit kleine fragmenten zoals losse tabelcellen of titels \autocite{UnstructuredDocs2024}. Daarnaast zou de \mintinline{python}{"one-doc-per-file"} optie geen mogelijkheid bieden tot het toekennen van de paginanummers aan de metadata van iedere chunk, aangezien deze de inhoud van een volledig document omzet naar één Haystack Document \autocite{UnstructuredDocs2024}. \mintinline{python}{"one-doc-per-page"} behoudt de logische flow van de informatie binnen een pagina en fungeert bovendien als een uniform startpunt voor de vergelijking tussen de drie verschillende chunkingstrategieën. Hierdoor kan in dit onderzoek objectief gemeten worden hoe de fixed size, recursive character en semantic chunking strategieën de pagina-brede informatie verder verwerken, zonder dat de resultaten vooraf worden beïnvloed door de visuele segmentatie van de converter.
 
-De \mintinline{python}{strategy="hi_res"} activeert de nauwkeurigste verwerkingsstrategie om de paginalayout te analyseren en elementen correct te identificeren. Dit is trager dan de standaard \texttt{fast}-strategie, maar noodzakelijk om de extractie van tabelinhoud en afbeeldingen met tekst te waarborgen.
-
-De parameter \mintinline{python}{pdf_infer_table_structure: True} is specifiek gericht op een optimale tabel-extractie voor \glspl{pdf}. Voor Excel-bestanden wordt de intrinsieke tabelstructuur behouden door Unstructured (die gebruikmaakt van via \texttt{openpyxl}), wat voorkomt dat data in kolommen lineair en foutief wordt samengevoegd.
+De parameters \mintinline{python}{pdf_infer_table_structure=True} en \mintinline{python}{strategy="hi_res"} activeren de Unstructured vision-gebaseerde tabelstructuurdetectie voor \glspl{pdf}, wat nauwkeurigere extractie van meerkoloms tabellen oplevert. Voor Excel-bestanden bewaart Unstructured de tabelstructuur intrinsiek via \texttt{openpyxl}, ongeacht deze parameter, wat voorkomt dat data in kolommen lineair en foutief wordt samengevoegd.
 
 %%----------------------------------------------------------------------
 \subsection{Documentreiniging en paginamarkering}
@@ -162,20 +160,6 @@ Na de conversie passeert elk document een zelfgeschreven\\\texttt{DocumentCleane
 \textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Deze ontwerpbeslissing heeft een directe invloed op de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door deze samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}).
 
 \textbf{Pagina-markers.} Om de paginatraceerbaarheid na het samenvoegen te bewaren, injecteert de cleaner vóór elke alinea een marker in de vorm \texttt{<<<PAGE X>>>}. Na het chunken extraheert de \texttt{ChunkMetaCleaner} de eerste marker die in een chunk voorkomt en koppelt die als \texttt{page}-metadata aan het fragment. Dit mechanisme implementeert de Could-Have-requirement voor \textbf{granulaire bronverwijzing op paginaniveau} (Tabel~\ref{tab:moscow}) zonder afhankelijk te zijn van de manier waarop de chunker de grenzen trekt.
-
-\begin{listing}[H]
-\begin{minted}{python}
-_PAGE_MARKER = "<<<PAGE {}>>>"
-
-def _mark_paragraphs(self, text: str, page: str) -> str:
-    marker = _PAGE_MARKER.format(page)
-    paragraphs = re.split(r"\n\n+", text)
-    marked = [f"{marker}\n{p.strip()}" for p in paragraphs if p.strip()]
-    return "\n\n".join(marked)
-\end{minted}
-\caption[Pagina-markering in DocumentCleaner]{Elke alinea wordt voorafgegaan door een \texttt{<<<PAGE X>>>}-marker. Na het chunken kan zo het paginanummer per chunk worden herleid, ongeacht of de chunkgrens midden in een pagina valt. Dit draagt bij aan de Could-Have-requirement voor granulaire bronverwijzing op paginaniveau (Tabel~\ref{tab:moscow}).}
-\label{lst:page-marker}
-\end{listing}
 
 \textbf{Tekstnormalisatie} elimineert overbodige witruimte en lege regels. De metadata-sleutels \texttt{source} (bestandsnaam) en \texttt{page} worden genormaliseerd en consistent doorgegeven aan alle volgende componenten. Voor Excel-bestanden wordt de bladnaam als pagina-identifier gebruikt.
 
@@ -253,34 +237,37 @@ class RecursiveCharacterSplitter:
 \end{listing}
 
 %%----------------------------------------------------------------------
-\subsection{Semantic chunking}
+\subsection{Semantische chunking}
 \label{subsec:semantic-chunker}
 
-De derde strategie is de semantische chunker, gebaseerd op de \emph{semantic chunking}-methodiek van \textcite{Kamradt2023} zoals beschreven in de literatuurstudie (Sectie~\ref{subsubsec:chunking}). In tegenstelling tot structurele of tekstuele splitsing hanteert deze component betekenisgrenzen als primair criterium. Een segmentatiegrens wordt geplaatst wanneer de cosine-gelijkenis tussen opeenvolgende zingroepen onder een kritische drempelwaarde daalt — het 95e percentiel van de afstandsverdeling binnen het document \autocite{Kamradt2023}.
+De derde strategie is de semantische chunker, gebaseerd op de \emph{semantic chunking}-methodiek van~\textcite{Kamradt2023} zoals beschreven in de literatuurstudie (Sectie~\ref{subsubsec:chunking}). In tegenstelling tot structurele of tekstuele splitsing hanteert deze component betekenisgrenzen als primair criterium: een segmentatiegrens wordt geplaatst wanneer de cosine-gelijkenis tussen opeenvolgende zingroepen onder het 95e percentiel van de afstandsverdeling daalt~\autocite{Kamradt2023}.
 
-Voor de berekening van de zin-embeddings wordt het \texttt{paraphrase-multilingual-mpnet-base-v2}-model ingezet. Dit meertalige model is bewust gekozen boven meer lichtgewicht Engelstalige alternatieven, conform de Should-Have-requirement voor \textbf{meertalige ondersteuning} (Tabel~\ref{tab:moscow}): de dataset bevat Italiaanse en Engelse documenten, waardoor een meertalig model noodzakelijk is om semantische grenzen correct te detecteren in beide talen. Per groep van drie zinnen (\texttt{sentences\_per\_group=3}) wordt een gecombineerde embedding berekend om ruis door korte zinnen te reduceren.
+Voor de berekening van de zin-embeddings wordt het \texttt{paraphrase-multilingual-mpnet-base-v2}-model ingezet. Dit meertalige model is bewust gekozen boven meer lichtgewicht Engelstalige alternatieven, conform de Should-Have-requirement voor \textbf{meertalige ondersteuning} (Tabel~\ref{tab:moscow}): de dataset bevat Italiaanse en Engelse documenten, waardoor een meertalig model noodzakelijk is om semantische grenzen correct te detecteren in beide talen. Per groep van twee zinnen (\texttt{sentences\_per\_group=2}) wordt een gecombineerde embedding berekend om ruis door korte zinnen te reduceren.
 
-Een bewuste keuze in de experimentele opzet is dat de semantische chunking \textbf{niet} wordt uitgevoerd met de embeddingmodellen die deel uitmaken van de evaluatiematrix Indien het model onder test ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunking-strategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
+Een bewuste keuze in de experimentele opzet is dat de semantische chunking \textbf{niet} wordt uitgevoerd met de embeddingmodellen die deel uitmaken van de evaluatiematrix. Indien het embeddingmodel - dat als aparte variabele geëvalueerd wordt - ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunking-strategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
+
+Een bijzonderheid van de implementatie is de \texttt{max\_length}-parameter. Deze wordt in de component als vaste waarde geconfigureerd omdat deze parameter noodzakelijk is om de component te instantiëren, maar wordt later overschreven en dynamisch ingesteld op basis van het geselecteerde \gls{llm} voor die indexeringsrun. Dit wordt verder toegelicht in Sectie~\ref{sec:technische-uitvoering-chunking} over chunk-optimalisatie.
 
 \begin{listing}[H]
 \begin{minted}{python}
+@component
 @component
 class SemanticEmbeddingChunker:
   def __init__(
     self,
     model_name: str = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
-    sentences_per_group: int = 3,
+    sentences_per_group: int = 2,
     percentile: float = 0.95,
     min_length: int = 50,
-    max_length: int = 1623,
-    language="it",
-    device: Optional[str] = None
+    max_length: int = 500,
+    language: str = "it",
   ):
+    self.max_length = max_length
+
     self.embedder = SentenceTransformersDocumentEmbedder(
-      model=model_name, 
-      device=device
+      model=model_name,
+      progress_bar=False,
     )
-    
     self.splitter = EmbeddingBasedDocumentSplitter(
       document_embedder=self.embedder,
       sentences_per_group=sentences_per_group,
@@ -289,16 +276,41 @@ class SemanticEmbeddingChunker:
       max_length=max_length,
       language=language,
     )
-
-  def warm_up(self):
-    self.embedder.warm_up()
-
-  @component.output_types(documents=List[Document])
-  def run(self, documents: List[Document]):
-    return self.splitter.run(documents=documents)
 \end{minted}
 \caption[SemanticEmbeddingChunker: betekenisgrens-detectie]{De semantische chunker combineert een embedder en een splitter om grenzen te detecteren op basis van het 95e percentiel van de cosine-afstanden tussen zinnen.}
 \label{lst:semantic-chunker}
+\end{listing}
+
+Omdat de \texttt{EmbeddingBasedDocumentSplitter} niet altijd elke chunk onder de maximale lengte kan houden — met name bij tabellen of structuurloze blokken zonder zinsgrens — is een harde terugval ingebouwd. Chunks die na de semantische splitsing toch de limiet overschrijden, worden via een \texttt{RecursiveDocumentSplitter} met woordgrenzen als vangnet verder opgedeeld:
+
+\begin{listing}[H]
+\begin{minted}{python}
+# Harde terugval voor chunks die EmbeddingBasedDocumentSplitter
+# niet kon reduceren onder max_length.
+self._fallback = RecursiveDocumentSplitter(
+    separators=[" ", ""],
+    split_length=400,
+    split_overlap=50,
+    split_unit="token"
+)
+
+@component.output_types(documents=List[Document])
+def run(self, documents: List[Document]) -> dict:
+    chunks = self.splitter.run(documents=documents)["documents"]
+    final: List[Document] = []
+    for doc in chunks:
+        if len(doc.content or "") > self.max_length:
+            sub = self._fallback.run(documents=[doc])["documents"]
+            final.extend(
+                dataclasses.replace(s, meta={**doc.meta, **s.meta})
+                for s in sub
+            )
+        else:
+            final.append(doc)
+    return {"documents": final}
+\end{minted}
+\caption[SemanticEmbeddingChunker: fallback voor overgrote chunks]{Bij structuurloze blokken — zoals grote tabellen zonder zinsgrens — kan de \texttt{EmbeddingBasedDocumentSplitter} de maximale lengte niet altijd respecteren. De \texttt{RecursiveDocumentSplitter} als harde terugval garandeert dat elke chunk de embedding-modellimiet nooit overschrijdt.}
+\label{lst:semantic-chunker-fallback}
 \end{listing}
 
 Hoewel de kernlogica voor de tekstsplitsing gebruikmaakt van de robuuste implementaties binnen het Haystack-framework, zijn deze strategieën geëncapsuleerd in specifieke custom componenten. Deze architecturale beslissing is ingegeven door drie concrete argumenten binnen de benchmark-methodologie:
@@ -309,58 +321,15 @@ Ten tweede bevordert deze encapsulatie de reproduceerbaarheid van het experiment
 
 Ten derde biedt deze structuur de noodzakelijke flexibiliteit voor samengestelde logica, zoals gedemonstreerd in de semantische chunker. Hierbij worden meerdere atomaire Haystack-componenten — een embedder en een splitter — gecombineerd tot één logische eenheid. Deze mate van granulariteit en controle is noodzakelijk om te voldoen aan de \emph{white-box} vereisten van dit onderzoek, waarbij elke stap in de gegevensstroom transparant en manipuleerbaar moet zijn.
 
-\subsection{Chunk-optimalisatie}
-\label{sec:technische-uitvoering-chunking}
-
-In het kader van deze vergelijkende studie tussen de geselecteerde \textit{embedding}-modellen is een uniforme testomgeving essentieel. Gegeven de uiteenlopende tokenizers van de gekozen \glspl{llm}, is een statisch karakterlimiet voor chunks onvoldoende om een gelijke semantische dichtheid te garanderen.
-
-\subsubsection{Mathematische Conversie naar Karakter-limieten}
-
-Om een consistente maximale chunk grootte van 400 tokens te waarborgen, is voor elk model een specifieke karakterdoelstelling ($C_{target}$) berekend. Hierbij is uitgegaan van een gemiddelde Italiaanse woordlengte ($\text{AVG}_{cpw}$) van 7,2 karakters en de model-specifieke fertility-scores voor Italiaanse corpora \autocite{Eurotrad2022,Allal2025}.
-
-De berekening van de \textit{Characters Per Token} (CPT) en de uiteindelijke $C_{target}$ volgt de formule:
-
-\begin{equation}
-    C_{target} = T_{target} \times \left( \frac{\text{AVG}_{cpw}}{F} \right)
-\end{equation}
-
-De resultaten van deze berekeningen zijn samengevat in Tabel\ref{tab:chunk-specs}.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Model-specifieke chunk-configuraties voor Italiaanse tekstverwerking.}
-\label{tab:chunk-specs}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Model Familie} & \textbf{Fertility ($F$)} & \textbf{CPT} & \textbf{Token Target} & \textbf{Chunk Size ($C_{target}$)} \\
-\midrule
-Llama-3.3-70B-Instruct    & 1,811955 & 3,9736 & 400 & 1589 karakters \\
-Gemma-3-27B-it            & 1,696459 & 4,2441 & 400 & 1698 karakters \\
-Mistral-Small-4-119B      & 1,816314 & 3,9641 & 400 & 1586 karakters \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsubsection{Noodzaak voor dynamische karakter-limieten}
-
-De noodzaak voor deze karakter-limieten vloeit voort uit de technische limitaties binnen het \textit{Haystack}-framework. Terwijl de \texttt{RecursiveDocumentSplitter} (gebruikt voor \textit{Fixed-size} en \textit{Recursive Character} splitting) native ondersteuning biedt voor het definiëren van de \texttt{split\_length} in tokens, hanteert de \texttt{EmbeddingBasedDocumentSplitter} (gebruikt voor \textit{Semantic Chunking}) uitsluitend karakters als eenheid voor de \texttt{max\_chunk\_length}~\autocite{HaystackRecusriveSplitter2026,HaystackEbds2026}.
-
-Door de berekende $C_{target}$ waarden uit Tabel \ref{tab:chunk-specs} toe te passen op de \texttt{EmbeddingBasedDocumentSplitter}, wordt gewaarborgd dat de semantische segmentatie binnen dezelfde numerieke kaders opereert als de token-gebaseerde splitters. Dit neutraliseert de variabele 'informatie-omvang' en stelt het onderzoek in staat om de puur structurele impact van de chunking-strategieën te evalueren.
-
 %%----------------------------------------------------------------------
 \section{Lokale embeddingmodellen}
 \label{sec:lokale-embedding}
 
-In de initiële opzet van het onderzoek werden de embeddingmodellen aangestuurd via externe \gls{api}-diensten, zoals de \gls{nvidia} NIM \gls{api} en de Hugging Face Serverless Inference \gls{api}. Gedurende de implementatiefase is hiervan afgestapt om drie redenen die een directe link hebben met de requirements.
+In de initiële opzet werden de embeddingmodellen aangestuurd via externe \gls{api}-diensten, zoals de \gls{nvidia} NIM \gls{api} en de Hugging Face Serverless Inference \gls{api}. Gedurende de implementatiefase is hiervan afgestapt om drie redenen die elk een directe link hebben met de requirements.
 
-Ten eerste introduceerden externe \gls{api}-aanroepen een afhankelijkheid van de beschikbaarheid van externe diensten tijdens de indexeringsfase. Storingen of rate limits konden de volledige benchmarkrun onderbreken, wat de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}) ondermijnt. Ten tweede deprecieerden providers tijdens het onderzoek diverse modellen binnen hun catalogus, waardoor onvoorziene aanpassingen in de pipeline-architectuur noodzakelijk werden.
+Ten eerste introduceerden externe aanroepen een afhankelijkheid van de beschikbaarheid van externe diensten. Storingen of rate limits konden de volledige benchmarkrun onderbreken, wat de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}) ondermijnde. Ten tweede deprecieerden providers tijdens het onderzoek modellen uit hun catalogus, waardoor onvoorziene aanpassingen in de pipeline-architectuur noodzakelijk werden. Ten derde biedt lokale uitvoering volledige \textbf{data soevereiniteit}: documentinhoud verlaat de lokale machine niet voor de embedding-berekeningen, wat \gls{gdpr}-compliant dataverwerking garandeert (Tabel~\ref{tab:moscow}).
 
-Ten derde had de Hugging Face Serverless Inference \gls{api} beperkingen op gelijktijdige aanroepen, wat de indexeringstijd verlengt en de \textbf{operationele efficiëntie} (Tabel~\ref{tab:moscow}) schaadt.
-
-De definitieve keuze is om alle drie de embeddingmodellen volledig lokaal te draaien in de Docker-container met \gls{gpu}-ondersteuning. Dit draagt ook bij aan het Must-Have-requirement betreffende \textbf{data soevereiniteit \& privacy} (Tabel~\ref{tab:moscow}): documentinhoud verlaat de lokale machine niet voor de embedding-berekeningen, wat \gls{gdpr}-compliant dataverwerking garandeert.
-
-De implementatie verschilt echter per model, wat zichtbaar is in de \texttt{\_make\_doc\_embedder()}-hulpfunctie in de indexeringspipeline:
+De definitieve keuze is om alle drie de embeddingmodellen volledig lokaal te draaien via de \texttt{sentence-transformers}-bibliotheek als inferentiebackend \autocite{ReimersGurevych2019}, in de Docker-container met \gls{gpu}-ondersteuning. De implementatie verschilt echter per model, wat zichtbaar is in de \texttt{\_make\_doc\_embedder()}-hulpfunctie:
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -392,14 +361,11 @@ Voor arctic-embed wordt via de \texttt{truncate\_dim}-parameter de Matryoshka-tr
 \subsection{BGE-M3 via FlagEmbedding}
 \label{subsec:bge-m3-embedder}
 
-BGE-M3 vereist een afwijkende implementatie ten opzichte van arctic-embed en E5-instruct. Zoals beschreven in de short list (Sectie~\ref{sec:shortlist-embedding}), produceert BGE-M3 naast dense vectoren ook sparse lexicale gewichten voor hybride zoeken \autocite{Chen2024}. Haystack's standaard \texttt{SentenceTransformersDocumentEmbedder} ondersteunt enkel dense vectoren, waardoor de hybride zoekfunctionaliteit — het voornaamste argument voor de selectie van BGE-M3 in de longlist (Sectie~\ref{sec:longlist-embedding}) — verloren zou gaan bij gebruik van die component.
+BGE-M3 vereist een afwijkende implementatie ten opzichte van arctic-embed en E5-instruct. Zoals beschreven in de short list (Sectie~\ref{sec:shortlist-embedding}), produceert BGE-M3 naast dense vectoren ook sparse lexicale gewichten voor hybride zoeken \autocite{Chen2024}. Haystack's standaard \texttt{SentenceTransformersDocumentEmbedder} ondersteunt enkel dense vectoren, waardoor de hybride zoekfunctionaliteit verloren zou gaan bij gebruik van die component.
 
-Om dit op te lossen zijn twee custom Haystack-componenten geïmplementeerd via de \texttt{FlagEmbedding}-bibliotheek, één per fase van de pipeline. Het onderscheid tussen de twee is inhoudelijk relevant: BGE-M3 hanteert bewust verschillende encoderingsstrategieën voor documenten en queries. Via \texttt{encode\_corpus()} worden documentpassages gecodeerd voor opslag; via \texttt{encode\_queries()} worden zoekvragen gecodeerd voor retrieval. Deze asymmetrie verbetert de retrieval-kwaliteit doordat het model de representatie kan optimaliseren voor de specifieke rol van elk teksttype \autocite{Chen2024}.
+Om dit op te lossen zijn twee custom Haystack-componenten geïmplementeerd via de \texttt{FlagEmbedding}-bibliotheek, één per fase van de pipeline. Het onderscheid tussen beide is inhoudelijk relevant: BGE-M3 hanteert bewust verschillende encoderingsstrategieën voor documenten en queries. Via \texttt{encode\_corpus()} worden documentpassages gecodeerd voor opslag; via \texttt{encode\_queries()} worden zoekvragen gecodeerd voor retrieval. Deze asymmetrie verbetert de retrieval-kwaliteit doordat het model de representatie kan optimaliseren voor de specifieke rol van elk teksttype \autocite{Chen2024}.
 
-%%----------------------------------------------------------------------
-\subsubsection{Indexeringsfase: \texttt{BGEM3HybridDocumentEmbedder}.} 
-
-De \texttt{BGEM3HybridDocumentEmbedder} wordt in de indexeringspipeline ingezet om elk document te encoderen. Via één \texttt{encode\_corpus()}-aanroep produceert de component zowel een dense inbeddingsvector als een \texttt{SparseEmbedding}-object met lexicale gewichten:
+\textbf{Indexeringsfase: \texttt{BGEM3HybridDocumentEmbedder}.} Via één \texttt{encode\_corpus()}-aanroep produceert de component zowel een dense inbeddingsvector als een \texttt{SparseEmbedding}-object met lexicale gewichten, compatibel met Qdrant's hybride zoekfunctionaliteit \autocite{QdrantHybrid2025}:
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -421,35 +387,15 @@ for doc, dense_vec, lex_weights in zip(
     ),
   ))
 \end{minted}
-\caption[BGEM3HybridDocumentEmbedder: dense en sparse vectoren via encode\_corpus()]{Eén \texttt{encode\_corpus()}-aanroep produceert per document zowel de dense inbeddingsvector (\texttt{doc.embedding}) als de sparse lexicale gewichten (\texttt{doc.sparse\_embedding}). Qdrant slaat beide op in dezelfde collectie voor later gebruik in hybride zoekopdrachten via \gls{rrf} (Sectie~\ref{subsubsec:hybride-zoeken}).}
+\caption[BGEM3HybridDocumentEmbedder: dense en sparse vectoren via
+encode\_corpus()]{Eén \texttt{encode\_corpus()}-aanroep produceert per
+document zowel de dense inbeddingsvector als de sparse lexicale gewichten.
+Qdrant slaat beide op voor hybride zoekopdrachten via \gls{rrf}
+(Sectie~\ref{subsubsec:hybride-zoeken}).}
 \label{lst:bge-m3-doc-embedder}
 \end{listing}
 
-%%----------------------------------------------------------------------
-\subsubsection{Queryfase: \texttt{BGEM3HybridTextEmbedder}.}
-
-In de querypipeline wordt de \texttt{BGEM3HybridTextEmbedder} gebruikt om de zoekvraag te encoderen. Via \texttt{encode\_queries()} — niet \texttt{encode\_corpus()} — wordt de vraag gecodeerd met de queryspecifieke encoderingstrategie van BGE-M3. De query-instructie wordt via \texttt{query\_instruction\_for\_retrieval} aan het model meegegeven, conform de domeinspecifieke prefix die in de HyPSTER-configuratie is vastgelegd (Sectie~\ref{sec:hypster-config}):
-
-\begin{listing}[H]
-\begin{minted}{python}
-output = self._model.encode_queries(
-  [text],
-  return_dense=True,
-  return_sparse=True,
-  return_colbert_vecs=False,
-)
-lex_weights = output["lexical_weights"][0]
-return {
-  "embedding": output["dense_vecs"][0].tolist(),
-  "sparse_embedding": SparseEmbedding(
-    indices=[int(k) for k in lex_weights.keys()],
-    values=[float(v) for v in lex_weights.values()],
-  ),
-}
-\end{minted}
-\caption[BGEM3HybridTextEmbedder: dense en sparse queryvectoren via encode\_queries()]{De \texttt{BGEM3HybridTextEmbedder} produceert via \texttt{encode\_queries()} een dense en sparse queryvector. In de querypipeline worden beide doorgegeven aan de \texttt{QdrantHybridRetriever}, die ze via \gls{rrf} combineert met de corresponderende documentvectoren in Qdrant (Sectie~\ref{subsubsec:hybride-zoeken}).}
-\label{lst:bge-m3-text-embedder}
-\end{listing}
+\textbf{Queryfase: \texttt{BGEM3HybridTextEmbedder}.} In de querypipeline produceert de analoge \texttt{BGEM3HybridTextEmbedder} via \texttt{encode\_queries()} zowel een dense als sparse queryvector. De query-instructie wordt via \texttt{query\_instruction\_for\_retrieval} aan het model meegegeven, conform de domeinspecifieke prefix uit de HyPSTER-configuratie (Sectie~\ref{sec:hypster-config}). In de querypipeline wordt voor BGE-M3 bijgevolg de \texttt{QdrantHybridRetriever} gebruikt in plaats van de standaard \texttt{QdrantEmbeddingRetriever}.
 
 %%----------------------------------------------------------------------
 \subsection{Werking van sentence-transformers met PyTorch}
@@ -469,119 +415,61 @@ Binnen Haystack worden deze modellen geïntegreerd via twee specifieke component
 Om de 27 unieke configuraties systematisch te kunnen doorlopen, wordt HyPSTER gebruikt als configuratieframework. De configuratieruimte is opgesplitst in drie geneste deelconfiguraties. De keuze voor HyPSTER sluit direct aan bij de Should-Have-requirement voor \textbf{predefined pipelines} (Tabel~\ref{tab:moscow}): door de volledige configuratieruimte declaratief te beschrijven in één Python-functie, is elke run volledig reproduceerbaar en auditeerbaar via \texttt{on\_unknown="raise"} — elke ongeldige sleutel genereert onmiddellijk een fout.
 
 %%----------------------------------------------------------------------
-\subsection{Configuratie embeddingmodellen}
-
-\textbf{De embedding-configuratie} slaat voor elk model de modelnaam, query-instructieprefix, documentprefix, vectordimensionaliteit en eventuele MRL-truncatiedimensie op:
-
-\begin{listing}[H]
-\begin{minted}{python}
-def embedding_config(hp: HP):
-  model = hp.select(
-    [
-      "BAAI/bge-m3",
-      "Snowflake/snowflake-arctic-embed-l-v2.0",
-      "intfloat/multilingual-e5-large-instruct",
-    ],
-    name="model",
-    default="BAAI/bge-m3",
-  )
-
-  _prefixes = {
-    "intfloat/multilingual-e5-large-instruct": (
-        "Instruct: Given a question about ESG reporting and sustainability, retrieve the most relevant supporting passage\nQuery: ",
-        "",
-    ),
-    "Snowflake/snowflake-arctic-embed-l-v2.0": (
-        "Represent this sentence for searching relevant passages: ",
-        "",
-    ),
-    "BAAI/bge-m3": (
-        "Given a question about ESG reporting and sustainability, retrieve the most relevant supporting passage: ",
-        "",
-    ),
-  }
-  
-  query_prefix, doc_prefix = _prefixes.get(model, ("", ""))
-
-  _dims = {
-    "BAAI/bge-m3": 1024,
-    "Snowflake/snowflake-arctic-embed-l-v2.0": 256,
-    "intfloat/multilingual-e5-large-instruct": 1024,
-  }
-  _truncate_dim = {
-    "Snowflake/snowflake-arctic-embed-l-v2.0": 256,
-  }
-
-  return {
-    "model": model,
-    "api_model": model,
-    "backend": "sentence-transformers",
-    "dims": _dims[model],
-    "truncate_dim": _truncate_dim.get(model),
-    "query_prefix": query_prefix,
-    "doc_prefix": doc_prefix,
-  }
-\end{minted}
-\caption[HyPSTER embedding-configuratie met instructieprefixen en MRL-truncatie]{De instructieprefixen activeren de asymmetrische query-document-modellering voor E5-instruct en arctic-embed \autocite{WangEtAl2022, YuEtAl2024}. Voor arctic-embed wordt Matryoshka-truncatie naar 256 dimensies geconfigureerd via \texttt{truncate\_dim} (Sectie~\ref{subsubsec:matryoshka}), wat de latency verlaagt conform de Should-Have-requirement voor operationele efficiëntie (Tabel~\ref{tab:moscow}).}
-\label{lst:hypster-embedding}
-\end{listing}
-
 \subsection{Configuratie chunkingstrategieën}
 
-Daarnaast worden de drie chunking-componenten gedefinieerd binnen een HyPSTER-configuratie. Dit maakt het mogelijk om tijdens de benchmark-fase dynamisch te schakelen tussen de verschillende segmentatiemethoden — \texttt{Recursive}, \texttt{FixedSize}, en \texttt{Semantic} — om zo de impact van elke strategie op de RAG-prestaties systematisch te vergelijken.
+De chunking-deelconfiguratie is de eenvoudigste van de drie: zij slaat uitsluitend de naam van de geselecteerde chunker. De werkelijke chunker-instanties worden in de indexeringspipeline aangemaakt via de \texttt{\_make\_chunker()}-hulpfunctie op basis van deze naam. De drie opties zijn \texttt{RecursiveCharacterSplitter}, \texttt{FixedSizeTokenSplitter} en \texttt{SemanticEmbeddingChunker}.
 
-\begin{listing}[H]
-\begin{minted}{python}
-def chunking_config(hp: HP):
-  chunker_name = hp.select(
-    [
-      "RecursiveSplitter",
-      "FixedSizeWordSplitter",
-      "SemanticEmbeddingChunker"
-    ],
-    name="chunker_name",
-    default="RecursiveSplitter",
-  )
-  return { "chunker_name": chunker_name }
-\end{minted}
-\caption[HyPSTER chunking-configuratie]{ HyPSTER-implementatie voor de dynamische selectie van chunkingstrategieën binnen de experimentele pipeline.}
-\label{lst:hypster-chunking}
-\end{listing}
+\subsection{Configuratie embeddingmodellen}
+
+De embedding-deelconfiguratie slaat voor elk model de modelnaam, query-instructieprefix, documentprefix, vectordimensionaliteit en eventuele MRL-truncatiedimensie op. De instructieprefixen zijn modelspecifiek en essentieel voor correcte retrieval.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.35\linewidth} p{0.55\linewidth}}
+\toprule
+\textbf{Model} & \textbf{Query-instructieprefix} \\
+\midrule
+\texttt{intfloat/multilingual-e5-large-instruct}
+  & \texttt{Instruct: Given a question about ESG reporting and sustainability, retrieve the most relevant supporting passage\textbackslash nQuery: } \\
+\texttt{Snowflake/snowflake-arctic-embed-l-v2.0}
+  & \texttt{Represent this sentence for searching relevant passages: } \\
+\texttt{BAAI/bge-m3}
+  & \texttt{Given a question about ESG reporting and sustainability, retrieve the most relevant supporting passage: } \\
+\bottomrule
+\end{tabular}
+\caption[Instructieprefixen per embeddingmodel]{\label{tab:embedding-prefixes} De query-instructieprefix per embeddingmodel. Documentpassages krijgen geen prefix; de asymmetrie is intentioneel en modelspecifiek \autocite{WangEtAl2022, YuEtAl2024}.}
+\end{table}
+
+De vectordimensionaliteit wordt per model vastgelegd: BGE-M3 en E5-instruct produceren 1.024-dimensionele vectoren; arctic-embed wordt via de \texttt{truncate\_dim}-parameter afgekapt naar 256 dimensies conform de Matryoshka-truncatietechniek (Sectie~\ref{subsubsec:matryoshka}).
 
 \subsection{Configuratie \glspl{llm}}
 
-\textbf{De \gls{llm}-configuratie} koppelt elke modelnaam aan een backend en \gls{api}-parameters. De keuze voor de drie \glspl{llm} — Gemma 3 27B, Llama 3.3 70B en Mistral Small 4 (2603) — is gemotiveerd in de shortlist (Sectie~\ref{sec:shortlist-llm}):
+De \gls{llm}-deelconfiguratie koppelt elke modelnaam aan een backend, \gls{api}-parameters en de modelspecifieke \texttt{max\_char\_length}. De achtergrond van deze karakterlimiet wordt toegelicht in Sectie~\ref{sec:technische-uitvoering-chunking}.
 
 \begin{listing}[H]
 \begin{minted}{python}
-def llm_config(hp: HP):
-  configs = {
-    "Gemma-3-27b-it": {
-      "backend": "hf",
-      "api_model": "google/gemma-3-27b-it:scaleway",
-      "api_base_url": "https://router.huggingface.co/v1",
-    },
-    "Llama-3.3-70B-Instruct": {
-      "backend": "hf",
-      "api_model": "meta-llama/Llama-3.3-70B-Instruct:ovhcloud",
-      "api_base_url": "https://router.huggingface.co/v1",
-    },
-    "Mistral-Small-2603": {
-      "backend": "mistral",
-      "api_model": "mistral-small-2603",
-    },
-  }
-
-  name = hp.select(list(configs.keys()), name="name", default="Gemma-3-27b-it")
-  return { "name": name, **configs[name] }
-
-def pipeline_config(hp: HP):
-  chunking = hp.nest(chunking_config, name="chunking")
-  embedding = hp.nest(embedding_config, name="embedding")
-  llm = hp.nest(llm_config, name="llm")
-  return hp.collect(locals())
+configs = {
+  "Gemma-3-27b-it": {
+    "backend": "hf",
+    "api_model": "google/gemma-3-27b-it:scaleway",
+    "api_base_url": "https://router.huggingface.co/v1",
+    "max_char_length": 1698,
+  },
+  "Llama-3.3-70B-Instruct": {
+    "backend": "hf",
+    "api_model": "meta-llama/Llama-3.3-70B-Instruct:ovhcloud",
+    "api_base_url": "https://router.huggingface.co/v1",
+    "max_char_length": 1589,
+  },
+  "Mistral-Small-2603": {
+    "backend": "mistral",
+    "api_model": "mistral-small-2603",
+    "max_char_length": 1586,
+  },
+}
 \end{minted}
-\caption[HyPSTER LLM-configuratie en pipeline-samenstelling]{De \gls{llm}-configuratie koppelt elke modelnaam aan backend en \gls{api}-modelnaam. De \texttt{pipeline\_config}-functie combineert de drie deelconfiguraties via \texttt{hp.nest()} en verzamelt ze via \texttt{hp.collect(locals())} in één object.}
+\caption[HyPSTER LLM-configuratie]{De \texttt{max\_char\_length}-waarde per \gls{llm} stemt de maximale chunkgrootte van de semantische chunker af op de specifieke tokenizer van het model (Sectie~\ref{sec:technische-uitvoering-chunking}). De twee \texttt{backend}-waarden bepalen welke \gls{api}-client in de querypipeline wordt geïnstantieerd: \texttt{"hf"} voor de HuggingFace Inference Router, \texttt{"mistral"} voor de officiële Mistral \gls{api}.}
 \label{lst:hypster-llm}
 \end{listing}
 
@@ -589,32 +477,19 @@ def pipeline_config(hp: HP):
 \section{Indexeringspipeline}
 \label{sec:indexering}
 
-De indexeringspipeline verwerkt alle brondocumenten voor alle $3 \times 3 = 9$ combinaties van chunkingstrategie en embeddingmodel. Voor elke combinatie wordt een aparte Qdrant-collectie aangemaakt, deterministisch benoemd als \texttt{<ChunkerNaam>\_<ModelId>}.
+De indexeringspipeline verwerkt alle brondocumenten voor alle combinaties van chunkingstrategie en embeddingmodel. De deterministische chunkers
+— \texttt{RecursiveCharacterSplitter} en \texttt{FixedSizeTokenSplitter} — produceren voor elk van de drie embeddingmodellen één collectie, wat $2 \times 3 = 6$ collecties oplevert.
 
-De scheiding per collectie is noodzakelijk binnen de pipeline. Hoewel BGE-M3 en E5-instruct 1.024-dimensionele vectoren produceren en arctic-embed met MRL-truncatie 256-dimensionele (Sectie~\ref{subsubsec:matryoshka}), zijn de vectorruimten zelfs bij gelijke dimensionaliteit fundamenteel incompatibel: elke encoder is getraind met een ander leerprobleem en andere databronnen. Een cosine-gelijkenis tussen een BGE-M3-queryvector en een arctic-embed-documentvector levert een semantisch zinloos getal op. Voor BGE-M3 wordt de collectie aangemaakt met \texttt{use\_sparse\_embeddings=True} om naast de dense vector ook de sparse lexicale gewichten op te slaan die het hybride zoeken mogelijk maken (Sectie~\ref{subsubsec:hybride-zoeken}).
+Voor de \texttt{SemanticEmbeddingChunker} geldt echter een afwijkende structuur. Zoals beschreven in Sectie~\ref{sec:technische-uitvoering-chunking}, wordt de \texttt{max\_length}-parameter van de semantische chunker afgestemd op de specifieke tokenizer van het geselecteerde \gls{llm}. Omdat dezelfde tekst met verschillende tokenizers tot verschillende karakterlimieten leidt, zou een gedeelde collectie per embeddingmodel deze tokenizer-afhankelijkheid verbergen en de experimentele vergelijkbaarheid ondermijnen. De semantische chunker krijgt daarom één aparte collectie \emph{per combinatie van embeddingmodel én \gls{llm}}, wat $3 \times 3 = 9$ bijkomende collecties oplevert. In totaal worden $6 + 9 = 15$ Qdrant-collecties aangemaakt.
+
+De collectienaam wordt deterministisch gegenereerd via een hulpfunctie. Voor de deterministische chunkers is de naam \texttt{<ChunkerNaam>\_<ModelId>}; voor de semantische chunker wordt de \gls{llm}-naam als suffix toegevoegd: \texttt{<ChunkerNaam>\_<ModelId>\_<LLMNaam>}.
+
+De scheiding per embeddingmodel is altijd noodzakelijk: hoewel BGE-M3 en E5-instruct beide 1.024-dimensionele vectoren produceren en arctic-embed met MRL-truncatie 256-dimensionele (Sectie~\ref{subsubsec:matryoshka}), zijn de vectorruimten zelfs bij gelijke dimensionaliteit fundamenteel incompatibel. Voor BGE-M3 wordt de collectie aangemaakt met \texttt{use\_sparse\_embeddings=True} om naast de dense vector ook de sparse lexicale gewichten op te slaan die het hybride zoeken mogelijk maken (Sectie~\ref{subsubsec:hybride-zoeken}).
 
 %%----------------------------------------------------------------------
 \subsection{Geheugenbeheer bij Semantische Chunking}
 
-De \texttt{SemanticEmbeddingChunker} laadt \texttt{paraphrase-multilingual-mpnet-base-v2} op de \gls{gpu} voor de segmentatiefase. Als het primaire embeddingmodel daarna wordt geladen, zijn beide modellen tegelijkertijd in \gls{vram}, wat op \gls{gpu}'s met 8 GB tot een \gls{oom}-fout leidt. De oplossing bestaat uit een tweetraps-uitvoering: na de segmentatiefase wordt het chunkermodel expliciet naar de \gls{cpu} verplaatst en het \gls{cuda}-geheugen gewist:
-
-\begin{listing}[H]
-\begin{minted}{python}
-def _free_semantic_chunker_gpu(chunker: SemanticEmbeddingChunker) -> None:
-  try:
-    if not torch.cuda.is_available():
-      return
-  backend = getattr(getattr(chunker, 'embedder', None), 'embedding_backend', None)
-  if backend is not None:
-    model = getattr(backend, 'model', None)
-    if model is not None:
-      model.cpu()
-    torch.cuda.empty_cache()
-  except Exception:
-    pass
-\end{minted}
-\caption[\_free\_semantic\_chunker\_gpu: VRAM vrijmaken na segmentatie]{Na de segmentatiefase wordt het interne chunkermodel naar de \gls{cpu} verplaatst. Dit voorkomt \gls{oom}-fouten bij het vervolgens laden van het primaire embeddingmodel, waardoor de semantische chunker-configuraties dezelfde infrastructuur kunnen gebruiken als de deterministische strategieën.}
-\end{listing}
+De \texttt{SemanticEmbeddingChunker} laadt \texttt{paraphrase-multilingual-mpnet-base-v2} op de \gls{gpu} voor de segmentatiefase. Als het primaire embeddingmodel daarna wordt geladen, zijn beide modellen tegelijkertijd in \gls{vram}, wat kan leiden tot \gls{oom}-errors tijdens de uitvoering. De oplossing bestaat uit een tweetraps-uitvoering: na de segmentatiefase wordt het interne model van de chunker via PyTorch's \texttt{model.cpu()}-methode expliciet naar het hoofdgeheugen verplaatst en wordt \texttt{torch.cuda.empty\_cache()} aangeroepen. Pas daarna wordt het primaire embeddingmodel geladen, zodat de twee neurale netwerken nooit tegelijkertijd in \gls{vram} aanwezig zijn.
 
 %%----------------------------------------------------------------------
 \subsection{uitvoeringslogica}
@@ -624,7 +499,6 @@ De uitvoeringslogica varieert op basis van de geselecteerde chunking-methode. Vo
 \begin{listing}[H]
 \begin{minted}{python}
 if chunker_name == "SemanticEmbeddingChunker":
-  # Fase 1: segmenteren
   chunk_pipe = Pipeline()
   chunk_pipe.add_component("converter", _make_converter(unstructured_url))
   chunk_pipe.add_component("cleaner", DocumentCleaner())
@@ -639,7 +513,6 @@ if chunker_name == "SemanticEmbeddingChunker":
   _free_semantic_chunker_gpu(chunker)
   del chunk_pipe; gc.collect()
 
-  # Fase 2: embedden en opslaan
   embed_pipe = Pipeline()
   embed_pipe.add_component("embedder", embedder)
   embed_pipe.add_component("writer",
@@ -668,31 +541,33 @@ else:
 \section{Querypipeline}
 \label{sec:query-pipeline}
 
-De querypipeline genereert voor elke van de 27 configuraties een antwoord op elke vraag uit de golden dataset. De pipeline is opgebouwd uit vier kerncomponenten: een tekstembedder, een Qdrant-retriever, een \texttt{PromptBuilder} en een \gls{llm}. De tekstembedder hanteert hierbij altijd hetzelfde embeddingmodel als gebruikt tijdens de indexeringsfase. Dit garandeert dat de queryvector en de documentvectoren zich in dezelfde vectorruimte bevinden, wat een betrouwbare semantische gelijkenisberekening mogelijk maakt. De \texttt{PromptBuilder} structureert vervolgens de opgehaalde contextfragmenten samen met de vraag tot een instructie voor de \gls{llm}, die op basis hiervan het finale antwoord formuleert.
+De querypipeline genereert voor elke van de 27 configuraties een antwoord op elke vraag uit de golden dataset (Hoofdstuk~\ref{ch:data-goldenset}). De tekstembedder hanteert altijd hetzelfde model als de indexeringsfase, wat garandeert dat queryvector en documentvectoren in dezelfde vectorruimte liggen.
+
+\subsection{Opbouw: hybride vs.\ dense retrieval}
+
+De querypipeline heeft twee uitvoeringspaden afhankelijk van het geconfigureerde embeddingmodel. Voor BGE-M3 worden zowel dense als sparse queryvectoren geproduceerd en gecombineerd via \gls{rrf} (Sectie~\ref{subsubsec:hybride-zoeken}). Voor arctic-embed en E5-instruct volstaat een enkel dense pad:
 
 \begin{listing}[H]
 \begin{minted}{python}
-if use_hybrid:  # BGE-M3: hybride dense + sparse
-  query_pipe.add_component("text_embedder", BGEM3HybridTextEmbedder(query_instruction=emb_cfg.get("query_prefix")))
-  query_pipe.add_component("retriever", QdrantHybridRetriever(document_store=document_store))
-
+if use_hybrid:  # BGE-M3
+  query_pipe.add_component("text_embedder",
+    BGEM3HybridTextEmbedder(
+        query_instruction=emb_cfg.get("query_prefix")))
+  query_pipe.add_component("retriever",
+    QdrantHybridRetriever(document_store=document_store))
   query_pipe.connect("text_embedder.embedding", "retriever.query_embedding")
   query_pipe.connect("text_embedder.sparse_embedding", "retriever.query_sparse_embedding")
-else:  # Arctic-embed / E5-instruct: dense
+else:  # Arctic-embed / E5-instruct
   query_pipe.add_component("text_embedder",
     SentenceTransformersTextEmbedder(
-      model=emb_cfg["api_model"],
-      prefix=emb_cfg.get("query_prefix", ""),
-      truncate_dim=emb_cfg.get("truncate_dim")))
-  query_pipe.add_component("retriever", QdrantEmbeddingRetriever(document_store=document_store))
+        model=emb_cfg["api_model"],
+        prefix=emb_cfg.get("query_prefix", ""),
+        truncate_dim=emb_cfg.get("truncate_dim")))
+  query_pipe.add_component("retriever",
+    QdrantEmbeddingRetriever(document_store=document_store))
   query_pipe.connect("text_embedder.embedding", "retriever.query_embedding")
-
-query_pipe.add_component("prompt_builder", PromptBuilder(template=_PROMPT_TEMPLATE, required_variables=["documents", "question"]))
-query_pipe.add_component("llm", llm_instance)
-query_pipe.connect("retriever.documents", "prompt_builder.documents")
-query_pipe.connect("prompt_builder", "llm")
 \end{minted}
-\caption[Querypipeline-opbouw: hybride pad voor BGE-M3, dense pad voor de overige modellen]{De \texttt{QdrantHybridRetriever} combineert dense en sparse resultaten via \gls{rrf} \autocite{QdrantHybrid2025}. De \texttt{truncate\_dim}-parameter voor arctic-embed activeert MRL-truncatie naar 256 dimensies (Sectie~\ref{subsubsec:matryoshka}).}
+\caption[Querypipeline: hybride pad voor BGE-M3, dense pad voor de overige modellen]{De \texttt{QdrantHybridRetriever} combineert dense en sparse resultaten via \gls{rrf} \autocite{QdrantHybrid2025}. De \texttt{truncate\_dim}-parameter voor arctic-embed activeert de MRL-truncatie naar 256 dimensies (Sectie~\ref{subsubsec:matryoshka}).}
 \label{lst:query-pipeline}
 \end{listing}
 
@@ -724,6 +599,37 @@ Question: {{question}}"""
 \caption[Promptsjabloon voor de querypipeline]{Het sjabloon verplicht een Italiaans antwoord in \gls{json}-formaat met expliciete bronvermelding van bestandsnaam en paginanummer. De metadata-sleutels \texttt{source} en \texttt{page} zijn door de \texttt{DocumentCleaner} en \texttt{ChunkMetaCleaner} genormaliseerd en gegarandeerd aanwezig in elke chunk (Secties~\ref{subsec:documentcleaner}--\ref{subsec:chunkmetacleaner}).}
 \label{lst:prompt-template}
 \end{listing}
+
+\section{Chunk-optimalisatie voor meertalige context}
+\label{sec:technische-uitvoering-chunking}
+%%----------------------------------------------------------------------
+
+Bij de vergelijking van de drie \glspl{llm} moet rekening worden gehouden met de heterogeniteit van de gehanteerde tokenizers. Elke \gls{llm} maakt gebruik van een specifiek vocabulair en algoritme om ruwe tekst om te zetten naar numerieke tokens \autocite{Wu2016, Kudo2018}. Omdat de \texttt{EmbeddingBasedDocumentSplitter} de maximale chunkgrootte uitdrukt in karakters — niet in tokens — is een modelspecifieke conversie noodzakelijk om een gelijke semantische dichtheid over de drie \glspl{llm} te garanderen \autocite{HaystackEbds2026}.
+
+De berekening vertrekt van een doelgrootte van 400 tokens per chunk, een gemiddelde Italiaanse woordlengte van 7,2 karakters \autocite{Eurotrad2022} en de model-specifieke \textit{subword fertility} $F$ — het gemiddeld aantal tokens per woord voor Italiaans \autocite{Allal2025}. De maximale karakterlengte $C_{target}$ per \gls{llm} volgt uit:
+
+\begin{equation}
+C_{target} = T_{target} \times \left( \frac{\text{AVG}_{cpw}}{F} \right)
+\end{equation}
+
+Tabel~\ref{tab:chunk-specs} toont de resulterende waarden per model.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Fertility ($F$)} & \textbf{Tokens} & \textbf{$C_{target}$ (chars)} \\
+\midrule
+Llama-3.3-70B-Instruct   & 1,812 & 400 & 1.589 \\
+Gemma-3-27B-it           & 1,696 & 400 & 1.698 \\
+Mistral-Small-2603       & 1,816 & 400 & 1.586 \\
+\bottomrule
+\end{tabular}
+\caption[Model-specifieke chunk-configuraties voor Italiaanse tekst]{\label{tab:chunk-specs}Model-specifieke chunk-configuraties voor Italiaanse tekstverwerking bij een doelgrootte van 400 tokens.}
+\end{table}
+
+Deze \texttt{max\_char\_length}-waarden worden opgeslagen in de HyPSTER \gls{llm}-configuratie (Sectie~\ref{sec:hypster-config}) en doorgegeven aan de \texttt{SemanticEmbeddingChunker} bij de instantiëring in de indexeringspipeline. Voor de twee deterministische chunkers — \texttt{FixedSizeTokenSplitter} en \texttt{RecursiveCharacterSplitter} — is deze conversie niet nodig, omdat zij native in tokens splitsen via de \texttt{RecursiveDocumentSplitter} \autocite{HaystackRecusriveSplitter2026}.
 
 %%----------------------------------------------------------------------
 \section{Resultaatstructuur}

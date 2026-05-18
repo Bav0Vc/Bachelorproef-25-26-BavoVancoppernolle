@@ -1,59 +1,59 @@
 {
   "latex-workshop.latex.outDir": "../output",
-  "latex-workshop.latex.recipes": [
-    {
-      "name": "xelatex ➞ biber ➞ xelatex× 2",
-      "tools": ["xelatex", "biber", "xelatex", "xelatex"]
-    },
-    {
-      "name": "xelatex× 2",
-      "tools": ["xelatex", "xelatex"]
-    },
-    {
-      "name": "latexmk 🔃",
-      "tools": ["latexmk"]
-    }
-  ],
-  "latex-workshop.latex.tools": [
-    {
-      "args": [
-        "-f",
-        "-xelatex",
-        "-shell-escape",
-        "-synctex=1",
-        "-interaction=nonstopmode",
-        "-file-line-error",
-        "-outdir=%OUTDIR%",
-        "%DOC%"
-      ],
-      "command": "latexmk",
-      "env": {},
-      "name": "latexmk"
-    },
-    {
-      "args": [
-        "-synctex=1",
-        "-interaction=nonstopmode",
-        "-shell-escape",
-        "-output-directory=%OUTDIR%",
-        "-file-line-error",
-        "%DOC%"
-      ],
-      "command": "xelatex",
-      "env": {},
-      "name": "xelatex"
-    },
-    {
-      "args": [
-        "--input-directory=%OUTDIR%",
-        "--output-directory=%OUTDIR%",
-        "%DOCFILE%"
-      ],
-      "command": "biber",
-      "env": {},
-      "name": "biber"
-    }
-  ],
+  //"latex-workshop.latex.recipes": [
+  //  {
+  //    "name": "xelatex ➞ biber ➞ xelatex× 2",
+  //    "tools": ["xelatex", "biber", "xelatex", "xelatex"]
+  //  },
+  //  {
+  //    "name": "xelatex× 2",
+  //    "tools": ["xelatex", "xelatex"]
+  //  },
+  //  {
+  //    "name": "latexmk 🔃",
+  //    "tools": ["latexmk"]
+  //  }
+  //],
+  //"latex-workshop.latex.tools": [
+  //  {
+  //    "args": [
+  //      "-f",
+  //      "-xelatex",
+  //      "-shell-escape",
+  //      "-synctex=1",
+  //      "-interaction=nonstopmode",
+  //      "-file-line-error",
+  //      "-outdir=%OUTDIR%",
+  //      "%DOC%"
+  //    ],
+  //    "command": "latexmk",
+  //    "env": {},
+  //    "name": "latexmk"
+  //  },
+  //  {
+  //    "args": [
+  //      "-synctex=1",
+  //      "-interaction=nonstopmode",
+  //      "-shell-escape",
+  //      "-output-directory=%OUTDIR%",
+  //      "-file-line-error",
+  //      "%DOC%"
+  //    ],
+  //    "command": "xelatex",
+  //    "env": {},
+  //    "name": "xelatex"
+  //  },
+  //  {
+  //    "args": [
+  //      "--input-directory=%OUTDIR%",
+  //      "--output-directory=%OUTDIR%",
+  //      "%DOCFILE%"
+  //    ],
+  //    "command": "biber",
+  //    "env": {},
+  //    "name": "biber"
+  //  }
+  //],
   "latex-workshop.view.pdf.viewer": "tab",
   "latex-workshop.latex.autoBuild.run": "onSave",
   "latex-workshop.latex.recipe.default": "first",
@@ -108,5 +108,11 @@
     "-file-line-error",
     "--shell-escape",
     "%DOC%"
-  ]
+  ],
+  "[latex]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
+  "latex-workshop.latex.recipes": [],
+  "latex-workshop.latex.tools": []
 }

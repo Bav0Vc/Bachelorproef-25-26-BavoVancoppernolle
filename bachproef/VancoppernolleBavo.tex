@@ -16,6 +16,8 @@
 \usepackage[chapter,outputdir=../output]{minted}
 \usemintedstyle{solarized-light}
 
+\setlength{\emergencystretch}{3em}
+
 %% Formatting for minted environments.
 \setminted{%
     autogobble,
@@ -86,7 +88,7 @@
 \newacronym{eu}{EU}{Europese Unie}
 \newacronym{csrd}{CSRD}{Corporate Sustainability Reporting Directive}
 \newacronym{esrs}{ESRS}{European Sustainability Reporting Standards}
-\newacronym{vsme}{VSME}{Voluntary SME Standard}
+\newacronym{vsme}{VSME}{Voluntary Sustainability Reporting Standard}
 \newacronym[shortplural={PDF's}]{pdf}{PDF}{Portable Document Format}
 \newacronym{mteb}{MTEB}{Massive Text Embedding Benchmark}
 \newacronym{vm}{VM}{Virtual Machine}
@@ -96,7 +98,7 @@
 \newacronym{gqa}{GQA}{Grouped-Query Attention}
 \newacronym{co2}{CO\textsubscript{2}}{koolstofdioxide}
 \newacronym[shortplural={GPU's}]{gpu}{GPU}{Graphics Processing Unit}
-\newacronym[shortplural={FLOPs} longplural={Floating Point Operations}]{flop}{FLOP}{Floating Point Operation}
+\newacronym[shortplural={FLOPs}, longplural={Floating Point Operations}]{flop}{FLOP}{Floating Point Operation}
 \newacronym{mmlu}{MMLU}{Massive Multitask Language Understanding}
 \newacronym{http}{HTTP}{Hypertext Transfer Protocol}
 \newacronym{json}{JSON}{JavaScript Object Notation}
@@ -114,7 +116,6 @@
 \newacronym{beir}{BEIR}{Benchmarking Information Retrieval}
 \newacronym{nlp}{NLP}{Natural Language Processing}
 \newacronym{etl}{ETL}{Extraction, Transformation and Load}
-\newacronym{blue}{BLUE}{Bilingual Evaluation Understudy}
 \newacronym{rouge}{ROUGE}{Recall-Oriented Understudy for Gisting Evaluation}
 \newacronym{nltk}{NLTK}{Natural Language Toolkit}
 \newacronym{ndcg@10}{NDCG@10}{Normalized Discounted Cumulative Gain at rank 10}
@@ -128,14 +129,15 @@
 \newacronym{bart}{BART}{Bidirectional and Auto-Regressive Transformers}
 \newacronym{vic}{VIC}{Virtual IT Company}
 \newacronym{hogent}{HoGent}{Hogeschool Gent}
-\newacronym{mae}{MAE}{Mean Average Error}
+\newacronym{mae}{MAE}{Mean Absolute Error}
 \newacronym{me}{ME}{Mean Error}
 \newacronym{map}{MAP}{Mean Average Precision}
+\newacronym{bleu}{BLEU}{Bilingual Evaluation Understudy}
 
 %%---------- Document metadata -------------------------------------------------
 % TODO: Replace this with your own information
 \author{Vancoppernolle Bavo}
-\supervisor{Mevr. N. Declercq}
+\supervisor{Mevre. L. De Mol, Mevr. N. Declercq}
 \cosupervisor{Dhr. G. Gueli}
 \title[]%
     %{Een vergelijkende studie van RAG\\-configuraties met variabele chunking-\\strategieën, embedding modellen en LLM's,\\geoptimaliseerd voor ESG-vraagstukken}
@@ -145,9 +147,6 @@
 \degreesought{\IfLanguageName{dutch}{Professionele bachelor in de toegepaste informatica}{Bachelor of applied computer science}}
 \partialthesis{false} %% To display 'in partial fulfilment'
 \institution{Turtle S.r.l.}
-
-%% Make LaTeX accept slightly imperfect line breaks before declaring overfull
-\tolerance=1000
 
 %% Add global exceptions to the hyphenation here
 \hyphenation{back-slash}

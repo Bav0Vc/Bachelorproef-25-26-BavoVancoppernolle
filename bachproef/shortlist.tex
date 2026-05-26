@@ -1,7 +1,7 @@
-\chapter{\IfLanguageName{dutch}{Short list}{Short list}}%
+\chapter{\IfLanguageName{dutch}{Shortlist}{Shortlist}}%
 \label{ch:shortlist}
 
-Op basis van de vergelijkingstabellen in de long list in Hoofdstuk~\ref{ch:longlist}, zijn per variabele component drie alternatieven geselecteerd. Deze shortlist vormt de inhoudelijke onderbouwing voor de experimentele fase, waarbij de selectie direct wordt getoetst aan de Must-Have requirements: feitelijke betrouwbaarheid (\textit{faithfulness}), strikte \gls{eu}-datasoevereiniteit en effectieve informatie-extractie uit complexe bronnen. De uiteindelijke selectie resulteert in een testmatrix van $3^3 = 27$ unieke configuraties.
+Op basis van de vergelijkingstabellen in de longlist in Hoofdstuk~\ref{ch:longlist}, zijn per variabele component drie alternatieven geselecteerd. Deze shortlist vormt de inhoudelijke onderbouwing voor de experimentele fase, waarbij de selectie direct wordt getoetst aan de Must-Have requirements: feitelijke betrouwbaarheid (\textit{faithfulness}), strikte \gls{eu}-datasoevereiniteit en effectieve informatie-extractie uit complexe bronnen. De uiteindelijke selectie resulteert in een testmatrix van $3^3 = 27$ unieke configuraties.
 
 \section{Chunkingstrategieën}
 \label{sec:shortlist-chunking}
@@ -35,7 +35,7 @@ De selectie is gedreven door de noodzaak van sterke \textbf{meertalige retrieval
 
 \subsection{Motivatie voor uitsluiting van alternatieven}
 
-De uitsluiting van de overige embeddingkandidaten uit de long list berust op een methodologische afweging tussen meertalige retrieval-nauwkeurigheid, functionele architectuur en datasoevereiniteit. 
+De uitsluiting van de overige embeddingkandidaten uit de longlist berust op een methodologische afweging tussen meertalige retrieval-nauwkeurigheid, functionele architectuur en datasoevereiniteit. 
 
 Hoewel \textit{Jina Embeddings-V3} met een \gls{mtebr} score van 55,76\% nominaal op de derde plaats staat, is het model uitgesloten ten gunste van \textit{BAAI BGE-M3} (54,60\%). Het prestatieverschil van 1,16\% op het algemene leaderboard wordt in de praktijk ruimschoots gecompenseerd door de unieke architectuur van BGE-M3. In tegenstelling tot het Jina-model beschikt BGE-M3 over \textit{native hybride retrieval}-functionaliteiten binnen één modelgewicht (dense, sparse en multi-vector). Gegeven de doelstelling om complexe, ongestructureerde \gls{esg}-rapportages te doorzoeken die zowel tekstuele nuances als exacte numerieke tabelwaarden bevatten, biedt de lexicale ondersteuning van sparse embeddings een kritieke functionele meerwaarde voor de \textit{context precision}. Jina Embeddings-V3 biedt deze hybride eigenschappen niet native aan, waardoor het model voor de specifieke eisen van deze \gls{poc} als technologisch minder geschikt werd beoordeeld.
 
@@ -54,7 +54,7 @@ Hoewel de modellen via de cloud worden aangeroepen (binnen de Azure \gls{eu}-reg
 
 \subsection{Motivatie voor uitsluiting van alternatieven}
 
-De uitsluiting van de overige \glspl{llm} uit de long list is hoofdzakelijk gedreven door de dwingende non-functional requirement omtrent absolute \textbf{\gls{eu}-datasoevereiniteit} en het uitsluiten van externe jurisdictionele risico's. 
+De uitsluiting van de overige \glspl{llm} uit de longlist is hoofdzakelijk gedreven door de dwingende non-functional requirement omtrent absolute \textbf{\gls{eu}-datasoevereiniteit} en het uitsluiten van externe jurisdictionele risico's. 
 
 Ten eerste is \textit{DeepSeek-V3} uitgesloten op grond van dataveiligheid en wetgeving. Hoewel dit model met een \gls{mmlu}-score van 88,5\% en een \gls{ifeval}-score van 86,6\% uitzonderlijk sterk presteert tegen minimale operationele kosten, is het model afkomstig van een Chinese provider en is hosting binnen een \gls{gdpr}-conforme Europese infrastructuur onmogelijk. Het doorsturen van niet-geanonymiseerde, strategische \gls{esg}-bedrijfsinformatie naar servers die vallen buiten een Europees adequaatheidsbesluit, vormt een directe schending van de \gls{gdpr}-naleving en de contractuele geheimhoudingsplichten van Turtle Srl.
 

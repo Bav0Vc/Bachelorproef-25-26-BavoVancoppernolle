@@ -364,7 +364,7 @@ Een bewuste ontwerpkeuze betreft de maximale inputlengte van \texttt{multilingua
 \subsection{BGE-M3 via FlagEmbedding}
 \label{subsec:bge-m3-embedder}
 
-BGE-M3 vereist een afwijkende implementatie ten opzichte van arctic-embed en E5-instruct. Zoals beschreven in de short list (Sectie~\ref{sec:shortlist-embedding}), produceert BGE-M3 naast dense vectoren ook sparse lexicale gewichten voor hybride zoeken \autocite{Chen2024}. Haystack's standaard \texttt{SentenceTransformersDocumentEmbedder} ondersteunt enkel dense vectoren, waardoor de hybride zoekfunctionaliteit verloren zou gaan bij gebruik van die component.
+BGE-M3 vereist een afwijkende implementatie ten opzichte van arctic-embed en E5-instruct. Zoals beschreven in de shortlist (Sectie~\ref{sec:shortlist-embedding}), produceert BGE-M3 naast dense vectoren ook sparse lexicale gewichten voor hybride zoeken \autocite{Chen2024}. Haystack's standaard \texttt{SentenceTransformersDocumentEmbedder} ondersteunt enkel dense vectoren, waardoor de hybride zoekfunctionaliteit verloren zou gaan bij gebruik van die component.
 
 Om dit op te lossen zijn twee custom Haystack-componenten geïmplementeerd via de \texttt{FlagEmbedding}-bibliotheek, één per fase van de pipeline. Het onderscheid tussen beide is inhoudelijk relevant: BGE-M3 hanteert bewust verschillende encoderingsstrategieën voor documenten en queries. Via \texttt{encode\_corpus()} worden documentpassages gecodeerd voor opslag; via \texttt{encode\_queries()} worden zoekvragen gecodeerd voor retrieval. Deze asymmetrie verbetert de retrieval-kwaliteit doordat het model de representatie kan optimaliseren voor de specifieke rol van elk teksttype \autocite{Chen2024}.
 
@@ -510,8 +510,8 @@ if chunker_name == "SemanticEmbeddingChunker":
   chunk_pipe.add_component("chunker", chunker)
   chunk_pipe.add_component("meta_cleaner", ChunkMetaCleaner())
   chunk_pipe.connect("converter.documents", "cleaner.documents")
-  chunk_pipe.connect("cleaner.documents",   "chunker.documents")
-  chunk_pipe.connect("chunker.documents",   "meta_cleaner.documents")
+  chunk_pipe.connect("cleaner.documents", "chunker.documents")
+  chunk_pipe.connect("chunker.documents", "meta_cleaner.documents")
   chunk_result = chunk_pipe.run({"converter": {"paths": all_file_paths}})
   chunks = chunk_result["meta_cleaner"]["documents"]
 
@@ -520,23 +520,22 @@ if chunker_name == "SemanticEmbeddingChunker":
 
   embed_pipe = Pipeline()
   embed_pipe.add_component("embedder", embedder)
-  embed_pipe.add_component("writer",
-    DocumentWriter(document_store=document_store))
+  embed_pipe.add_component("writer", DocumentWriter(document_store=document_store))
   embed_pipe.connect("embedder.documents", "writer.documents")
   embed_pipe.run({"embedder": {"documents": chunks}})
 else:
   indexing_pipe = Pipeline()
   indexing_pipe.add_component("converter", _make_converter(unstructured_url))
-  indexing_pipe.add_component("cleaner",   DocumentCleaner())
-  indexing_pipe.add_component("chunker",   chunker)
+  indexing_pipe.add_component("cleaner", DocumentCleaner())
+  indexing_pipe.add_component("chunker", chunker)
   indexing_pipe.add_component("meta_cleaner", ChunkMetaCleaner())
-  indexing_pipe.add_component("embedder",  embedder)
+  indexing_pipe.add_component("embedder", embedder)
   indexing_pipe.add_component("writer", DocumentWriter(document_store=document_store))
-  indexing_pipe.connect("converter.documents",    "cleaner.documents")
-  indexing_pipe.connect("cleaner.documents",      "chunker.documents")
-  indexing_pipe.connect("chunker.documents",      "meta_cleaner.documents")
+  indexing_pipe.connect("converter.documents", "cleaner.documents")
+  indexing_pipe.connect("cleaner.documents", "chunker.documents")
+  indexing_pipe.connect("chunker.documents", "meta_cleaner.documents")
   indexing_pipe.connect("meta_cleaner.documents", "embedder.documents")
-  indexing_pipe.connect("embedder.documents",     "writer.documents")
+  indexing_pipe.connect("embedder.documents", "writer.documents")
   indexing_pipe.run({"converter": {"paths": all_file_paths}})
 \end{minted}
 \caption[Indexeringslogica: tweeledige uitvoering voor semantische chunking, lineair voor de rest]{De tweeledige uitvoering vrijwaart de \gls{gpu} van gelijktijdige belasting. In beide paden is de \texttt{ChunkMetaCleaner} aanwezig die de pagina-markers verwerkt en chunks dedupliceert (Sectie~\ref{subsec:chunkmetacleaner}).}
@@ -589,7 +588,7 @@ Het promptsjabloon is de technische operationalisering van de Must-Have-requirem
 
 \begin{listing}[H]
 \begin{minted}{python}
-_PROMPT_TEMPLATE = """Answer the question in Italian based on the context. Also include
+_PROMPT_TEMPLATE = """Answer the question based on the context. Also include
 the filename and page number or page name of the document containing
 the retrieved chunk, on a new line after the answer to the question.
 Output only in valid JSON.
@@ -600,7 +599,7 @@ Context:
 {% endfor %}
 Question: {{question}}"""
 \end{minted}
-\caption[Promptsjabloon voor de querypipeline]{Het sjabloon verplicht een Italiaans antwoord in \gls{json}-formaat met expliciete bronvermelding van bestandsnaam en paginanummer. De metadata-sleutels \texttt{source} en \texttt{page} zijn door de \texttt{DocumentCleaner} en \texttt{ChunkMetaCleaner} genormaliseerd en gegarandeerd aanwezig in elke chunk (Secties~\ref{subsec:documentcleaner}--\ref{subsec:chunkmetacleaner}).}
+\caption[Promptsjabloon voor de querypipeline]{Het sjabloon verplicht een antwoord in \gls{json}-formaat met expliciete bronvermelding van bestandsnaam en paginanummer. De metadata-sleutels \texttt{source} en \texttt{page} zijn door de \texttt{DocumentCleaner} en \texttt{ChunkMetaCleaner} genormaliseerd en gegarandeerd aanwezig in elke chunk (Secties~\ref{subsec:documentcleaner}--\ref{subsec:chunkmetacleaner}). Het sjabloon is voor de leesbaarheid vertaald naar het Engels; het origineel is in het Italiaans opgesteld.}
 \label{lst:prompt-template}
 \end{listing}
 

@@ -36,13 +36,13 @@ De golden dataset is opgeslagen in een gestructureerd \gls{json}-formaat. De exa
     "question": "What is the company's total annual water withdrawal in cubic metres for 2024?",
     "answer": {
       "data_points": {
-        "Water withdrawal 2024 (m³)": 1.000
+        "Water withdrawal 2024 (m³)": 1000
       }
     },
-    "ground_truth": "In 2024, the company's total water withdrawal was 1.000 m³.",
+    "ground_truth": "In 2024, the company's total water withdrawal was 1,000 m³.",
     "expected_source": "water_bill.pdf",
     "reference_contexts": {
-      "context_1": "Water consumption | m³ | 1.000 "
+      "context_1": "Water consumption | m³ | 1,000"
     },
     "source_page": 2,
     "acceptable_sources": [
@@ -63,7 +63,7 @@ De verschillende velden in deze structuur hebben elk een specifieke functie binn
     \item \textbf{question\_id:} Een unieke identificatiecode voor de vraag, wat toelaat om resultaten over verschillende testruns heen consistent te vergelijken.
     \item \textbf{question:} De specifieke vraag gericht op het extraheren van \gls{esg}-data.
     \item \textbf{answer (met data\_points):} Bevat de ruwe data en eenheden (zoals \gls{m3} of \gls{mwh}) die geëxtraheerd moeten worden.
-    \item \textbf{ground\_truth:} Het ideale antwoord, dat manueel geverifieerd is. Dit dient als referentie om de \textit{faithfulness} en \textit{answer correctness} van de \gls{llm} te meten.
+    \item \textbf{ground\_truth:} Het ideale antwoord, dat manueel geverifieerd is. Dit dient als referentie om de \textit{faithfulness} en \textit{answer relevancy} van de \gls{llm} te meten.
     \item \textbf{expected\_source:} De naam van het primaire bronbestand waar de informatie zich bevindt.
     \item \textbf{reference\_contexts:} De exacte tekstfragmenten uit het brondocument die als bewijs dienen. Dit wordt gebruikt om de \textit{context recall} te berekenen.
     \item \textbf{source\_page:} Het specifieke paginanummer in de bron, wat handmatige verificatie vergemakkelijkt en wordt gebruikt om \textit{source attribution} te evalueren.

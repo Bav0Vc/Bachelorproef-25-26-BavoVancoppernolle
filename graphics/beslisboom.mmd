@@ -1,0 +1,62 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#fff9c4",
+    "primaryTextColor": "#333333",
+    "primaryBorderColor": "#e6ac00",
+    "lineColor": "#555555",
+    "fontSize": "14px",
+    "fontFamily": "Helvetica Neue, Arial, sans-serif",
+    "edgeLabelBackground": "#ffffff"
+  }
+}}%%
+flowchart TD
+    D1{"<b>SA ≥ 40 %</b><br/>vereist?"}
+
+    D1 -->|"<b>JA</b>"| N_RecE5
+    D1 -->|"<b>NEE</b>"| D2
+
+    N_RecE5["<b>RecursiveCharacterSplitter</b><br/><b>multilingual-e5-large-instruct</b><br/>──────────────────<br/><i>SA vereist → beide geforceerd</i><br/><i>bge-m3 drukt SA naar 23 %</i>"]
+    N_RecE5 --> L1["<b>Gemma-3-27b-it</b><br/>──────────────────<br/>SA 46,7 % · F 0,657 · CR 0,792 ★"]
+
+    D2{"<b>AR ≥ 0,65</b><br/>vereist?"}
+    D2 -->|"<b>JA</b>"| N_bgeM3
+    D2 -->|"<b>NEE</b>"| N_E5large
+
+    N_bgeM3["<b>BAAI/bge-m3</b><br/>──────────────────<br/><i>AR μ = 0,679 — enige embedder ≥ 0,65</i>"]
+    N_E5large["<b>multilingual-e5-large-instruct</b><br/>──────────────────<br/><i>CR μ = 0,792 — hoogste context recall</i>"]
+
+    N_bgeM3 --> D3A{"<b>F ≥ 0,65</b><br/>vereist?"}
+    N_E5large --> D3B{"<b>F ≥ 0,65</b><br/>vereist?"}
+
+    D3A -->|"<b>JA</b>"| N_FixA
+    D3A -->|"<b>NEE</b>"| N_SemA
+    D3B -->|"<b>JA</b>"| N_FixB
+    D3B -->|"<b>NEE</b>"| N_SemB
+
+    N_FixA["<b>FixedSizeTokenSplitter</b><br/>──────────────────<br/><i>stabiele context, min. hallucinatierisico</i>"]
+    N_SemA["<b>SemanticEmbeddingChunker</b><br/>──────────────────<br/><i>max CP μ = 0,749</i>"]
+    N_FixB["<b>FixedSizeTokenSplitter</b><br/>──────────────────<br/><i>stabiele context, min. hallucinatierisico</i>"]
+    N_SemB["<b>SemanticEmbeddingChunker</b><br/>──────────────────<br/><i>max CP μ = 0,744</i>"]
+
+    N_FixA --> L2["<b>Gemma-3-27b-it</b><br/>──────────────────<br/>AR 0,679 · F 0,657"]
+    N_SemA --> L3["<b>Gemma-3-27b-it</b><br/>──────────────────<br/>AR 0,679 · CP 0,749"]
+    N_FixB --> L4["<b>Gemma-3-27b-it</b><br/>──────────────────<br/>CR 0,792 · F 0,657"]
+    N_SemB --> L5["<b>Gemma-3-27b-it</b><br/>──────────────────<br/>CR 0,792 · CP 0,744"]
+
+    style N_RecE5 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style N_bgeM3 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style N_E5large fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style N_FixA fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style N_SemA fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style N_FixB fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style N_SemB fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    style L1 fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#1b5e20
+    style L2 fill:#e8f5e9,stroke:#43a047,stroke-width:2px
+    style L3 fill:#e8f5e9,stroke:#43a047,stroke-width:2px
+    style L4 fill:#e8f5e9,stroke:#43a047,stroke-width:2px
+    style L5 fill:#e8f5e9,stroke:#43a047,stroke-width:2px
+    style D1 fill:#fff9c4,stroke:#e6ac00,stroke-width:2px,color:#5d4000
+    style D2 fill:#fff9c4,stroke:#e6ac00,stroke-width:2px,color:#5d4000
+    style D3A fill:#fff9c4,stroke:#e6ac00,stroke-width:2px,color:#5d4000
+    style D3B fill:#fff9c4,stroke:#e6ac00,stroke-width:2px,color:#5d4000

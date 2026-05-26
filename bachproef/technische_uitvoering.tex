@@ -157,7 +157,7 @@ De parameters \mintinline{python}{pdf_infer_table_structure=True} en \mintinline
 
 Na de conversie passeert elk document een zelfgeschreven\\\texttt{DocumentCleaner}-component die het \texttt{@component}-protocol van Haystack implementeert. Deze component vervult twee rollen: tekstnormalisatie en het samenvoegen van pagina's per brondocument met expliciete pagina-markers.
 
-\textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Deze ontwerpbeslissing heeft een directe invloed op de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door deze samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}).
+\textbf{Samenvoegen van pagina's.} Unstructured levert per pagina een afzonderlijk \texttt{Document}-object op. De \texttt{DocumentCleaner} groepeert alle pagina's van hetzelfde bestand en voegt ze samen tot één enkel \texttt{Document}-object. Deze ontwerpbeslissing heeft een directe invloed op de retrieval-kwaliteit: wanneer pagina's afzonderlijk blijven, kunnen chunkgrenzen nooit een alineaovergang tussen twee pagina's omvatten. Door deze samen te voegen, kunnen de chunkers cross-pagina-context behouden en semantisch coherentere fragmenten produceren, wat een positieve invloed heeft op de \textbf{context recall}.
 
 \textbf{Pagina-markers.} Om de paginatraceerbaarheid na het samenvoegen te bewaren, injecteert de cleaner vóór elke alinea een marker in de vorm \texttt{<<<PAGE X>>>}. Na het chunken extraheert de \texttt{ChunkMetaCleaner} de eerste marker die in een chunk voorkomt en koppelt die als \texttt{page}-metadata aan het fragment. Dit mechanisme implementeert de Could-Have-requirement voor \textbf{granulaire bronverwijzing op paginaniveau} (Tabel~\ref{tab:moscow}) zonder afhankelijk te zijn van de manier waarop de chunker de grenzen trekt.
 
@@ -177,17 +177,19 @@ Zoals vastgesteld in de shortlist (Sectie~\ref{sec:shortlist-chunking}) worden d
 
 Ten eerste garandeert de uniforme interface de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}): de exacte configuratieparameters van elke chunker zijn bevroren in de broncode, onafhankelijk van toekomstige framework-updates. Ten tweede maakt de modulaire opbouw de \textbf{variabele configuratieondersteuning} mogelijk die de kern van dit onderzoek vormt: het Cartesisch product van alle componenten is alleen haalbaar als elke component dezelfde interface hanteert. Ten derde biedt deze structuur de transparantie en uitbreidbaarheid die Turtle Srl heeft gevraagd in het kader van de white-box-vereiste.
 %%----------------------------------------------------------------------
-\subsection{Fixed-size word splitting}
+\subsection{Fixed-size token splitting}
 \label{subsec:fixed-chunker}
 
-De eerste chunker is een wrapper rond Haystack's \texttt{RecursiveDocumentSplitter}, geconfigureerd met uitsluitend \texttt{[" ", ""]} als scheidingstekens. Dit dwingt het algoritme om uitsluitend op woordgrenzen te splitsen — nooit op alinea- of zinsgrenzen — wat resulteert in een strikt vaste tokenvenstergrootte van 400 tokens met een overlap van 50 tokens. Als deterministisch referentiepunt zonder semantisch bewustzijn is deze strategie de baseline waartegen de meerwaarde van de twee complexere strategieën wordt aangetoond, conform de benchmarkmethodologie beschreven in Sectie~\ref{sec:shortlist-chunking}.
+De eerste chunker is een wrapper rond Haystack's \texttt{RecursiveDocumentSplitter}, geconfigureerd met uitsluitend \texttt{[" ", ""]} als scheidingstekens. Dit dwingt het algoritme om uitsluitend op woordgrenzen te splitsen — nooit op alinea- of zinsgrenzen — wat resulteert in een strikt vaste tokenvenstergrootte van 1024 tokens met een overlap van 154 tokens — circa 15\% van de venstergrootte, conform de aanbeveling uit Sectie~\ref{subsubsec:chunking}.
+
+Als deterministisch referentiepunt zonder semantisch bewustzijn is deze strategie de baseline waartegen de meerwaarde van de twee complexere strategieën wordt aangetoond, conform de benchmarkmethodologie beschreven in Sectie~\ref{sec:shortlist-chunking}.
 
 De keuze voor \textbf{tokens} als spliteenheid — in tegenstelling tot woorden in de oorspronkelijke opzet — is een bewuste aanpassing. De maximale inputlengte van de drie embeddingmodellen is gedefinieerd in tokens. Door tokens als gemeenschappelijke maat te hanteren, worden chunks gegarandeerd binnen de modellimieten gehouden ongeacht de gemiddelde woordlengte van de ingevoerde taal (Italiaans versus Engels). Bovendien meten beide andere chunkers ook in tokens, wat de chunkgrootte als experimentele variabele isoleert van de spliteenheid.
 
 \begin{listing}[H]
 \begin{minted}{python}
 @component
-class FixedSizeWordSplitter:
+class FixedSizeTokenSplitter:
   def __init__(self, split_length: int = 400, split_overlap: int = 50):
     self.internal_splitter = RecursiveDocumentSplitter(
       separators=[" ", ""],
@@ -200,14 +202,16 @@ class FixedSizeWordSplitter:
   def run(self, documents: List[Document]):
     return self.internal_splitter.run(documents=documents)
 \end{minted}
-\caption[FixedSizeWordSplitter: fixed-size chunking als deterministisch referentiepunt]{De fixed-size chunker splitst uitsluitend op woordgrenzen in een venster van 400 tokens (overlap 50). Door \texttt{[" ", ""]} als separatoren te gebruiken binnen de \texttt{RecursiveDocumentSplitter}, is de vergelijking met de recursieve chunker volledig gecontroleerd: het enige verschil is de hiërarchie van scheidingstekens.}
+\caption[FixedSizeTokenSplitter: fixed-size chunking als deterministisch referentiepunt]{De fixed-size chunker splitst uitsluitend op woordgrenzen in een venster van 1024 tokens (overlap 154). Door \texttt{[" ", ""]} als separatoren te gebruiken binnen de \texttt{RecursiveDocumentSplitter}, is de vergelijking met de recursieve chunker volledig gecontroleerd: het enige verschil is de hiërarchie van scheidingstekens.}
 \end{listing}
+
+De Python-standaardwaarden in de constructor (\texttt{split\_length=400}, \texttt{split\_overlap=50}) dienen als terugvalwaarden; tijdens het experiment worden altijd de via HyPSTER-configuratie doorgegeven waarden van 1024 tokens en 154 tokens overlap gebruikt (Sectie~\ref{sec:hypster-config}).
 
 %%----------------------------------------------------------------------
 \subsection{Recursive character splitting}
 \label{subsec:recursive-chunker}
 
-De tweede chunker maakt gebruik van dezelfde \texttt{RecursiveDocumentSplitter}als de fixed-size chunker, maar met een volledige hiërarchie van scheidingstekens: \texttt{["\textbackslash n\textbackslash n", "\textbackslash n", ". ", " ", ""]}. Het algoritme splitst eerst op alinea-grenzen en grijpt pas recursief terug op fijnmazigere grenzen wanneer een fragment de limiet van 400 tokens overschrijdt \autocite{LangChain2024}. Dezelfde overlap van 50 tokens als de fixed-size chunker is geconfigureerd, zodat de splitsingstrategie de enige variabele is.
+De tweede chunker maakt gebruik van dezelfde \texttt{RecursiveDocumentSplitter} als de fixed-size chunker, maar met een volledige hiërarchie van scheidingstekens: \texttt{["\textbackslash n\textbackslash n", "\textbackslash n", ". ", " ", ""]}. Het algoritme splitst eerst op alinea-grenzen en grijpt pas recursief terug op fijnmazigere grenzen wanneer een fragment de limiet van 1024 tokens overschrijdt \autocite{LangChain2024}. Dezelfde overlap van 154 tokens als de fixed-size chunker is geconfigureerd, zodat de splitsingstrategie de enige variabele is.
 
 Deze strategie scoort in de longlist (Sectie~\ref{sec:longlist-chunking}) het sterkst op de Must-Have-requirement voor context recall: door alinea-integriteit te bewaren, maximaliseert het de kans dat semantisch bij elkaar horende informatie — zoals de cijfers en de bijbehorende meetéénheid in een \gls{esg}-tabel — in één chunk terechtkomen en samen opgehaald worden. Dit is direct relevant voor de faithfulness-evaluatie: een \gls{llm} kan enkel correct rapporteren wat volledig in de opgehaalde context aanwezig is \autocite{Es2024}.
 
@@ -232,9 +236,11 @@ class RecursiveCharacterSplitter:
   def run(self, documents: List[Document]):
     return self.internal_splitter.run(documents=documents)
 \end{minted}
-\caption[RecursiveCharacterSplitter: hiërarchische splitsing op structurele grenzen]{Identieke tokenparameters als de fixed-size chunker (400 tokens, overlap 50) maar met een volledige scheidingsteken-hiërarchie die alinea- en zinsgrenzen respecteert. De gecontroleerde parameteridentiteit maakt een directe prestatievergelijking van de splitsingstrategie mogelijk.}
+\caption[RecursiveCharacterSplitter: hiërarchische splitsing op structurele grenzen]{Identieke tokenparameters als de fixed-size chunker (1024 tokens, overlap 154) maar met een volledige scheidingsteken-hiërarchie die alinea- en zinsgrenzen respecteert. De gecontroleerde parameteridentiteit maakt een directe prestatievergelijking van de splitsingstrategie mogelijk.}
 \label{lst:recursive-chunker}
 \end{listing}
+
+Ook hier dienen de Python-standaardwaarden (\texttt{split\_length=400}, \texttt{split\_overlap=50}) als terugvalwaarden; het experiment gebruikt de door HyPSTER doorgegeven waarden van 1024 tokens en 154 tokens overlap (Sectie~\ref{sec:hypster-config}).
 
 %%----------------------------------------------------------------------
 \subsection{Semantische chunking}
@@ -244,7 +250,7 @@ De derde strategie is de semantische chunker, gebaseerd op de \emph{semantic chu
 
 Voor de berekening van de zin-embeddings wordt het \texttt{paraphrase-multilingual-mpnet-base-v2}-model ingezet. Dit meertalige model is bewust gekozen boven meer lichtgewicht Engelstalige alternatieven, conform de Should-Have-requirement voor \textbf{meertalige ondersteuning} (Tabel~\ref{tab:moscow}): de dataset bevat Italiaanse en Engelse documenten, waardoor een meertalig model noodzakelijk is om semantische grenzen correct te detecteren in beide talen. Per groep van twee zinnen (\texttt{sentences\_per\_group=2}) wordt een gecombineerde embedding berekend om ruis door korte zinnen te reduceren.
 
-Een bewuste keuze in de experimentele opzet is dat de semantische chunking \textbf{niet} wordt uitgevoerd met de embeddingmodellen die deel uitmaken van de evaluatiematrix. Indien het embeddingmodel - dat als aparte variabele geëvalueerd wordt - ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunking-strategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
+Een bewuste keuze in de experimentele opzet is dat de semantische chunking \textbf{niet} wordt uitgevoerd met de embeddingmodellen die deel uitmaken van de evaluatiematrix. Indien het embeddingmodel - dat als aparte variabele geëvalueerd wordt - ook de chunking zou aansturen, ontstaat er een afhankelijkheid tussen beide variabelen. Door een onafhankelijk, statisch model te gebruiken voor de segmentatie, worden de variabelen \textit{chunkingstrategie} en \textit{embedding-kwaliteit} strikt van elkaar geïsoleerd. Dit waarborgt de interne validiteit van het onderzoek: eventuele prestatieverschillen kunnen zo eenduidig worden toegeschreven aan de specifieke werking van de chunkingstrategie, onafhankelijk van het embeddingmodel dat later de uiteindelijke retrieval uitvoert.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -253,10 +259,10 @@ class SemanticEmbeddingChunker:
   def __init__(
     self,
     max_length: int,
+    min_length: int,
     model_name: str = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
     sentences_per_group: int = 2,
     percentile: float = 0.95,
-    min_length: int = 50,
     language: str = "it",
   ):
     self.max_length = max_length
@@ -278,18 +284,16 @@ class SemanticEmbeddingChunker:
 \label{lst:semantic-chunker}
 \end{listing}
 
-Een bijzonderheid van de implementatie is de \texttt{max\_length}-parameter. Deze wordt namelijk in de indexeringspipeline geïnitialiseerd op basis van het geselecteerde \gls{llm} voor die indexeringsrun. Dit wordt verder toegelicht in Sectie~\ref{sec:technische-uitvoering-chunking} over chunk-optimalisatie.
+Een bijzonderheid van de implementatie zijn de \texttt{max\_length}- en \texttt{min\_length}-parameters. \texttt{max\_length} wordt voor elke indexeringsrun geïnitialiseerd op basis van het geselecteerde \gls{llm}; de modelspecifieke berekening wordt toegelicht in Sectie~\ref{sec:technische-uitvoering-chunking}. De \texttt{min\_length}-parameter stelt een minimale karakterlengte per zingroep in: zingroepen die korter zijn dan deze drempel, worden samengevoegd met de volgende groep voordat de semantische splitsing wordt toegepast. Dit voorkomt over-fragmentatie — excessief kleine chunks die de retrieval-precisie schaden. De achterliggende drempelwaarde van 128 tokens — omgezet naar modelspecifieke karakterwaarden via de formule in Sectie~\ref{sec:technische-uitvoering-chunking} en weergegeven in Tabel~\ref{tab:chunk-specs} — is gemotiveerd door \textcite{BhatEtAl2025}, die aantoont dat dit de bovengrens vormt van het bereik dat optimaal is voor feitgerichte vraag-antwoordretrieval, het primaire gebruiksscenario van de Turtle Srl-chatbot (Sectie~\ref{subsubsec:chunking}). Dit minimum is uitsluitend van toepassing op de semantische chunker; de twee deterministische chunkers — \texttt{FixedSizeTokenSplitter} en \texttt{RecursiveCharacterSplitter} — hanteren geen minimale chunklengte en beschouwen elk resultaatfragment ongeacht de grootte als geldig.
 
-Omdat de \texttt{EmbeddingBasedDocumentSplitter} niet altijd elke chunk onder de maximale lengte kan houden — met name bij tabellen of structuurloze blokken zonder zinsgrens — is een harde terugval ingebouwd. Chunks die na de semantische splitsing toch de limiet overschrijden, worden via een \texttt{RecursiveDocumentSplitter} met woordgrenzen als vangnet verder opgedeeld:
+Omdat de \texttt{EmbeddingBasedDocumentSplitter} niet altijd elke chunk onder de maximale lengte kan houden — met name bij tabellen of structuurloze blokken zonder zinsgrens — is een harde terugval ingebouwd. Chunks die na de semantische splitsing toch de limiet overschrijden, worden via een \texttt{RecursiveDocumentSplitter} met woordgrenzen als vangnet verder opgedeeld. De terugval hanteert geen overlap (\texttt{split\_overlap=0}): een overlap zou de fragmenten langer maken dan de limiet en zo het doel van de terugval ondermijnen.
 
 \begin{listing}[H]
 \begin{minted}{python}
-overlap_chars = int(self.max_length * 0.15)
-
 self._fallback = RecursiveDocumentSplitter(
   separators=["\n\n", "\n", ". ", " "],
   split_length=self.max_length,
-  split_overlap=overlap_chars,
+  split_overlap=0,
   split_unit="char"
 )
 
@@ -354,6 +358,8 @@ De inferentie verloopt via PyTorch: de modelspecifieke tokenizer zet de invoerte
 
 Voor arctic-embed wordt via de \texttt{truncate\_dim}-parameter de Matryoshka-truncatie naar 256 dimensies geactiveerd (Sectie~\ref{subsubsec:matryoshka}). Voor E5-instruct wordt de domeinspecifieke query-instructieprefix via de \texttt{prefix}-parameter meegegeven, wat de asymmetrische query-document-modellering activeert \autocite{WangEtAl2022}.
 
+Een bewuste ontwerpkeuze betreft de maximale inputlengte van \texttt{multilingual-e5-large-instruct}: het model verwerkt slechts 512 tokens per invoertekst \autocite{WangEtAl2024b}, terwijl chunks een maximale grootte hebben van 1.024 tokens (Sectie~\ref{sec:chunkers}). De \texttt{SentenceTransformersDocumentEmbedder} kapt invoer die deze limiet overschrijdt automatisch af. Er is bewust \textbf{niet} voor gekozen de chunkgrootte specifiek voor \texttt{E5-large} te halveren: het verkleinen van de chunkgrootte voor één embedder zou de chunkgrootte als gecontroleerde experimentele variabele doorbreken en een groter methodologisch confound introduceren dan de truncatie zelf. De benchmarkmethodologie vereist dat elke embedder evalueert onder identieke chunk-condities, zodat prestatieverschillen eenduidig aan het embeddingmodel worden toegeschreven en niet aan een ongelijke datavoorbereiding.
+
 %%----------------------------------------------------------------------
 \subsection{BGE-M3 via FlagEmbedding}
 \label{subsec:bge-m3-embedder}
@@ -414,11 +420,11 @@ Om de 27 unieke configuraties systematisch te kunnen doorlopen, wordt HyPSTER ge
 %%----------------------------------------------------------------------
 \subsection{Configuratie chunkingstrategieën}
 
-De chunking-deelconfiguratie is de eenvoudigste van de drie: zij slaat uitsluitend de naam van de geselecteerde chunker. De werkelijke chunker-instanties worden in de indexeringspipeline aangemaakt via de \texttt{\_make\_chunker()}-hulpfunctie op basis van deze naam. De drie opties zijn \texttt{RecursiveCharacterSplitter}, \texttt{FixedSizeTokenSplitter} en \texttt{SemanticEmbeddingChunker}.
+De chunking-deelconfiguratie slaat de naam van de geselecteerde chunker op samen met de bijbehorende splitparameters: \texttt{split\_length} (1024 voor de deterministische chunkers, \texttt{None} voor semantisch) en \texttt{split\_overlap} (154 respectievelijk \texttt{None}). De werkelijke chunker-instanties worden in de indexeringspipeline aangemaakt via de \texttt{\_make\_chunker()}-hulpfunctie op basis van deze waarden. De drie opties zijn \texttt{RecursiveCharacterSplitter}, \texttt{FixedSizeTokenSplitter} en \texttt{SemanticEmbeddingChunker}.
 
 \subsection{Configuratie embeddingmodellen}
 
-De embedding-deelconfiguratie slaat voor elk model de modelnaam, query-instructieprefix, documentprefix, vectordimensionaliteit en eventuele MRL-truncatiedimensie op. De instructieprefixen zijn modelspecifiek en essentieel voor correcte retrieval.
+De embedding-deelconfiguratie slaat voor elk model de modelnaam, query-instructieprefix, documentprefix, vectordimensionaliteit en eventuele \gls{mrl}-truncatiedimensie op. De instructieprefixen zijn modelspecifiek en essentieel voor correcte retrieval.
 
 \begin{table}[h]
 \centering
@@ -442,7 +448,7 @@ De vectordimensionaliteit wordt per model vastgelegd: BGE-M3 en E5-instruct prod
 
 \subsection{Configuratie \glspl{llm}}
 
-De \gls{llm}-deelconfiguratie koppelt elke modelnaam aan een backend, \gls{api}-parameters en de modelspecifieke \texttt{max\_char\_length}. De achtergrond van deze karakterlimiet wordt toegelicht in Sectie~\ref{sec:technische-uitvoering-chunking}.
+De \gls{llm}-deelconfiguratie koppelt elke modelnaam aan een backend, \gls{api}-parameters en de modelspecifieke \texttt{max\_char\_length} en \texttt{min\_char\_length}. De achtergrond van deze karakterlimieten wordt toegelicht in Sectie~\ref{sec:technische-uitvoering-chunking}.
 
 \begin{listing}[H]
 \begin{minted}{python}
@@ -451,22 +457,25 @@ configs = {
     "backend": "hf",
     "api_model": "google/gemma-3-27b-it:scaleway",
     "api_base_url": "https://router.huggingface.co/v1",
-    "max_char_length": 1698,
+    "max_char_length": 4347,
+    "min_char_length": 543,
   },
   "Llama-3.3-70B-Instruct": {
     "backend": "hf",
     "api_model": "meta-llama/Llama-3.3-70B-Instruct:ovhcloud",
     "api_base_url": "https://router.huggingface.co/v1",
-    "max_char_length": 1589,
+    "max_char_length": 4069,
+    "min_char_length": 509,
   },
   "Mistral-Small-2603": {
     "backend": "mistral",
     "api_model": "mistral-small-2603",
-    "max_char_length": 1586,
+    "max_char_length": 4060,
+    "min_char_length": 507,
   },
 }
 \end{minted}
-\caption[HyPSTER LLM-configuratie]{De \texttt{max\_char\_length}-waarde per \gls{llm} stemt de maximale chunkgrootte van de semantische chunker af op de specifieke tokenizer van het model (Sectie~\ref{sec:technische-uitvoering-chunking}). De twee \texttt{backend}-waarden bepalen welke \gls{api}-client in de querypipeline wordt geïnstantieerd: \texttt{"hf"} voor de HuggingFace Inference Router, \texttt{"mistral"} voor de officiële Mistral \gls{api}.}
+\caption[HyPSTER LLM-configuratie]{De \texttt{max\_char\_length}- en \texttt{min\_char\_length}-waarden per \gls{llm} stemmen respectievelijk de maximale en minimale chunkgrootte van de semantische chunker af op de specifieke tokenizer van het model (Sectie~\ref{sec:technische-uitvoering-chunking}). De twee \texttt{backend}-waarden bepalen welke \gls{api}-client in de querypipeline wordt geïnstantieerd: \texttt{"hf"} voor de HuggingFace Inference Router, \texttt{"mistral"} voor de officiële Mistral \gls{api}.}
 \label{lst:hypster-llm}
 \end{listing}
 
@@ -474,14 +483,13 @@ configs = {
 \section{Indexeringspipeline}
 \label{sec:indexering}
 
-De indexeringspipeline verwerkt alle brondocumenten voor alle combinaties van chunkingstrategie en embeddingmodel. De deterministische chunkers
-— \texttt{RecursiveCharacterSplitter} en \texttt{FixedSizeTokenSplitter} — produceren voor elk van de drie embeddingmodellen één collectie, wat $2 \times 3 = 6$ collecties oplevert.
+De indexeringspipeline verwerkt alle brondocumenten voor alle combinaties van chunkingstrategie en embeddingmodel. De deterministische chunkers — \texttt{RecursiveCharacterSplitter} en \texttt{FixedSizeTokenSplitter} — produceren voor elk van de drie embeddingmodellen één collectie, wat $2 \times 3 = 6$ collecties oplevert.
 
 Voor de \texttt{SemanticEmbeddingChunker} geldt echter een afwijkende structuur. Zoals beschreven in Sectie~\ref{sec:technische-uitvoering-chunking}, wordt de \texttt{max\_length}-parameter van de semantische chunker afgestemd op de specifieke tokenizer van het geselecteerde \gls{llm}. Omdat dezelfde tekst met verschillende tokenizers tot verschillende karakterlimieten leidt, zou een gedeelde collectie per embeddingmodel deze tokenizer-afhankelijkheid verbergen en de experimentele vergelijkbaarheid ondermijnen. De semantische chunker krijgt daarom één aparte collectie \emph{per combinatie van embeddingmodel én \gls{llm}}, wat $3 \times 3 = 9$ bijkomende collecties oplevert. In totaal worden $6 + 9 = 15$ Qdrant-collecties aangemaakt.
 
 De collectienaam wordt deterministisch gegenereerd via een hulpfunctie. Voor de deterministische chunkers is de naam \texttt{<ChunkerNaam>\_<ModelId>}; voor de semantische chunker wordt de \gls{llm}-naam als suffix toegevoegd: \texttt{<ChunkerNaam>\_<ModelId>\_<LLMNaam>}.
 
-De scheiding per embeddingmodel is altijd noodzakelijk: hoewel BGE-M3 en E5-instruct beide 1.024-dimensionele vectoren produceren en arctic-embed met MRL-truncatie 256-dimensionele (Sectie~\ref{subsubsec:matryoshka}), zijn de vectorruimten zelfs bij gelijke dimensionaliteit fundamenteel incompatibel. Voor BGE-M3 wordt de collectie aangemaakt met \texttt{use\_sparse\_embeddings=True} om naast de dense vector ook de sparse lexicale gewichten op te slaan die het hybride zoeken mogelijk maken (Sectie~\ref{subsubsec:hybride-zoeken}).
+De scheiding per embeddingmodel is altijd noodzakelijk: hoewel BGE-M3 en E5-instruct beide 1.024-dimensionele vectoren produceren en arctic-embed met \gls{mrl}-truncatie 256-dimensionele (Sectie~\ref{subsubsec:matryoshka}), zijn de vectorruimten zelfs bij gelijke dimensionaliteit fundamenteel incompatibel. Voor BGE-M3 wordt de collectie aangemaakt met \texttt{use\_sparse\_embeddings=True} om naast de dense vector ook de sparse lexicale gewichten op te slaan die het hybride zoeken mogelijk maken (Sectie~\ref{subsubsec:hybride-zoeken}).
 
 %%----------------------------------------------------------------------
 \subsection{Geheugenbeheer bij Semantische Chunking}
@@ -489,7 +497,7 @@ De scheiding per embeddingmodel is altijd noodzakelijk: hoewel BGE-M3 en E5-inst
 De \texttt{SemanticEmbeddingChunker} laadt \texttt{paraphrase-multilingual-mpnet-base-v2} op de \gls{gpu} voor de segmentatiefase. Als het primaire embeddingmodel daarna wordt geladen, zijn beide modellen tegelijkertijd in \gls{vram}, wat kan leiden tot \gls{oom}-errors tijdens de uitvoering. De oplossing bestaat uit een tweetraps-uitvoering: na de segmentatiefase wordt het interne model van de chunker via PyTorch's \texttt{model.cpu()}-methode expliciet naar het hoofdgeheugen verplaatst en wordt \texttt{torch.cuda.empty\_cache()} aangeroepen. Pas daarna wordt het primaire embeddingmodel geladen, zodat de twee neurale netwerken nooit tegelijkertijd in \gls{vram} aanwezig zijn.
 
 %%----------------------------------------------------------------------
-\subsection{uitvoeringslogica}
+\subsection{Uitvoeringslogica}
 
 De uitvoeringslogica varieert op basis van de geselecteerde chunking-methode. Voor de \texttt{SemanticEmbeddingChunker} is de pipeline opgedeeld in twee afzonderlijke fasen. Deze fysieke scheiding is noodzakelijk om het \gls{gpu}-geheugen (\gls{vram}) tussen de segmentatie- en embedding-fase vrij te maken, waardoor \gls{oom} errors worden voorkomen.
 
@@ -564,7 +572,7 @@ else:  # Arctic-embed / E5-instruct
     QdrantEmbeddingRetriever(document_store=document_store))
   query_pipe.connect("text_embedder.embedding", "retriever.query_embedding")
 \end{minted}
-\caption[Querypipeline: hybride pad voor BGE-M3, dense pad voor de overige modellen]{De \texttt{QdrantHybridRetriever} combineert dense en sparse resultaten via \gls{rrf} \autocite{QdrantHybrid2025}. De \texttt{truncate\_dim}-parameter voor arctic-embed activeert de MRL-truncatie naar 256 dimensies (Sectie~\ref{subsubsec:matryoshka}).}
+\caption[Querypipeline: hybride pad voor BGE-M3, dense pad voor de overige modellen]{De \texttt{QdrantHybridRetriever} combineert dense en sparse resultaten via \gls{rrf} \autocite{QdrantHybrid2025}. De \texttt{truncate\_dim}-parameter voor arctic-embed activeert de \gls{mrl}-truncatie naar 256 dimensies (Sectie~\ref{subsubsec:matryoshka}).}
 \label{lst:query-pipeline}
 \end{listing}
 
@@ -587,8 +595,7 @@ the retrieved chunk, on a new line after the answer to the question.
 Output only in valid JSON.
 Context:
 {% for doc in documents %}
-  File: {{ doc.meta['source'] }},
-  Page: {{ doc.meta.get('page', '?') }}
+  File: {{ doc.meta['source'] }}, Page: {{ doc.meta.get('page', '?') }}
   Contents: {{ doc.content }}
 {% endfor %}
 Question: {{question}}"""
@@ -601,32 +608,32 @@ Question: {{question}}"""
 \label{sec:technische-uitvoering-chunking}
 %%----------------------------------------------------------------------
 
-Bij de vergelijking van de drie \glspl{llm} moet rekening worden gehouden met de heterogeniteit van de gehanteerde tokenizers. Elke \gls{llm} maakt gebruik van een specifiek vocabulair en algoritme om ruwe tekst om te zetten naar numerieke tokens \autocite{Wu2016, Kudo2018}. Omdat de \texttt{EmbeddingBasedDocumentSplitter} de maximale chunkgrootte uitdrukt in karakters — niet in tokens — is een modelspecifieke conversie noodzakelijk om een gelijke semantische dichtheid over de drie \glspl{llm} te garanderen \autocite{HaystackEbds2026}.
+De achtergrond bij de keuze voor de gehanteerde chunkgroottes — het evenwicht tussen granulariteit en contextbehoud, en de aanbevolen tokenvensters voor contextueel begrip — is uiteengezet in Sectie~\ref{subsubsec:chunking}. Bij de vergelijking van de drie \glspl{llm} moet rekening worden gehouden met de heterogeniteit van de gehanteerde tokenizers. Elke \gls{llm} maakt gebruik van een specifiek vocabulair en algoritme om ruwe tekst om te zetten naar numerieke tokens \autocite{Wu2016, Kudo2018}. Omdat de \texttt{EmbeddingBasedDocumentSplitter} de maximale chunkgrootte uitdrukt in karakters — niet in tokens — is een modelspecifieke conversie noodzakelijk om een gelijke semantische dichtheid over de drie \glspl{llm} te garanderen \autocite{HaystackEbds2026}.
 
-De berekening vertrekt van een doelgrootte van 400 tokens per chunk, een gemiddelde Italiaanse woordlengte van 7,2 karakters \autocite{Eurotrad2022} en de model-specifieke \textit{subword fertility} $F$ — het gemiddeld aantal tokens per woord voor Italiaans \autocite{Allal2025}. De maximale karakterlengte $C_{target}$ per \gls{llm} volgt uit:
+De berekening vertrekt van een minimale chunkgrootte van 128 tokens en een maximale chunkgrootte van 1.024 tokens, een gemiddelde Italiaanse woordlengte van 7,2 karakters \autocite{Eurotrad2022} en de model-specifieke \textit{subword fertility} $F$ — het gemiddeld aantal tokens per woord voor Italiaans \autocite{Allal2025}. De karakterlengte $C$ per \gls{llm} volgt uit:
 
 \begin{equation}
-C_{target} = T_{target} \times \left( \frac{\text{AVG}_{cpw}}{F} \right)
+C = T \times \left( \frac{\text{AVG}_{cpw}}{F} \right)
 \end{equation}
 
-Tabel~\ref{tab:chunk-specs} toont de resulterende waarden per model.
+Tabel~\ref{tab:chunk-specs} toont de resulterende waarden per model voor zowel de minimale als de maximale chunkgrootte.
 
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-\textbf{Model} & \textbf{Fertility ($F$)} & \textbf{Tokens} & \textbf{$C_{target}$ (chars)} \\
+\textbf{Model} & \textbf{Fertility ($F$)} & \textbf{$C_{\min}$ (128 tok.)} & \textbf{$C_{\max}$ (1024 tok.)} \\
 \midrule
-Llama-3.3-70B-Instruct   & 1,812 & 400 & 1.589 \\
-Gemma-3-27B-it           & 1,696 & 400 & 1.698 \\
-Mistral-Small-2603       & 1,816 & 400 & 1.586 \\
+Llama-3.3-70B-Instruct   & 1,812 & 509 & 4.069 \\
+Gemma-3-27b-it           & 1,696 & 543 & 4.347 \\
+Mistral-Small-2603       & 1,816 & 507 & 4.060 \\
 \bottomrule
 \end{tabular}
-\caption[Model-specifieke chunk-configuraties voor Italiaanse tekst]{\label{tab:chunk-specs}Model-specifieke chunk-configuraties voor Italiaanse tekstverwerking bij een doelgrootte van 400 tokens.}
+\caption[Model-specifieke chunk-configuraties voor Italiaanse tekst]{\label{tab:chunk-specs}Model-specifieke chunk-configuraties voor Italiaanse tekstverwerking bij een minimale chunkgrootte van 128 tokens en een maximale chunkgrootte van 1.024 tokens.}
 \end{table}
 
-Deze \texttt{max\_char\_length}-waarden worden opgeslagen in de HyPSTER \gls{llm}-configuratie (Sectie~\ref{sec:hypster-config}) en doorgegeven aan de \texttt{SemanticEmbeddingChunker} bij de instantiëring in de indexeringspipeline. Voor de twee deterministische chunkers — \texttt{FixedSizeTokenSplitter} en \texttt{RecursiveCharacterSplitter} — is deze conversie niet nodig, omdat zij native in tokens splitsen via de \texttt{RecursiveDocumentSplitter} \autocite{HaystackRecusriveSplitter2026}.
+Deze \texttt{min\_char\_length}- en \texttt{max\_char\_length}-waarden worden opgeslagen in de HyPSTER \gls{llm}-configuratie (Sectie~\ref{sec:hypster-config}) en doorgegeven aan de \texttt{SemanticEmbeddingChunker} bij de instantiëring in de indexeringspipeline. Voor de twee deterministische chunkers — \texttt{FixedSizeTokenSplitter} en \texttt{RecursiveCharacterSplitter} — is deze conversie niet nodig, omdat zij native in tokens splitsen via de \texttt{RecursiveDocumentSplitter} \autocite{HaystackRecusriveSplitter2026}.
 
 %%----------------------------------------------------------------------
 \section{Resultaatstructuur}

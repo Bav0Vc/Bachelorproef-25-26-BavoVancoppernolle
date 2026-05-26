@@ -10,20 +10,20 @@ Deze bachelorproef onderzoekt hoe \gls{rag} kan ingezet worden om een betrouwbar
 \section{\IfLanguageName{dutch}{Probleemstelling}{Problem Statement}}%
 \label{sec:probleemstelling}
 
-De kern van het probleem situeert bevindt zich op het snijvlak van juridische compliance omtrent \gls{esg} en de technologische beperkingen van ‘stand-alone’ \glspl{llm}. Turtle Srl moet voldoen aan steeds strengere rapportage-eisen, maar deze data handmatig verwerken, of met behulp van \glspl{llm} is een tijdrovende en foutgevoelige taak.
+De kern van het probleem bevindt zich op het snijvlak van juridische compliance omtrent \gls{esg} en de technologische beperkingen van ‘stand-alone’ \glspl{llm}. Turtle Srl moet voldoen aan steeds strengere rapportage-eisen, maar deze data handmatig verwerken, of met behulp van \glspl{llm} is een tijdrovende en foutgevoelige taak.
 
 De nood aan \gls{esg}-rapportage is niet langer optioneel. Het is een overlevingsvoorwaarde geworden in de mondiale supply chain. De \gls{eu}, stakeholders en klanten eisen gedetailleerde \gls{esg} rapporten die transparant weergeven wat de impact op mens en milieu is. De structurele uitdaging hierbij is de fragmentatie en heterogeniteit van de data. Zo is de informatie vaak verspreid over verschillende databronnen en kan het verschillende dataformaten aannemen. Daarnaast is ook de juridisch bewijslast verzwaard, aangezien elke claim in een rapport terug moet te vinden zijn in de documenten van het bedrijf.
 
 Hoewel \glspl{llm} een krachtig instrument bieden voor de automatisering van tekstverwerking, kampen zij met fundamentele tekortkomingen zoals hallucinaties, de \gls{knowledge-cut-off} en een gebrek aan transparante bronvermelding.
 
-In deze bachelorproef wordt onderzocht hoe \gls{rag} kan worden ingezet om een betrouwbaar, transparant en performant systeem te ontwikkelen dat Turtle S.r.l. ondersteunt bij de realisatie van een \gls{poc} voor interne \gls{esg}-rapportage. Door de integratie van externe kennisbronnen met \glspl{llm} biedt RAG een oplossing voor de structurele uitdagingen van datafragmentatie en de noodzaak voor auditeerbaarheid binnen het \gls{esg}-domein.
+In deze bachelorproef wordt onderzocht hoe \gls{rag} kan worden ingezet om een betrouwbaar, transparant en performant systeem te ontwikkelen dat Turtle S.r.l. ondersteunt bij de realisatie van een \gls{poc} voor interne \gls{esg}-rapportage. Door de integratie van externe kennisbronnen met \glspl{llm} biedt \gls{rag} een oplossing voor de structurele uitdagingen van datafragmentatie en de noodzaak voor auditeerbaarheid binnen het \gls{esg}-domein.
 
 \section{\IfLanguageName{dutch}{Onderzoeksvraag}{Research question}}%
 \label{sec:onderzoeksvraag}
 
 Dit onderzoek vertrekt vanuit de volgende onderzoeksvraag:
 
-\textit{Welke combinatie van chunking strategie, embedding model en \gls{llm} resulteert in een optimaal \gls{rag}-systeem voor Turtle Srl’s \gls{poc}?}
+\textit{Welke combinatie van chunkingstrategie, embeddingmodel en \gls{llm} resulteert in een optimaal \gls{rag}-systeem voor Turtle Srl’s \gls{poc}?}
 
 Om deze hoofdvraag systematisch te beantwoorden, is het onderzoek onderverdeeld in deelvragen binnen het probleem- en oplossingsdomein:
 
@@ -39,8 +39,8 @@ Om deze hoofdvraag systematisch te beantwoorden, is het onderzoek onderverdeeld 
   \item[\IfLanguageName{dutch}{Het oplossingsdomein}{The solution domain}]
   \item Hierbij ligt de focus op de technische realisatie en evaluatie van de \gls{rag}-pipeline:
   \begin{itemize}
-    \item \label{dv:chunking-retrieval} Hoe beïnvloeden verschillende chunking strategieën de retrieval-kwaliteit van interne \gls{esg}-documenten?
-    \item \label{dv:embedding-functie} Welke functie heeft een embedding model binnen een \gls{rag}-pipeline?
+    \item \label{dv:chunking-retrieval} Hoe beïnvloeden verschillende chunkingstrategieën en embeddingmodellen de retrieval-kwaliteit van interne \gls{esg}-documenten?
+    \item \label{dv:embedding-functie} Welke functie heeft een embeddingmodel binnen een \gls{rag}-pipeline?
     \item \label{dv:llm-taak} Wat is de taak van een \gls{llm} binnen de \gls{rag}-architectuur?
     \item \label{dv:rag-framework} Welk \gls{rag}-framework is geschikt voor het aanmaken van aangepaste modules met behulp van open source-oplossingen?
     \item \label{dv:dynamische-pipeline} Hoe wordt een dynamische \gls{rag}-pipeline gemaakt om combinaties van componenten systematisch te vergelijken?
@@ -56,10 +56,9 @@ Het beoogde resultaat van deze bachelorproef is een vergelijkende studie en een 
 De kritische succesfactoren zijn als volgt gedefinieerd:
 
 \begin{itemize}
-  \item Betrouwbaarheid: Het systeem moet een faithfulness-score (getrouwheid aan de bron) behalen die hallucinaties tot een minimum beperkt.
-  \item Traceerbaarheid: Elk gegenereerd antwoord moet voorzien zijn van correcte source attribution, waarbij direct verwezen wordt naar de metadata (bestandsnaam en paginanummer) in de vector database.
-  \item Efficiëntie: De gekozen configuratie moet een optimaal evenwicht bieden tussen de rekenkosten (token-verbruik) en de snelheid van antwoorden (latency). Aangezien dat, naast het voldoen aan de technische requirements, de \gls{poc} van Turtle Srl die zal volgen uit dit onderzoek ook business value zal moeten hebben.
-  \item Modulariteit: De voorgestelde architectuur moet dynamisch zijn, wat betekent dat componenten (zoals een embedding model) vervangen kunnen worden zonder de gehele pipeline te herschrijven.
+  \item \textbf{Betrouwbaarheid:} Het systeem moet een faithfulness-score (getrouwheid aan de bron) behalen die hallucinaties tot een minimum beperkt.
+  \item \textbf{Traceerbaarheid:} Elk gegenereerd antwoord moet voorzien zijn van correcte source attribution, waarbij direct verwezen wordt naar de metadata (bestandsnaam en paginanummer) in de vector database.
+  \item \textbf{Informatie-extractie en contextvaliditeit:} De pipelines moeten de benodigde relevante bewijslast ophalen uit de gefragmenteerde documentbasis in de vector database, en irrelevante ruis effectief filtert alvorens de context aan het \gls{llm} wordt aangeboden.
 \end{itemize}
 
 Uiteindelijk zal dit leiden tot een technisch ontwerp van een dynamische \gls{rag}-pipeline, gebouwd met Haystack 2.x en HyPSTER, waarmee Turtle Srl hun \gls{esg}-workflows op een verantwoorde en schaalbare manier kan automatiseren.
@@ -67,4 +66,4 @@ Uiteindelijk zal dit leiden tot een technisch ontwerp van een dynamische \gls{ra
 \section{\IfLanguageName{dutch}{Opzet van deze bachelorproef}{Structure of this bachelor thesis}}%
 \label{sec:opzet-bachelorproef}
 
-Na deze inleiding volgt de literatuurstudie in Hoofdstuk~\ref{ch:stand-van-zaken} waarin de theoretische fundamenten van \gls{esg} en \gls{rag} uiteen worden gezet. Daarna volgt de methodologie in Hoofdstuk~\ref{ch:methodologie}. Hier wordt de experimentele opzet en evaluatie van de \gls{rag}-pipeline toegelicht, gebaseerd op het evaluatieframework van~\autocite{Es2024}. In Hoofdstuk~\ref{ch:requirementsanalyse} worden de bedrijfsnoden van Turtle Srl en wetenschappelijke criteria vertaald naar concrete technische vereisten met behulp van de MoSCoW-methode. Vervolgens wordt in Hoofdstuk~\ref{ch:longlist} een inventarisatie gemaakt van beschikbare technologieën voor chunking strategieën, embeddingmodellen en \glspl{llm}. Hoofdstuk~\ref{ch:shortlist} beschrijft de selectie van de meest veelbelovende kandidaten die in de experimentele fase systematisch tegen elkaar worden afgewogen. De samenstelling van de representatieve documentbasis en de creatie van de handmatig geverifieerde 'golden dataset' staan centraal in Hoofdstuk~\ref{ch:data-goldenset}. In Hoofdstuk~\ref{ch:technische-uitvoering} wordt de technische realisatie van de dynamische \gls{rag}-pipeline met Haystack 2.x en custom componenten gedetailleerd. Hoofdstuk~\ref{ch:pipeline-testen} zet vervolgens uiteen hoe de testinfrastructuur is opgebouwd en hoe de geautomatiseerde benchmark-runs worden uitgevoerd. Daarna worden in Hoofdstuk~\ref{ch:resultaten} de verzamelde metrics geanalyseerd en geïnterpreteerd om tot een onderbouwd technisch advies te komen. Ten slotte wordt in Hoofdstuk~\ref{ch:conclusie} een conclusie gegeven en een antwoord geformuleerd op de onderzoeksvragen, en worden aanbevelingen geformuleerd voor zowel verder onderzoek als praktische implementatie. 
+Na deze inleiding volgt de literatuurstudie in Hoofdstuk~\ref{ch:stand-van-zaken} waarin de theoretische fundamenten van \gls{esg} en \gls{rag} uiteen worden gezet. Daarna volgt de methodologie in Hoofdstuk~\ref{ch:methodologie}. Hier wordt de experimentele opzet en evaluatie van de \gls{rag}-pipeline toegelicht, gebaseerd op het evaluatieframework van~\autocite{Es2024}. In Hoofdstuk~\ref{ch:requirementsanalyse} worden de bedrijfsnoden van Turtle Srl en wetenschappelijke criteria vertaald naar concrete technische vereisten met behulp van de \textbf{MoSCoW}-methode. Vervolgens wordt in Hoofdstuk~\ref{ch:longlist} een inventarisatie gemaakt van beschikbare technologieën voor chunkingstrategieën, embeddingmodellen en \glspl{llm}. Hoofdstuk~\ref{ch:shortlist} beschrijft de selectie van de meest veelbelovende kandidaten die in de experimentele fase systematisch tegen elkaar worden afgewogen. De samenstelling van de representatieve documentbasis en de creatie van de handmatig geverifieerde 'golden dataset' staan centraal in Hoofdstuk~\ref{ch:data-goldenset}. In Hoofdstuk~\ref{ch:technische-uitvoering} wordt de technische realisatie van de dynamische \gls{rag}-pipeline met Haystack 2.x en custom componenten besproken. Hoofdstuk~\ref{ch:pipeline-testen} zet vervolgens uiteen hoe de testinfrastructuur is opgebouwd en hoe de geautomatiseerde benchmark-runs worden uitgevoerd. Daarna worden in Hoofdstuk~\ref{ch:resultaten} de verzamelde metrics geanalyseerd en geïnterpreteerd om tot een onderbouwd technisch advies te komen. Ten slotte wordt in Hoofdstuk~\ref{ch:conclusie} een conclusie gegeven en een antwoord geformuleerd op de onderzoeksvragen, en worden aanbevelingen geformuleerd voor zowel verder onderzoek als praktische implementatie. 

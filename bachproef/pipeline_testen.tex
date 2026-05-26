@@ -12,7 +12,7 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 \textbf{De applicatiecontainer} bevat de volledige Python-codebase: de pipeline-componenten, de HyPSTER-configuraties, alle afhankelijkheden en een script om de verschillende pipelines en \gls{ragas}-evaluatie in één keer uit te voeren. De container is opgebouwd vanuit een Dockerfile die PyTorch met \gls{cuda} 12.4-ondersteuning installeert, gevolgd door de projectafhankelijkheden uit \texttt{requirements.txt}. Bij de start van de container worden ook de benodigde \gls{nltk}-databestanden gedownload die Haystack's \texttt{EmbeddingBasedDocumentSplitter} gebruikt voor zinsgrens-detectie in de semantische chunker (Sectie~\ref{subsec:semantic-chunker}).
 
-\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. Unstructured draait lokaal om rate limits van de cloud-variant te vermijden en om de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} te waarborgen (Tabel~\ref{tab:moscow}) tijdens de indexeringsfase: documentinhoud verlaat de lokale omgeving niet via externe API-aanroepen.
+\textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. Unstructured draait lokaal om rate limits van de cloud-variant te vermijden en om de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} te waarborgen (Tabel~\ref{tab:moscow}) tijdens de indexeringsfase: documentinhoud verlaat de lokale omgeving niet via externe \gls{api}-calls.
 
 \subsection{GPU-toegang en modelcaching}
 
@@ -34,7 +34,7 @@ De volledige pipelinerun bestaat uit vier opeenvolgende stappen gecoördineerd v
 # Stap 1: leeg Qdrant
 clear_qdrant_collections()
 
-# Stap 2: indexeer alle 9 chunker × embedder combinaties
+# Stap 2: indexeer alle 15 (6 + 9) chunker × embedder combinaties
 run_indexing(resume_from=0)
 
 # Stap 3: benchmark alle 27 configuraties op de golden dataset
@@ -53,7 +53,7 @@ Vóór elke volledige run worden alle bestaande Qdrant-collecties verwijderd. Di
 
 \subsection{Stap 2: Indexering}
 
-De indexeringsfase verwerkt alle documenten voor alle $3 \times 3 = 9$ combinaties. De negen indexeringen worden sequentieel uitgevoerd: elke indexering verbruikt het volledige \gls{gpu}-geheugen voor het embeddingmodel, waardoor parallelle uitvoering op één \gls{gpu} niet mogelijk is. Sequentiële uitvoering maakt ook logging en foutopsporing eenvoudiger: problemen met een specifieke combinatie zijn direct isoleerbaar.
+De indexeringsfase verwerkt alle documenten voor alle 15 combinaties: 6 voor de twee deterministische chunkers en 9 voor de semantische chunker die per \gls{llm} aparte collecties vereist (Sectie~\ref{sec:indexering}). De indexeringen worden sequentieel uitgevoerd: elke indexering verbruikt het volledige \gls{gpu}-geheugen voor het embeddingmodel, waardoor parallelle uitvoering op één \gls{gpu} niet mogelijk is. Sequentiële uitvoering maakt ook logging en foutopsporing eenvoudiger: problemen met een specifieke combinatie zijn direct isoleerbaar.
 
 \subsection{Stap 3: Benchmark loop}
 \label{subsec:benchmarkloop}
@@ -64,14 +64,12 @@ De benchmark loop bevat een resume-mechanisme: reeds voltooide configuraties wor
 
 \subsection{Stap 4: RAGAS-evaluatie}
 
-De \gls{ragas}-evaluatiefase transformeert de ruwe antwoorden naar kwantitatieve scores. Deze fase is beschreven in Hoofdstuk~\ref{ch:resultaten}, dat volledig gewijd is aan de evaluatiemethode en de interpretatie van de scores. Om self-preference bias te vermijden, wordt het open-weights model \textbf{gpt-oss:20b} als onafhankelijke judge ingesteld voor alle \gls{ragas}-evaluaties.
+Om self-preference bias te vermijden, wordt het open-weights model \textbf{gpt-oss:20b} als onafhankelijke judge ingesteld voor alle \gls{ragas}-evaluaties. Dit model is een open-source \gls{llm} van 20 miljard parameters, aangeboden via de interne \gls{vic}-infrastructuur van \gls{hogent} (zie Sectie~\ref{sec:methodologische-validatie} in Hoofdstuk~\ref{ch:resultaten} voor een uitgebreide toelichting van de model-isolatiestrategie en validatie van de judge-keuze)~\autocite{OpenAI2025a}.
 
 \section{LLM-providers tijdens de benchmark loop}
 \label{sec:llm-providers}
 
-De drie geselecteerde \glspl{llm} worden via twee verschillende externe \gls{api}-diensten aangestuurd. Het onderscheid tussen de providers is relevant voor de reproduceerbaarheid en de latencymeting.
-
-\textbf{HuggingFace Inference Router} biedt een OpenAI-compatibele \gls{api} voor open-source modellen op de Hugging Face Hub. Gemma 3 27B en Llama 3.3 70B worden via deze router aangestuurd op respectievelijk Scaleway- en OVHcloud-infrastructuur, conform de \textbf{Azure-compatibiliteitsvereiste} en \textbf{data soevereiniteitseis} (Tabel~\ref{tab:moscow}): beide providers zijn \gls{eu}-gevestigd. De aanroepen verlopen via de \texttt{OpenAIGenerator}-component van Haystack met basis-\gls{url} \texttt{https://router.huggingface.co/v1}.
+De drie geselecteerde \glspl{llm} worden via twee verschillende externe \gls{api}-services aangestuurd. \textbf{HuggingFace Inference Router} biedt een OpenAI-compatibele \gls{api} voor open-source modellen op de Hugging Face Hub. Gemma 3 27B en Llama 3.3 70B worden via deze router aangestuurd op respectievelijk Scaleway- en OVHcloud-infrastructuur, conform de \textbf{Azure-compatibiliteitsvereiste} en \textbf{data soevereiniteitseis} (Tabel~\ref{tab:moscow}): beide providers zijn \gls{eu}-gevestigd. De \gls{api}-calls verlopen via de \texttt{OpenAIGenerator}-component van Haystack met basis-\gls{url} \texttt{https://router.huggingface.co/v1}.
 
 \textbf{Mistral AI} stuurt Mistral Small 2603 aan via de officiële Mistral \gls{api}. Mistral AI is een Frans bedrijf gevestigd in Parijs, wat conform de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} (Tabel~\ref{tab:moscow}) garandeert dat data binnen de \gls{eu}-jurisdictie blijft. In Haystack wordt de \texttt{MistralChatGenerator}-component gebruikt.
 
@@ -91,7 +89,7 @@ def _build_llm(llm_cfg: dict):
 \label{lst:build-llm}
 \end{listing}
 
-\textbf{Limitatie:} Externe \gls{api}-diensten introduceren netwerk-latency die onafhankelijk is van de modelarchitectuur. Bij de interpretatie van de responstijden — een component van de Should-Have-requirement voor \textbf{operationele efficiëntie} (Tabel~\ref{tab:moscow}) — moet rekening worden gehouden met deze infrastructuurfactor: Gemma en Llama draaien op HuggingFace-partnerinfrastructuur, terwijl Mistral via een eigen endpoint wordt aangestuurd.
+\textbf{Limitatie:} Externe \gls{api}-services introduceren netwerk-latency die onafhankelijk is van de modelarchitectuur. Bij de interpretatie van de responstijden — een component van de Should-Have-requirement voor \textbf{operationele efficiëntie} (Tabel~\ref{tab:moscow}) — moet rekening worden gehouden met deze infrastructuurfactor: Gemma en Llama draaien op HuggingFace-partnerinfrastructuur, terwijl Mistral via een eigen endpoint wordt aangestuurd.
 
 \section{Reproduceerbaarheid van de experimentele opzet}
 \label{sec:reproduceerbaarheid}
@@ -105,6 +103,17 @@ Reproduceerbaarheid is een Should-Have-requirement (Tabel~\ref{tab:moscow}) en i
 \textbf{Identieke golden dataset over alle runs.} De golden dataset is een statisch \gls{json}-bestand dat niet wijzigt tussen runs. Elke configuratie wordt op exact dezelfde vragen in exact dezelfde volgorde geëvalueerd, waardoor de resultaten per configuratie direct vergelijkbaar zijn.
 
 \textbf{Logging van elke run.} Elk script dat via het hoofdscript wordt gestart, initialiseert een gestructureerde logger die alle uitvoer — inclusief timestamps, configuratielabels en foutmeldingen — naar een logbestand wegschrijft. De logbestandsnaam bevat de scriptnaam, datum en tijd, zodat de uitvoering en resultaten van elke run achteraf volledig herleidbaar zijn.
+
+\textbf{Publieke toegang tot de broncode.} De volledige broncode van de experimentele pipeline, inclusief alle custom componenten, configuratiebestanden, Docker Compose-setup en uitvoeringsscripts, is publiek beschikbaar gesteld via een GitHub-repository\footnote{\url{https://github.com/Bav0Vc/rag-esg-benchmark}}. De repository bevat:
+
+\begin{itemize}
+    \item Alle Python-modules voor chunking, embedding en retrieval
+    \item HyPSTER-configuratiebestanden voor de 27 geteste configuraties
+    \item Docker Compose orchestratie voor Qdrant en uitvoeringsomgeving
+    \item \texttt{requirements.txt} met vastgelegde package-versies
+    \item Uitvoeringsscripts voor indexering, benchmark en evaluatie
+    \item \texttt{README.md} met installatie-instructies en architectuurdocumentatie
+\end{itemize}
 
 \section{Invoer en uitvoer van de testfase}
 \label{sec:invoer-uitvoer}

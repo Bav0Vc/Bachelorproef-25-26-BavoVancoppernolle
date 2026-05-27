@@ -81,7 +81,7 @@ Haystack 2.x lost dit op via een architectuur gebaseerd op een gerichte acyclisc
     \node[proc, right=of H] (I) {Text Embedder};
     \node[proc, right=of I] (J) {Retriever};
     \node[proc, right=of J] (K) {Prompt Builder};
-    \node[proc, right=of K] (L) {LLM $\times 3$};
+    \node[proc, right=of K] (L) {\gls{llm} $\times 3$};
     \node[proc, right=of L] (M) {Results};
     \node[proc, right=of M] (N) {RAGAS Metrics};
     \node[proc, right=of N] (O) {Leaderboard};
@@ -205,7 +205,7 @@ class FixedSizeTokenSplitter:
 \caption[FixedSizeTokenSplitter: fixed-size chunking als deterministisch referentiepunt]{De fixed-size chunker splitst uitsluitend op woordgrenzen in een venster van 1024 tokens (overlap 154). Door \texttt{[" ", ""]} als separatoren te gebruiken binnen de \texttt{RecursiveDocumentSplitter}, is de vergelijking met de recursieve chunker volledig gecontroleerd: het enige verschil is de hiërarchie van scheidingstekens.}
 \end{listing}
 
-De Python-standaardwaarden in de constructor (\texttt{split\_length=400}, \texttt{split\_overlap=50}) dienen als terugvalwaarden; tijdens het experiment worden altijd de via HyPSTER-configuratie doorgegeven waarden van 1024 tokens en 154 tokens overlap gebruikt (Sectie~\ref{sec:hypster-config}).
+De standaardwaarden in de constructor dienen als terugvalwaarden; tijdens het experiment worden altijd de via HyPSTER-configuratie doorgegeven waarden van 1024 tokens en 154 tokens overlap gebruikt (Sectie~\ref{sec:hypster-config}).
 
 %%----------------------------------------------------------------------
 \subsection{Recursive character splitting}
@@ -240,7 +240,7 @@ class RecursiveCharacterSplitter:
 \label{lst:recursive-chunker}
 \end{listing}
 
-Ook hier dienen de Python-standaardwaarden (\texttt{split\_length=400}, \texttt{split\_overlap=50}) als terugvalwaarden; het experiment gebruikt de door HyPSTER doorgegeven waarden van 1024 tokens en 154 tokens overlap (Sectie~\ref{sec:hypster-config}).
+Ook hier dienen de Python-standaardwaarden als terugvalwaarden; het experiment gebruikt de door HyPSTER doorgegeven waarden van 1024 tokens en 154 tokens overlap (Sectie~\ref{sec:hypster-config}).
 
 %%----------------------------------------------------------------------
 \subsection{Semantische chunking}
@@ -475,7 +475,7 @@ configs = {
   },
 }
 \end{minted}
-\caption[HyPSTER LLM-configuratie]{De \texttt{max\_char\_length}- en \texttt{min\_char\_length}-waarden per \gls{llm} stemmen respectievelijk de maximale en minimale chunkgrootte van de semantische chunker af op de specifieke tokenizer van het model (Sectie~\ref{sec:technische-uitvoering-chunking}). De twee \texttt{backend}-waarden bepalen welke \gls{api}-client in de querypipeline wordt geïnstantieerd: \texttt{"hf"} voor de HuggingFace Inference Router, \texttt{"mistral"} voor de officiële Mistral \gls{api}.}
+\caption[HyPSTER \gls{llm}-configuratie]{De \texttt{max\_char\_length}- en \texttt{min\_char\_length}-waarden per \gls{llm} stemmen respectievelijk de maximale en minimale chunkgrootte van de semantische chunker af op de specifieke tokenizer van het model (Sectie~\ref{sec:technische-uitvoering-chunking}). De twee \texttt{backend}-waarden bepalen welke \gls{api}-client in de querypipeline wordt geïnstantieerd: \texttt{"hf"} voor de HuggingFace Inference Router, \texttt{"mistral"} voor de officiële Mistral \gls{api}.}
 \label{lst:hypster-llm}
 \end{listing}
 
@@ -578,7 +578,7 @@ else:  # Arctic-embed / E5-instruct
 %%----------------------------------------------------------------------
 \subsection{Uitvoering en opvangen van retriever-uitvoer}
 
-De pipeline wordt uitgevoerd met de parameter \mintinline{python}{include_outputs_from={"retriever"}}. Standaard geeft Haystack enkel de einduitvoer van de pipeline terug — in dit geval het \gls{llm}-antwoord. Door de retriever expliciet op te nemen in de tussentijdse uitvoer, worden ook de opgehaalde chunks beschikbaar in het resultaat. Deze chunks zijn noodzakelijk als \texttt{contexts}-veld voor de \gls{ragas}-evaluatie: zowel faithfulness als context recall vereisen de daadwerkelijk opgehaalde passages als invoer (Hoofdstuk~\ref{ch:resultaten}).
+De pipeline wordt uitgevoerd met de parameter\\\mintinline{python}{include_outputs_from={"retriever"}}. Standaard geeft Haystack enkel de einduitvoer van de pipeline terug — in dit geval het \gls{llm}-antwoord. Door de retriever expliciet op te nemen in de tussentijdse uitvoer, worden ook de opgehaalde chunks beschikbaar in het resultaat. Deze chunks zijn noodzakelijk als \texttt{contexts}-veld voor de \gls{ragas}-evaluatie: zowel faithfulness als context recall vereisen de daadwerkelijk opgehaalde passages als invoer (Hoofdstuk~\ref{ch:resultaten}).
 
 %%----------------------------------------------------------------------
 \subsection{Promptsjabloon en bronvermelding}

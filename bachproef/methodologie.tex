@@ -37,11 +37,11 @@ Daarnaast wordt een golden dataset van vragen opgesteld, die \gls{esg}-gerelatee
 
 Deze fase resulteert in een gestructureerde verzameling van contextdata die in de vector database zal worden geïndexeerd, en een vragenlijst die als vaste benchmark dient voor alle \gls{rag} configuraties.
 
-\section{Fase 5: Ontwikkeling van dynamische RAG-pipeline}
+\section{Fase 5: Ontwikkeling van dynamische \gls{rag}-pipeline}
 
 Technisch wordt gekozen voor een componentgebaseerde architectuur waarin modules voor documentconversie, chunking, embedding, vectoropslag, retrieval en generatie als afzonderlijke bouwstenen worden gedefinieerd. De configuratielaag wordt geïmplementeerd via het \texttt{HyPSTER}-framework in Python. Deze laag beheert de parameters en parameterruimtes van alle te evalueren pipeline-componenten. Concreet bevat de \texttt{HyPSTER}-configuratie de definities voor de drie geselecteerde chunkingstrategieën (\textit{Recursive Character Splitter}, \textit{Fixed Size Token Splitter} en \textit{Semantic Embedding Chunker}), de drie embeddingmodellen (\textit{BGE-M3}, \textit{Snowflake Arctic} en \textit{Multilingual E5}) en de drie generatieve taalmodellen (\textit{Gemma-3}, \textit{Llama-3.3} en \textit{Mistral-Small}).
 
-Een sleutelkenmerk binnen deze configuratielaag is het principe van \textit{nesting} (nesten). Hierbij worden losse configuratiefuncties voor de chunker, embedder en het \gls{llm} via runtime-parameters programmatisch samengevoegd onder één overkoepelende pipeline-configuratie. Door deze hiërarchische structuur kunnen specifieke configuratieparameters — zoals modelaliassen, API-endpoints, dimensietruncaties en modelspecifieke instructieprefixes — onafhankelijk van elkaar worden gewijzigd. Dit stelt het evaluatiesysteem in staat om via eenvoudige parameter-injectie dynamisch te schakelen tussen de $3 \times 3 \times 3 = 27$ unieke combinaties.
+Een sleutelkenmerk binnen deze configuratielaag is het principe van \textit{nesting} (nesten). Hierbij worden losse configuratiefuncties voor de chunker, embedder en het \gls{llm} via runtime-parameters programmatisch samengevoegd onder één overkoepelende pipeline-configuratie. Door deze hiërarchische structuur kunnen specifieke configuratieparameters — zoals modelaliassen, \gls{api}-endpoints, dimensietruncaties en modelspecifieke instructieprefixes — onafhankelijk van elkaar worden gewijzigd. Dit stelt het evaluatiesysteem in staat om via eenvoudige parameter-injectie dynamisch te schakelen tussen de $3 \times 3 \times 3 = 27$ unieke combinaties.
 
 \section{Fase 6: Pipeline testen}
 

@@ -3,7 +3,7 @@
 
 Op basis van de requirementsanalyse in Hoofdstuk~\ref{ch:requirementsanalyse} worden in dit hoofdstuk alle mogelijke alternatieven per variabele component van de \gls{rag}-pipeline in kaart gebracht. Het doel van de longlist is om via een literatuuronderzoek zo veel mogelijk kandidaten te identificeren. Per component worden alle gevonden alternatieven besproken, inclusief de opties die uiteindelijk in de shortlist zullen terechtkomen. Vervolgens worden ze samengebracht in een vergelijkingstabel die toont in welke mate elk alternatief voldoet aan de gedefinieerde requirements. Op basis van die tabel wordt per component duidelijk welke drie alternatieven het sterkst scoren en bijgevolg worden overgenomen in de shortlist.
 
-\section{chunkingstrategieën}
+\section{Chunkingstrategieën}
 \label{sec:longlist-chunking}
 
 Chunking is de eerste en bepalende stap in de indexeringsfase van een \gls{rag}-pipeline. De keuze van chunkingstrategie heeft een directe impact op de kwaliteit van de retrieval: te kleine chunks verliezen de semantische samenhang van een passage, terwijl te grote chunks onnodig ruis introduceren in de context die aan het \gls{llm} wordt meegegeven~\autocite{Moro2025}. De literatuur identificeert de volgende families van chunkingstrategieën als mogelijke kandidaten.
@@ -156,7 +156,7 @@ Gemma-3-27B-IT, uitgebracht door Google DeepMind~\autocite{GemmaTeam2025}, is ee
 
 Mistral Small 4, uitgebracht in maart 2026 door Mistral AI~\autocite{MistralAI2026}, is een 119 miljard parameter instruction-tuned model beschikbaar onder de Apache 2.0-licentie. Het model behaalt een \gls{mmlu}-score van 73,5\%, terwijl de exacte \gls{ifeval}-score op dit moment nog niet is gekwantificeerd~\autocite{MistralAI2026}. Het combineert de Europese datasoevereiniteitsgaranties van de Mistral-modelfamilie met een volwaardige instruction-tuned architectuur — het doorslaggevende onderscheid ten opzichte van Mistral Large 2, dat als basismodel de instruction-tuning-requirement mist~\autocite{MistralAIzd}. Als Frans bedrijf gevestigd in Parijs verwerkt Mistral AI alle data exclusief binnen de \gls{eu}~\autocite{MistralAI2026}. Het model is beschikbaar als Open Weights en ondersteunt meerdere talen waaronder Italiaans en Engels, beschikt over een context window van 256.000 tokens (256k)~\autocite{MistralAI2026}.
 
-\subsection{Vergelijkingstabel LLMs}
+\subsection{Vergelijkingstabel \glspl{llm}}
 
 De selectie van de generatieve component is gebaseerd op de balans tussen taalkundige intelligentie, het vermogen om strikte instructies op te volgen en de juridische datasoevereiniteit voor de verwerking van gevoelige bedrijfsinformatie van Turtle Srl. De modellen worden beoordeeld op de volgende criteria:
 

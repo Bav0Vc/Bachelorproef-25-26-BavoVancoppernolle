@@ -14,7 +14,7 @@ De volledige experimentele opzet draait binnen een Docker-containeromgeving die 
 
 \textbf{De Unstructured-service} draait de officiële Unstructured lokale \gls{api} op poort 8000. Unstructured draait lokaal om rate limits van de cloud-variant te vermijden en om de Must-Have-requirement voor \textbf{data soevereiniteit \& privacy} te waarborgen (Tabel~\ref{tab:moscow}) tijdens de indexeringsfase: documentinhoud verlaat de lokale omgeving niet via externe \gls{api}-calls.
 
-\subsection{GPU-toegang en modelcaching}
+\subsection{\gls{gpu}-toegang en modelcaching}
 
 De \gls{gpu} van de hostmachine wordt via de \gls{nvidia} container runtime beschikbaar gesteld. Alle drie de embeddingmodellen — BGE-M3, arctic-embed-l-v2.0 en multilingual-e5-large-instruct — draaien volledig lokaal op de \gls{gpu} via \texttt{sentence-transformers} en PyTorch (Sectie~\ref{sec:lokale-embedding}). Dit omvat eveneens het interne model van de semantische chunker (\texttt{paraphrase-multilingual-mpnet-base-v2}).
 
@@ -62,7 +62,7 @@ De benchmark loop doorloopt het volledige Cartesisch product van 27 configuratie
 
 De benchmark loop bevat een resume-mechanisme: reeds voltooide configuraties worden herkend op basis van het \texttt{Configuration}-label in het bestaande uitvoerbestand en overgeslagen. Dit draagt bij aan de \textbf{reproduceerbaarheid} (Tabel~\ref{tab:moscow}): een onderbroken run levert na herstart dezelfde resultaten op als een ononderbroken run.
 
-\subsection{Stap 4: RAGAS-evaluatie}
+\subsection{Stap 4: \gls{ragas}-evaluatie}
 
 Om self-preference bias te vermijden, wordt het open-weights model \textbf{gpt-oss:20b} als onafhankelijke judge ingesteld voor alle \gls{ragas}-evaluaties. Dit model is een open-source \gls{llm} van 20 miljard parameters, aangeboden via de interne \gls{vic}-infrastructuur van \gls{hogent} (zie Sectie~\ref{sec:methodologische-validatie} in Hoofdstuk~\ref{ch:resultaten} voor een uitgebreide toelichting van de model-isolatiestrategie en validatie van de judge-keuze)~\autocite{OpenAI2025a}.
 

@@ -1,64 +1,50 @@
-%==============================================================================
-% Sjabloon poster bachproef
-%==============================================================================
-% Gebaseerd op document class `a0poster' door Gerlinde Kettl en Matthias Weiser
-% Aangepast voor gebruik aan HOGENT door Jens Buysse en Bert Van Vreckem
-
 \documentclass[a0,portrait]{hogent-poster}
 
 % Info over de opleiding
 \course{Bachelorproef}
 \studyprogramme{toegepaste informatica}
-\academicyear{2022-2023}
+\academicyear{2025-2026}
 \institution{Hogeschool Gent, Valentin Vaerwyckweg 1, 9000 Gent}
 
 % Info over de bachelorproef
-\title{Titel van uw bachelorproef}
-\subtitle{Ondertitel (eventueel)}
-\author{Voornaam Naam}
-\email{voornaam.familienaam@student.hogent.be}
-\supervisor{Voornaam Naam}
-\cosupervisor{Voornaam Naam (Bedrijf)}
+\title{RAG voor ESG rapportage: een vergelijkende studie van chunking-, embedding- en LLM-configuraties}
+\subtitle{}
+\author{Bavo Vancoppernolle}
+\email{bavo.vancoppernolle@student.hogent.be}
+\supervisor{Mevr. Lena De Mol, Mevr. Nathalie Declerca}
+\cosupervisor{Dhr. Gianluca Gueli (Turtle Srl)}
 
 % Indien ingevuld, wordt deze informatie toegevoegd aan het einde van de
 % abstract. Zet in commentaar als je dit niet wilt.
-\specialisation{Systeem- en Netwerkbeheer}
-\keywords{Lambda-calculus, Scheme}
-\projectrepo{https://github.com/user/repo}
+\specialisation{AI \& Data Engineering}
+\keywords{Retrieval-Augmented Generation, ESG, embeddingmodel, LLM, chunkingstrategie, duurzaamheidsrapportage}
+\projectrepo{https://github.com/Bav0Vc/rag-esg-benchmark}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-It's only a model.
-You don't vote for kings. Who's that then? We found them. Ni! Ni! Ni! Ni!
-The nose? On second thoughts, let's not go there. It is a silly place. Bloody Peasant! And the hat. She's a witch! Where'd you get the coconuts?
+De Europese Corporate Sustainability Reporting Directive (CSRD) verplicht productiebedrijven tot gedetailleerde rapportage over milieu-, sociale en governanceaspecten conform de European Sustainability Reporting Standards (ESRS). Voor organisaties zoals Turtle Srl brengt dit een aanzienlijke administratieve last met zich mee: Environmental, Social en Governance (ESG)-informatie is verspreid over heterogene documenten in meerdere formaten en talen, terwijl externe partijen via vragenlijsten zoals EcoVadis en de Voluntary Sustainability Reporting Standard (VSME) een transparante verantwoording van duurzaamheidsprestaties verwachten. Standaard Large Language Models (LLM's) bieden onvoldoende soelaas: ze kennen geen interne bedrijfsdocumenten, zijn vatbaar voor hallucinaties en missen de traceerbare bronvermelding die CSRD-auditing vereist.
+
+Deze bachelorproef onderzoekt hoe Retrieval-Augmented Generation (RAG) kan worden ingezet als oplossing voor deze tekortkomingen. De centrale onderzoeksvraag luidt: \textit{Welke combinatie van chunkingstrategie, embeddingmodel en Large Language Model (LLM) resulteert in een optimaal RAG-systeem voor Turtle Srl's Proof of Concept (PoC)?} Het beoogde resultaat is een vergelijkende studie en een technisch adviesrapport dat Turtle Srl begeleidt bij de keuze van de optimale RAG-pipelineconfiguratie, met als kritische succesfactoren feitelijke betrouwbaarheid (faithfulness), juridische traceerbaarheid (source attribution) en contextvaliditeit (context recall).
+
+Het onderzoek volgt een sequentieel framework van zeven fasen. Na een uitgebreid literatuuronderzoek en een requirementsanalyse via de MoSCoW-methode, werden drie chunkingstrategieën (\texttt{RecursiveCharacterSplitter}, \texttt{FixedSizeTokenSplitter} en \texttt{SemanticEmbeddingChunker}), drie embeddingmodellen (\texttt{multilingual-e5-large-instruct}, \texttt{BAAI/bge-m3} en \texttt{Snowflake Arctic Embed}) en drie LLM's (\texttt{Gemma-3-27b-it}, \texttt{Mistral-Small-2603} en \texttt{Llama-3.3-70B-Instruct}) geselecteerd via een longlist-shortlistprocedure. De experimentele dataset bestond uit interne ESG-documenten van Turtle Srl en een handmatig geverifieerde golden dataset van 20 vraag-antwoordparen. Met Haystack~2.x en het HyPSTER-configuratieframework werden alle 27 unieke componentcombinaties ($3 \times 3 \times 3$) systematisch geëvalueerd over 540 runs. De performantie werd gemeten via vier Retrieval Augmented Generation Assessment (RAGAS)-metrics — faithfulness, answer relevancy, context precision en context recall — aangevuld met een domeinspecifieke source attribution-score die de correctheid van bestandsnaam en paginanummer beoordeelt. Statistische vergelijkingen werden uitgevoerd via de Kruskal-Wallis-toets met Dunn/Holm post-hoc correctie, en gevalideerd via een menselijke validatiestudie.
+
+De resultaten onthullen een duidelijke hiërarchie in componenteffecten. Het embeddingmodel is de dominante kwaliteitshefboom: \texttt{multilingual-e5-large-instruct} behaalt de hoogste context recall ($\mu = 0{,}792$) en vermijdt de source attribution-penalisering die \texttt{bge-m3} treft door zijn hybride Reciprocal Rank Fusion (RRF)-retrieval. De chunkingstrategie is doorslaggevend voor source attribution: de \texttt{RecursiveCharacterSplitter} is als enige strategie in staat SA\,$\geq$\,40\,\% te halen (46{,}7\,\%, $p_{\text{holm}} < 0{,}001$), doordat zijn scheidingstekenhiërarchie paginagrensmarkeerders structureel intact laat. Opmerkelijk is dat het LLM geen statistisch significant effect vertoont op faithfulness noch op answer relevancy ($H = 5{,}78$, $p = 0{,}056$ resp.\ $H = 5{,}00$, $p = 0{,}082$). De combinatie \textbf{\texttt{RecursiveCharacterSplitter} + \texttt{multilingual-e5-large-instruct} + \texttt{Gemma-3-27b-it}} wordt formeel aanbevolen als optimale configuratie voor de PoC van Turtle Srl.
+
+Het meest fundamentele inzicht voor de implementatiepraktijk is dat optimalisatie-inspanningen bij RAG-pipelines voor ESG-compliance beter gericht zijn op de upstream vectorisatie- en chunkfase dan op de selectie van een krachtigere generatieve engine. Op basis van de experimentele resultaten werd een metriekgestuurde beslissingsboom opgesteld die toekomstige implementatoren begeleidt bij de configuratiekeuze afhankelijk van hun prioriteit: juridische traceerbaarheid, antwoordrelevantie of contextdekking. De generaliseerbaarheid van de resultaten is beperkt tot vergelijkbare meertalige ESG-documentstromen; validatie op andere domeinen of met uitgebreidere golden datasets vormt een logische vervolgstap.
 \end{abstract}
 
 \begin{multicols}{2} % This is how many columns your poster will be broken into, a portrait poster is generally split into 2 columns
 
 \section{Introductie}
 
-Be quiet! Found them? In Mercia?! The coconut's tropical! But you are dressed as one… Well, what do you want? Knights of Ni, we are but simple travelers who seek the enchanter who lives beyond these woods.
-
-Well, what do you want? It's only a model. Camelot! We found them. We shall say `Ni' again to you, if you do not appease us.
-
-The nose? Shut up! Burn her! I am your king. You don't vote for kings.
-
-You can't expect to wield supreme power just `cause some watery tart threw a sword at you! Well, we did do the nose. I don't want to talk to you no more, you empty-headed animal food trough water! I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Now leave before I am forced to taunt you a second time!
-
-Why do you think that she is a witch? We want a shrubbery!! I don't want to talk to you no more, you empty-headed animal food trough water! I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Now leave before I am forced to taunt you a second time!
+% Tekst
 
 \section{Experimenten}
 
-A newt? Camelot! Why? No, no, no! Yes, yes. A bit. But she's got a wart.
-
-Shut up! I dunno. Must be a king. Who's that then? Look, my liege! On second thoughts, let's not go there. It is a silly place.
-
-Shut up! Will you shut up?! No, no, no! Yes, yes. A bit. But she's got a wart. He hasn't got shit all over him. It's only a model. It's only a model.
-
-Bring her forward! I don't want to talk to you no more, you empty-headed animal food trough water! I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Now leave 
+% Tekst
 
 \section{Sectie met figuur}
 
